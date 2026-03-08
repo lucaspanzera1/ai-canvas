@@ -75,7 +75,7 @@ final class GroqService {
             throw GroqError.parsingError
         }
 
-        return content
+        return Self.stripThinkTags(from: content)
     }
 
     // MARK: - Validate Key
@@ -106,6 +106,22 @@ final class GroqService {
         } catch {
             return false
         }
+    }
+
+    // MARK: - Helpers
+
+    /// Strips `<think>...</think>` reasoning tags from model output.
+    /// Some reasoning models (e.g. Qwen3, DeepSeek-R1) wrap internal
+    /// chain-of-thought in these tags — they shouldn't be shown to the user.
+    static func stripThinkTags(from text: String) -> String {
+        // Remove <think>...</think> blocks (including multiline content)
+        let pattern = "<think>[\\s\\S]*?</think>"
+        let cleaned = text.replacingOccurrences(
+            of: pattern,
+            with: "",
+            options: .regularExpression
+        )
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 

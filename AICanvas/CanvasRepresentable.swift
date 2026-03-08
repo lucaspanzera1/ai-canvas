@@ -29,6 +29,15 @@ struct CanvasRepresentable: UIViewRepresentable {
         // Delegate
         canvasView.delegate = context.coordinator
 
+        // Tap gesture to restore first responder (and tool picker)
+        // when user taps back on canvas after using chat input.
+        let tapGesture = UITapGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.canvasTapped(_:))
+        )
+        tapGesture.cancelsTouchesInView = false
+        canvasView.addGestureRecognizer(tapGesture)
+
         // Register canvas with manager
         canvasManager.canvasView = canvasView
 
@@ -71,11 +80,24 @@ struct CanvasRepresentable: UIViewRepresentable {
         }
 
         func canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView) {
-            // Could be used to hide UI during drawing
+            // Ensure first responder when drawing starts
+            if !canvasView.isFirstResponder {
+                canvasView.becomeFirstResponder()
+            }
         }
 
         func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {
             canvasManager.updateUndoState()
+        }
+
+        @objc func canvasTapped(_ gesture: UITapGestureRecognizer) {
+            guard let canvasView = gesture.view as? PKCanvasView else { return }
+            if !canvasView.isFirstResponder {
+                canvasView.becomeFirstResponder()
+                if let toolPicker {
+                    toolPicker.setVisible(true, forFirstResponder: canvasView)
+                }
+            }
         }
     }
 }
