@@ -3,24 +3,54 @@ import PencilKit
 
 struct ContentView: View {
     @StateObject private var canvasManager = CanvasManager()
+    @StateObject private var chatViewModel = ChatViewModel()
     @State private var showToolPicker = true
+    @State private var showAIPanel = false
+    @State private var showOnboarding: Bool
+
+    init() {
+        _showOnboarding = State(initialValue: !KeychainManager.shared.hasAPIKey)
+    }
 
     var body: some View {
         ZStack {
             Color(.systemBackground)
                 .ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                // Toolbar
-                CanvasToolbar(canvasManager: canvasManager)
+            HStack(spacing: 0) {
+                // Main canvas area
+                VStack(spacing: 0) {
+                    CanvasToolbar(
+                        canvasManager: canvasManager,
+                        showAIPanel: $showAIPanel
+                    )
 
-                // Canvas
-                CanvasRepresentable(
-                    canvasManager: canvasManager,
-                    showToolPicker: $showToolPicker
-                )
-                .ignoresSafeArea(edges: .bottom)
+                    CanvasRepresentable(
+                        canvasManager: canvasManager,
+                        showToolPicker: $showToolPicker
+                    )
+                    .ignoresSafeArea(edges: .bottom)
+                }
+
+                // AI Chat panel (slides in from right)
+                if showAIPanel {
+                    Divider()
+
+                    AIChatPanelView(
+                        viewModel: chatViewModel,
+                        isVisible: $showAIPanel
+                    )
+                    .transition(.move(edge: .trailing))
+                }
             }
+            .animation(.easeInOut(duration: 0.25), value: showAIPanel)
+        }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            APIKeyOnboardingView(isPresented: $showOnboarding)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .apiKeyDidChange)) { _ in
+            showOnboarding = true
+            showAIPanel = false
         }
         .statusBarHidden(false)
         .persistentSystemOverlays(.hidden)
@@ -31,6 +61,7 @@ struct ContentView: View {
 
 struct CanvasToolbar: View {
     @ObservedObject var canvasManager: CanvasManager
+    @Binding var showAIPanel: Bool
 
     var body: some View {
         HStack(spacing: 20) {
@@ -68,6 +99,19 @@ struct CanvasToolbar: View {
             } label: {
                 Image(systemName: "square.and.arrow.up")
                     .font(.title3)
+            }
+
+            Divider()
+                .frame(height: 24)
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    showAIPanel.toggle()
+                }
+            } label: {
+                Image(systemName: showAIPanel ? "sparkles.rectangle.stack.fill" : "sparkles.rectangle.stack")
+                    .font(.title3)
+                    .foregroundStyle(showAIPanel ? Color.accentColor : Color.primary)
             }
         }
         .padding(.horizontal, 20)
