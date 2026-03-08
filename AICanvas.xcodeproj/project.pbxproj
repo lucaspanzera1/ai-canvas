@@ -15,9 +15,12 @@
 		AA000006 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000016 /* Preview Assets.xcassets */; };
 		AA000007 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000017 /* KeychainManager.swift */; };
 		AA000008 /* APIKeyOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000018 /* APIKeyOnboardingView.swift */; };
-		AA000009 /* GroqService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000019 /* GroqService.swift */; };
 		AA00000A /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001A /* ChatViewModel.swift */; };
 		AA00000B /* AIChatPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001B /* AIChatPanelView.swift */; };
+		AA00000C /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001C /* AIProvider.swift */; };
+		AA00000D /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001D /* AIService.swift */; };
+		AA00000E /* ModelSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001E /* ModelSelectionView.swift */; };
+		AA00000F /* MultiProviderOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001F /* MultiProviderOnboardingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,9 +33,12 @@
 		AA000016 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		AA000017 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		AA000018 /* APIKeyOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyOnboardingView.swift; sourceTree = "<group>"; };
-		AA000019 /* GroqService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroqService.swift; sourceTree = "<group>"; };
 		AA00001A /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		AA00001B /* AIChatPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatPanelView.swift; sourceTree = "<group>"; };
+		AA00001C /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProvider.swift; sourceTree = "<group>"; };
+		AA00001D /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		AA00001E /* ModelSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSelectionView.swift; sourceTree = "<group>"; };
+		AA00001F /* MultiProviderOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderOnboardingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,9 +69,12 @@
 				AA000014 /* CanvasRepresentable.swift */,
 				AA000017 /* KeychainManager.swift */,
 				AA000018 /* APIKeyOnboardingView.swift */,
-				AA000019 /* GroqService.swift */,
 				AA00001A /* ChatViewModel.swift */,
 				AA00001B /* AIChatPanelView.swift */,
+				AA00001C /* AIProvider.swift */,
+				AA00001D /* AIService.swift */,
+				AA00001E /* ModelSelectionView.swift */,
+				AA00001F /* MultiProviderOnboardingView.swift */,
 				AA000015 /* Assets.xcassets */,
 				AA000033 /* Preview Content */,
 			);
@@ -164,9 +173,12 @@
 				AA000004 /* CanvasRepresentable.swift in Sources */,
 				AA000007 /* KeychainManager.swift in Sources */,
 				AA000008 /* APIKeyOnboardingView.swift in Sources */,
-				AA000009 /* GroqService.swift in Sources */,
 				AA00000A /* ChatViewModel.swift in Sources */,
 				AA00000B /* AIChatPanelView.swift in Sources */,
+				AA00000C /* AIProvider.swift in Sources */,
+				AA00000D /* AIService.swift in Sources */,
+				AA00000E /* ModelSelectionView.swift in Sources */,
+				AA00000F /* MultiProviderOnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

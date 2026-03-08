@@ -115,14 +115,14 @@ struct APIKeyOnboardingView: View {
         isValidating = true
         errorMessage = nil
 
-        // Quick validation call to Groq
+        // Quick validation call to AI service with debug
         Task {
-            let isValid = await GroqService.shared.validateKey(trimmed)
+            let isValid = await AIService.shared.validateKeyWithDebug(trimmed, for: .groq)
 
             await MainActor.run {
                 isValidating = false
                 if isValid {
-                    KeychainManager.shared.saveKey(trimmed)
+                    KeychainManager.shared.saveKey(trimmed, for: .groq)
                     withAnimation {
                         isPresented = false
                     }

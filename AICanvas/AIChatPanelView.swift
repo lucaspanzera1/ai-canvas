@@ -1,10 +1,12 @@
 import SwiftUI
 
-/// Side panel with AI chat agent powered by Groq.
+/// Side panel with AI chat agent powered by multiple providers.
 struct AIChatPanelView: View {
     @ObservedObject var viewModel: ChatViewModel
+    @ObservedObject var aiConfig: AIConfiguration
     @Binding var isVisible: Bool
     @FocusState private var isInputFocused: Bool
+    @State private var showModelSelection = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -15,6 +17,9 @@ struct AIChatPanelView: View {
 
             // Messages
             chatMessages
+            
+            // Current Model Indicator
+            currentModelIndicator
 
             // Error banner
             if let error = viewModel.errorMessage {
@@ -28,6 +33,12 @@ struct AIChatPanelView: View {
         }
         .frame(width: 340)
         .background(Color(.systemBackground))
+        .sheet(isPresented: $showModelSelection) {
+            ModelSelectionView(
+                aiConfig: aiConfig,
+                isPresented: $showModelSelection
+            )
+        }
     }
 
     // MARK: - Header
@@ -43,6 +54,14 @@ struct AIChatPanelView: View {
             Spacer()
 
             Menu {
+                Button {
+                    showModelSelection = true
+                } label: {
+                    Label("Trocar modelo", systemImage: "brain.head.profile")
+                }
+                
+                Divider()
+                
                 Button(role: .destructive) {
                     viewModel.clearChat()
                 } label: {
@@ -50,15 +69,14 @@ struct AIChatPanelView: View {
                 }
 
                 Button {
-                    // Show API key change
-                    KeychainManager.shared.deleteKey()
+                    KeychainManager.shared.deleteAllKeys()
                     // Force re-onboarding by posting notification
                     NotificationCenter.default.post(
                         name: .apiKeyDidChange,
                         object: nil
                     )
                 } label: {
-                    Label("Alterar API Key", systemImage: "key")
+                    Label("Reconfigurar APIs", systemImage: "key")
                 }
             } label: {
                 Image(systemName: "ellipsis.circle")
@@ -134,6 +152,42 @@ struct AIChatPanelView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 60)
+    }
+
+    // MARK: - Current Model
+
+    private var currentModelIndicator: some View {
+        Button {
+            showModelSelection = true
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: aiConfig.selectedModel.provider.icon)
+                    .foregroundStyle(.tint)
+                    .frame(width: 16)
+
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(aiConfig.selectedModel.name)
+                        .font(.caption.bold())
+                        .foregroundStyle(.primary)
+                    Text(aiConfig.selectedModel.provider.displayName)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(.tertiarySystemBackground))
+            .cornerRadius(8)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+        .padding(.bottom, 4)
     }
 
     // MARK: - Error
@@ -245,7 +299,8 @@ extension Notification.Name {
 
 #Preview {
     AIChatPanelView(
-        viewModel: ChatViewModel(),
+        viewModel: ChatViewModel(aiConfig: AIConfiguration()),
+        aiConfig: AIConfiguration(),
         isVisible: .constant(true)
     )
 }

@@ -3,13 +3,17 @@ import PencilKit
 
 struct ContentView: View {
     @StateObject private var canvasManager = CanvasManager()
-    @StateObject private var chatViewModel = ChatViewModel()
+    @StateObject private var aiConfig = AIConfiguration()
+    @StateObject private var chatViewModel: ChatViewModel
     @State private var showToolPicker = true
     @State private var showAIPanel = false
     @State private var showOnboarding: Bool
 
     init() {
-        _showOnboarding = State(initialValue: !KeychainManager.shared.hasAPIKey)
+        let config = AIConfiguration()
+        _aiConfig = StateObject(wrappedValue: config)
+        _chatViewModel = StateObject(wrappedValue: ChatViewModel(aiConfig: config))
+        _showOnboarding = State(initialValue: !KeychainManager.shared.hasAnyAPIKey)
     }
 
     var body: some View {
@@ -38,6 +42,7 @@ struct ContentView: View {
 
                     AIChatPanelView(
                         viewModel: chatViewModel,
+                        aiConfig: aiConfig,
                         isVisible: $showAIPanel
                     )
                     .transition(.move(edge: .trailing))
@@ -46,11 +51,15 @@ struct ContentView: View {
             .animation(.easeInOut(duration: 0.25), value: showAIPanel)
         }
         .fullScreenCover(isPresented: $showOnboarding) {
-            APIKeyOnboardingView(isPresented: $showOnboarding)
+            MultiProviderOnboardingView(
+                isPresented: $showOnboarding,
+                aiConfig: aiConfig
+            )
         }
         .onReceive(NotificationCenter.default.publisher(for: .apiKeyDidChange)) { _ in
             showOnboarding = true
             showAIPanel = false
+            aiConfig.updateAvailableModels()
         }
         .statusBarHidden(false)
         .persistentSystemOverlays(.hidden)

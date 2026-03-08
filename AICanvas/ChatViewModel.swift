@@ -21,12 +21,18 @@ final class ChatViewModel: ObservableObject {
     @Published var inputText = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
+    
+    private let aiConfig: AIConfiguration
 
     private let systemPrompt = """
     Você é um assistente criativo integrado a um app de desenho e escrita (AI Canvas). \
     Ajude o usuário com ideias, sugestões artísticas, brainstorming, feedback sobre conceitos, \
     e qualquer dúvida. Responda de forma concisa e útil. Pode usar emojis quando apropriado.
     """
+    
+    init(aiConfig: AIConfiguration) {
+        self.aiConfig = aiConfig
+    }
 
     func sendMessage() {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -40,8 +46,9 @@ final class ChatViewModel: ObservableObject {
 
         Task {
             do {
-                let reply = try await GroqService.shared.sendMessage(
+                let reply = try await AIService.shared.sendMessage(
                     messages: messages,
+                    model: aiConfig.selectedModel,
                     systemPrompt: systemPrompt
                 )
                 let assistantMessage = ChatMessage(role: .assistant, content: reply)
