@@ -1,42 +1,63 @@
 import SwiftUI
 
-/// Onboarding screen shown on first launch to collect the Groq API key.
+/// Legacy single-provider onboarding screen — Game Edition.
 struct APIKeyOnboardingView: View {
     @Binding var isPresented: Bool
     @State private var apiKey = ""
     @State private var isValidating = false
     @State private var errorMessage: String?
     @State private var showKey = false
+    @State private var glowPulse = false
 
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            GameTheme.background
                 .ignoresSafeArea()
+
+            // Background glow effect
+            Circle()
+                .fill(GameTheme.neonPurple.opacity(0.15))
+                .frame(width: 400, height: 400)
+                .blur(radius: 80)
+                .offset(y: -100)
+                .animation(.easeInOut(duration: 3).repeatForever(autoreverses: true), value: glowPulse)
+                .scaleEffect(glowPulse ? 1.2 : 1.0)
 
             VStack(spacing: 32) {
                 Spacer()
 
-                // Icon
-                Image(systemName: "cpu")
-                    .font(.system(size: 64))
-                    .foregroundStyle(.tint)
+                // Icon with glow
+                ZStack {
+                    Circle()
+                        .fill(GameTheme.primaryGradient)
+                        .frame(width: 90, height: 90)
+                        .shadow(color: GameTheme.neonPurple.opacity(0.8), radius: 20)
+                        .shadow(color: GameTheme.neonCyan.opacity(0.4), radius: 40)
+
+                    Image(systemName: "cpu.fill")
+                        .font(.system(size: 38, weight: .bold))
+                        .foregroundStyle(.white)
+                }
 
                 // Title
-                VStack(spacing: 8) {
+                VStack(spacing: 10) {
                     Text("AI Canvas")
-                        .font(.largeTitle.bold())
+                        .font(.system(size: 36, weight: .heavy, design: .rounded))
+                        .foregroundStyle(GameTheme.primaryGradient)
+                        .shadow(color: GameTheme.neonPurple.opacity(0.5), radius: 10)
 
                     Text("Configure sua API Key do Groq para\nusar o assistente de IA.")
-                        .font(.body)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 15))
+                        .foregroundStyle(GameTheme.textSecondary)
                         .multilineTextAlignment(.center)
                 }
 
                 // Input
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Groq API Key")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("GROQ API KEY")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundStyle(GameTheme.textMuted)
+                        .tracking(2)
 
                     HStack {
                         Group {
@@ -51,22 +72,37 @@ struct APIKeyOnboardingView: View {
                             }
                         }
                         .textFieldStyle(.plain)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundStyle(GameTheme.textPrimary)
 
                         Button {
                             showKey.toggle()
                         } label: {
                             Image(systemName: showKey ? "eye.slash" : "eye")
-                                .foregroundStyle(.secondary)
+                                .font(.system(size: 14))
+                                .foregroundStyle(GameTheme.textSecondary)
                         }
+                        .buttonStyle(.plain)
                     }
-                    .padding(12)
-                    .background(Color(.secondarySystemBackground))
-                    .cornerRadius(10)
+                    .padding(14)
+                    .background(GameTheme.surfaceElevated)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(
+                                apiKey.isEmpty ? GameTheme.border : GameTheme.neonPurple.opacity(0.5),
+                                lineWidth: 1
+                            )
+                    )
 
                     if let errorMessage {
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundStyle(.red)
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 11))
+                            Text(errorMessage)
+                                .font(.system(size: 12))
+                        }
+                        .foregroundStyle(GameTheme.neonPink)
                     }
                 }
                 .padding(.horizontal, 40)
@@ -75,32 +111,58 @@ struct APIKeyOnboardingView: View {
                 Button {
                     saveKey()
                 } label: {
-                    HStack {
+                    HStack(spacing: 8) {
                         if isValidating {
                             ProgressView()
                                 .tint(.white)
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "key.fill")
+                                .font(.system(size: 13, weight: .bold))
                         }
-                        Text("Continuar")
-                            .fontWeight(.semibold)
+                        Text(isValidating ? "Validando..." : "Continuar")
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(apiKey.isEmpty ? Color.gray : Color.accentColor)
                     .foregroundStyle(.white)
-                    .cornerRadius(12)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 15)
+                    .background(
+                        apiKey.isEmpty
+                        ? AnyView(GameTheme.surfaceElevated)
+                        : AnyView(GameTheme.primaryGradient)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(apiKey.isEmpty ? GameTheme.border : Color.clear, lineWidth: 1)
+                    )
+                    .shadow(
+                        color: apiKey.isEmpty ? .clear : GameTheme.neonPurple.opacity(0.5),
+                        radius: 12
+                    )
                 }
+                .buttonStyle(.plain)
                 .disabled(apiKey.isEmpty || isValidating)
+                .animation(.easeInOut(duration: 0.2), value: apiKey.isEmpty)
                 .padding(.horizontal, 40)
 
                 // Link
-                Link("Obter API Key no Groq Console →",
-                     destination: URL(string: "https://console.groq.com/keys")!)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Link(destination: URL(string: "https://console.groq.com/keys")!) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "link")
+                            .font(.system(size: 11))
+                        Text("Obter API Key no Groq Console")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundStyle(GameTheme.neonCyan)
+                }
 
                 Spacer()
                 Spacer()
             }
+        }
+        .onAppear {
+            withAnimation { glowPulse = true }
         }
     }
 
@@ -115,7 +177,6 @@ struct APIKeyOnboardingView: View {
         isValidating = true
         errorMessage = nil
 
-        // Quick validation call to AI service with debug
         Task {
             let isValid = await AIService.shared.validateKeyWithDebug(trimmed, for: .groq)
 
@@ -123,7 +184,7 @@ struct APIKeyOnboardingView: View {
                 isValidating = false
                 if isValid {
                     KeychainManager.shared.saveKey(trimmed, for: .groq)
-                    withAnimation {
+                    withAnimation(.spring(response: 0.4)) {
                         isPresented = false
                     }
                 } else {
