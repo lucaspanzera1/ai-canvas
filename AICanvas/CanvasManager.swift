@@ -21,14 +21,28 @@ struct DrawingToolConfig: Equatable {
 final class CanvasManager: ObservableObject {
     @Published var canUndo = false
     @Published var canRedo = false
-    @Published var showExportSheet = false
-    @Published var exportedImage: UIImage?
 
     // Tool state
     @Published var toolConfig = DrawingToolConfig()
-    @Published var eraserWidth: CGFloat = 20.0
 
     weak var canvasView: PKCanvasView?
+
+    /// Called every time the drawing changes — used for auto-save.
+    var onDrawingChange: ((PKDrawing) -> Void)?
+
+    private let initialDrawing: PKDrawing
+
+    init(initialDrawing: PKDrawing = PKDrawing()) {
+        self.initialDrawing = initialDrawing
+    }
+
+    // MARK: - Setup
+
+    /// Called from CanvasRepresentable after canvasView is assigned.
+    func setup() {
+        canvasView?.drawing = initialDrawing
+        applyCurrentTool()
+    }
 
     // MARK: - Tool Application
 
@@ -86,13 +100,16 @@ final class CanvasManager: ObservableObject {
         canRedo = canvasView?.undoManager?.canRedo ?? false
     }
 
+    func getCurrentDrawing() -> PKDrawing {
+        canvasView?.drawing ?? PKDrawing()
+    }
+
     func exportDrawing() {
         guard let canvasView else { return }
         let image = canvasView.drawing.image(
             from: canvasView.drawing.bounds,
             scale: UIScreen.main.scale
         )
-        exportedImage = image
 
         let activityVC = UIActivityViewController(
             activityItems: [image],

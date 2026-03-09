@@ -2,7 +2,6 @@ import SwiftUI
 import PencilKit
 
 /// UIViewRepresentable wrapper for PKCanvasView — sem PKToolPicker nativo.
-/// As ferramentas são controladas manualmente pela GameDrawingToolbar em SwiftUI.
 struct CanvasRepresentable: UIViewRepresentable {
     @ObservedObject var canvasManager: CanvasManager
     @Binding var showToolPicker: Bool
@@ -20,19 +19,18 @@ struct CanvasRepresentable: UIViewRepresentable {
         canvasView.bouncesZoom = true
         canvasView.delegate = context.coordinator
 
-        // Registrar canvas no manager (sem PKToolPicker)
+        // Registrar canvas no manager e aplicar desenho inicial + ferramenta
         canvasManager.canvasView = canvasView
 
-        // Configurar ferramenta inicial via manager
         DispatchQueue.main.async {
-            canvasManager.applyCurrentTool()
+            canvasManager.setup()
         }
 
         return canvasView
     }
 
     func updateUIView(_ canvasView: PKCanvasView, context: Context) {
-        // Tool updates são gerenciadas pelo CanvasManager
+        // Tool updates são gerenciadas pelo CanvasManager via applyCurrentTool()
     }
 
     func makeCoordinator() -> Coordinator {
@@ -50,6 +48,8 @@ struct CanvasRepresentable: UIViewRepresentable {
 
         func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
             canvasManager.updateUndoState()
+            // Propaga para auto-save
+            canvasManager.onDrawingChange?(canvasView.drawing)
         }
 
         func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {

@@ -22,6 +22,8 @@
 		AA00000E /* ModelSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001E /* ModelSelectionView.swift */; };
 		AA00000F /* MultiProviderOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001F /* MultiProviderOnboardingView.swift */; };
 		AA000009 /* GameDrawingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000019 /* GameDrawingToolbar.swift */; };
+		AB000001 /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011 /* Notebook.swift */; };
+		AB000002 /* NotebookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* NotebookListView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +43,8 @@
 		AA00001E /* ModelSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSelectionView.swift; sourceTree = "<group>"; };
 		AA00001F /* MultiProviderOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderOnboardingView.swift; sourceTree = "<group>"; };
 		AA000019 /* GameDrawingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDrawingToolbar.swift; sourceTree = "<group>"; };
+		AB000011 /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
+		AB000012 /* NotebookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +82,8 @@
 				AA00001E /* ModelSelectionView.swift */,
 				AA00001F /* MultiProviderOnboardingView.swift */,
 				AA000019 /* GameDrawingToolbar.swift */,
+				AB000011 /* Notebook.swift */,
+				AB000012 /* NotebookListView.swift */,
 				AA000015 /* Assets.xcassets */,
 				AA000033 /* Preview Content */,
 			);
@@ -183,6 +189,8 @@
 				AA00000E /* ModelSelectionView.swift in Sources */,
 				AA00000F /* MultiProviderOnboardingView.swift in Sources */,
 				AA000009 /* GameDrawingToolbar.swift in Sources */,
+				AB000001 /* Notebook.swift in Sources */,
+				AB000002 /* NotebookListView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

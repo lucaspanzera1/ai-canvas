@@ -35,31 +35,53 @@ struct GameTheme {
     }
 }
 
+// MARK: - Content View (Canvas for a specific notebook)
+
 struct ContentView: View {
-    @StateObject private var canvasManager = CanvasManager()
+    let notebook: Notebook
+    @ObservedObject var store: NotebookStore
+    @Binding var selectedNotebook: Notebook?
+
     @StateObject private var aiConfig = AIConfiguration()
     @StateObject private var chatViewModel: ChatViewModel
+    @StateObject private var canvasManager: CanvasManager
+
     @State private var showAIPanel = false
     @State private var showOnboarding: Bool
 
-    init() {
+    init(notebook: Notebook, store: NotebookStore, selectedNotebook: Binding<Notebook?>) {
+        self.notebook = notebook
+        self.store = store
+        self._selectedNotebook = selectedNotebook
+
         let config = AIConfiguration()
         _aiConfig = StateObject(wrappedValue: config)
         _chatViewModel = StateObject(wrappedValue: ChatViewModel(aiConfig: config))
         _showOnboarding = State(initialValue: !KeychainManager.shared.hasAnyAPIKey)
+
+        // Carrega o desenho salvo do caderno
+        let drawing = store.loadDrawing(for: notebook)
+        _canvasManager = StateObject(wrappedValue: CanvasManager(initialDrawing: drawing))
     }
 
     var body: some View {
         ZStack {
-            GameTheme.background
-                .ignoresSafeArea()
+            GameTheme.background.ignoresSafeArea()
 
             HStack(spacing: 0) {
                 // Canvas area
                 VStack(spacing: 0) {
                     CanvasToolbar(
+                        notebook: notebook,
                         canvasManager: canvasManager,
-                        showAIPanel: $showAIPanel
+                        showAIPanel: $showAIPanel,
+                        onBack: {
+                            // Salva metadados ao sair
+                            store.persistMetadata()
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                selectedNotebook = nil
+                            }
+                        }
                     )
 
                     ZStack(alignment: .bottom) {
@@ -69,11 +91,11 @@ struct ContentView: View {
                         )
                         .ignoresSafeArea(edges: .bottom)
 
-                        // Gamified drawing toolbar (flutua sobre o canvas)
+                        // Gamified drawing toolbar
                         GameDrawingToolbar(canvasManager: canvasManager)
                             .padding(.bottom, 28)
                             .padding(.leading, 20)
-                            .frame(maxWidth: CGFloat.infinity, alignment: Alignment.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
 
@@ -91,6 +113,12 @@ struct ContentView: View {
                 }
             }
             .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showAIPanel)
+        }
+        .onAppear {
+            // Conecta o auto-save ao store
+            canvasManager.onDrawingChange = { [weak store] drawing in
+                store?.saveDrawing(drawing, for: notebook)
+            }
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             MultiProviderOnboardingView(
@@ -111,30 +139,47 @@ struct ContentView: View {
 // MARK: - Top Toolbar
 
 struct CanvasToolbar: View {
+    let notebook: Notebook
     @ObservedObject var canvasManager: CanvasManager
     @Binding var showAIPanel: Bool
+    let onBack: () -> Void
+
+    private var accentColor: Color { notebookSwiftColor(at: notebook.colorIndex) }
 
     var body: some View {
         HStack(spacing: 6) {
-            // Logo
-            HStack(spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(GameTheme.primaryGradient)
-                        .frame(width: 28, height: 28)
-                    Image(systemName: "paintbrush.pointed.fill")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(.white)
+            // Back button
+            Button(action: onBack) {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 12, weight: .bold))
+                    Text("Cadernos")
+                        .font(.system(size: 13, weight: .semibold))
                 }
+                .foregroundStyle(GameTheme.textSecondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(GameTheme.surfaceElevated)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(GameTheme.border, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
 
-                Text("AI Canvas")
+            // Notebook title
+            HStack(spacing: 8) {
+                Text(notebook.emoji)
+                    .font(.system(size: 18))
+                    .shadow(color: accentColor.opacity(0.6), radius: 6)
+
+                Text(notebook.name)
                     .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(GameTheme.textPrimary)
+                    .lineLimit(1)
             }
 
             Spacer()
 
-            // Action Buttons
+            // Action buttons
             HStack(spacing: 4) {
                 GameToolButton(
                     icon: "arrow.uturn.backward",
@@ -212,16 +257,8 @@ struct CanvasToolbar: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(
-            GameTheme.surface
-                .ignoresSafeArea(edges: .top)
-        )
-        .overlay(
-            Rectangle()
-                .fill(GameTheme.border)
-                .frame(height: 1),
-            alignment: .bottom
-        )
+        .background(GameTheme.surface.ignoresSafeArea(edges: .top))
+        .overlay(Rectangle().fill(GameTheme.border).frame(height: 1), alignment: .bottom)
     }
 }
 
@@ -246,11 +283,7 @@ struct GameToolButton: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(isDisabled ? GameTheme.textMuted : color)
                 .frame(width: 36, height: 36)
-                .background(
-                    isPressed
-                    ? color.opacity(0.2)
-                    : GameTheme.surfaceElevated
-                )
+                .background(isPressed ? color.opacity(0.2) : GameTheme.surfaceElevated)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
@@ -264,5 +297,9 @@ struct GameToolButton: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(
+        notebook: Notebook(name: "Preview", emoji: "✏️", colorIndex: 0),
+        store: NotebookStore(),
+        selectedNotebook: .constant(nil)
+    )
 }
