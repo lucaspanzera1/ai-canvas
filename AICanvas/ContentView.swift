@@ -17,7 +17,7 @@ struct GameTheme {
     static let textMuted = Color(white: 0.4)
     static let border = Color(white: 1.0, opacity: 0.08)
     static let borderGlow = Color(red: 0.58, green: 0.22, blue: 1.0).opacity(0.5)
-    
+
     static var primaryGradient: LinearGradient {
         LinearGradient(
             colors: [neonPurple, neonCyan],
@@ -25,7 +25,7 @@ struct GameTheme {
             endPoint: .bottomTrailing
         )
     }
-    
+
     static var heroGradient: LinearGradient {
         LinearGradient(
             colors: [neonPurple.opacity(0.8), neonPink.opacity(0.6), neonCyan.opacity(0.4)],
@@ -39,7 +39,6 @@ struct ContentView: View {
     @StateObject private var canvasManager = CanvasManager()
     @StateObject private var aiConfig = AIConfiguration()
     @StateObject private var chatViewModel: ChatViewModel
-    @State private var showToolPicker = true
     @State private var showAIPanel = false
     @State private var showOnboarding: Bool
 
@@ -56,19 +55,29 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             HStack(spacing: 0) {
+                // Canvas area
                 VStack(spacing: 0) {
                     CanvasToolbar(
                         canvasManager: canvasManager,
                         showAIPanel: $showAIPanel
                     )
 
-                    CanvasRepresentable(
-                        canvasManager: canvasManager,
-                        showToolPicker: $showToolPicker
-                    )
-                    .ignoresSafeArea(edges: .bottom)
+                    ZStack(alignment: .bottom) {
+                        CanvasRepresentable(
+                            canvasManager: canvasManager,
+                            showToolPicker: .constant(false)
+                        )
+                        .ignoresSafeArea(edges: .bottom)
+
+                        // Gamified drawing toolbar (flutua sobre o canvas)
+                        GameDrawingToolbar(canvasManager: canvasManager)
+                            .padding(.bottom, 28)
+                            .padding(.leading, 20)
+                            .frame(maxWidth: CGFloat.infinity, alignment: Alignment.leading)
+                    }
                 }
 
+                // AI Chat panel
                 if showAIPanel {
                     AIChatPanelView(
                         viewModel: chatViewModel,
@@ -99,13 +108,11 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Toolbar
+// MARK: - Top Toolbar
 
 struct CanvasToolbar: View {
     @ObservedObject var canvasManager: CanvasManager
     @Binding var showAIPanel: Bool
-    @State private var undoScale: CGFloat = 1.0
-    @State private var redoScale: CGFloat = 1.0
 
     var body: some View {
         HStack(spacing: 6) {
@@ -127,7 +134,7 @@ struct CanvasToolbar: View {
 
             Spacer()
 
-            // Tool Buttons
+            // Action Buttons
             HStack(spacing: 4) {
                 GameToolButton(
                     icon: "arrow.uturn.backward",
@@ -162,13 +169,12 @@ struct CanvasToolbar: View {
                 }
             }
 
-            // Divider
             Rectangle()
                 .fill(GameTheme.border)
                 .frame(width: 1, height: 24)
                 .padding(.horizontal, 8)
 
-            // AI Button
+            // AI Panel Toggle
             Button {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                     showAIPanel.toggle()
@@ -230,13 +236,9 @@ struct GameToolButton: View {
 
     var body: some View {
         Button(action: {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                isPressed = true
-            }
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) { isPressed = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) {
-                    isPressed = false
-                }
+                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) { isPressed = false }
             }
             action()
         }) {

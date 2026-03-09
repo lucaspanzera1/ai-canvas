@@ -2,14 +2,67 @@ import SwiftUI
 import PencilKit
 import Combine
 
-/// Manages the canvas state, undo/redo, and export functionality.
+// MARK: - Tool Models
+
+enum DrawingToolType: CaseIterable, Equatable {
+    case pen
+    case pencil
+    case marker
+    case eraser
+}
+
+struct DrawingToolConfig: Equatable {
+    var type: DrawingToolType = .pen
+    var color: Color = .black
+    var width: CGFloat = 3.0
+}
+
+/// Manages canvas state, tools, undo/redo, and export.
 final class CanvasManager: ObservableObject {
     @Published var canUndo = false
     @Published var canRedo = false
     @Published var showExportSheet = false
     @Published var exportedImage: UIImage?
 
+    // Tool state
+    @Published var toolConfig = DrawingToolConfig()
+    @Published var eraserWidth: CGFloat = 20.0
+
     weak var canvasView: PKCanvasView?
+
+    // MARK: - Tool Application
+
+    func applyCurrentTool() {
+        guard let canvasView else { return }
+        let uiColor = UIColor(toolConfig.color)
+        let width = toolConfig.width
+
+        switch toolConfig.type {
+        case .pen:
+            canvasView.tool = PKInkingTool(.pen, color: uiColor, width: width)
+        case .pencil:
+            canvasView.tool = PKInkingTool(.pencil, color: uiColor, width: width)
+        case .marker:
+            canvasView.tool = PKInkingTool(.marker, color: uiColor, width: width * 3)
+        case .eraser:
+            canvasView.tool = PKEraserTool(.vector)
+        }
+    }
+
+    func selectTool(_ type: DrawingToolType) {
+        toolConfig.type = type
+        applyCurrentTool()
+    }
+
+    func setColor(_ color: Color) {
+        toolConfig.color = color
+        applyCurrentTool()
+    }
+
+    func setWidth(_ width: CGFloat) {
+        toolConfig.width = width
+        applyCurrentTool()
+    }
 
     // MARK: - Actions
 
@@ -48,7 +101,6 @@ final class CanvasManager: ObservableObject {
 
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
            let rootVC = windowScene.windows.first?.rootViewController {
-            // For iPad popover presentation
             if let popover = activityVC.popoverPresentationController {
                 popover.sourceView = rootVC.view
                 popover.sourceRect = CGRect(

@@ -1,7 +1,8 @@
 import SwiftUI
 import PencilKit
 
-/// UIViewRepresentable wrapper for PKCanvasView, optimized for Apple Pencil input.
+/// UIViewRepresentable wrapper for PKCanvasView — sem PKToolPicker nativo.
+/// As ferramentas são controladas manualmente pela GameDrawingToolbar em SwiftUI.
 struct CanvasRepresentable: UIViewRepresentable {
     @ObservedObject var canvasManager: CanvasManager
     @Binding var showToolPicker: Bool
@@ -9,56 +10,29 @@ struct CanvasRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> PKCanvasView {
         let canvasView = PKCanvasView()
 
-        // Drawing configuration
-        // .default = Pencil draws, finger scrolls. When no Pencil is paired, finger draws.
-        // .anyInput = Any input draws (finger, mouse, trackpad, Pencil). Best for testing.
         canvasView.drawingPolicy = .anyInput
-        canvasView.backgroundColor = .systemBackground
+        canvasView.backgroundColor = .white
         canvasView.isOpaque = true
-
-        // Default tool: fine black pen for writing
-        canvasView.tool = PKInkingTool(.pen, color: .label, width: 2)
-
-        // Allow finger drawing for devices without Apple Pencil / simulator
         canvasView.allowsFingerDrawing = true
         canvasView.isScrollEnabled = false
         canvasView.minimumZoomScale = 1.0
         canvasView.maximumZoomScale = 5.0
         canvasView.bouncesZoom = true
-
-        // Delegate
         canvasView.delegate = context.coordinator
 
-        // Tap gesture to restore first responder (and tool picker)
-        // when user taps back on canvas after using chat input.
-        let tapGesture = UITapGestureRecognizer(
-            target: context.coordinator,
-            action: #selector(Coordinator.canvasTapped(_:))
-        )
-        tapGesture.cancelsTouchesInView = false
-        canvasView.addGestureRecognizer(tapGesture)
-
-        // Register canvas with manager
+        // Registrar canvas no manager (sem PKToolPicker)
         canvasManager.canvasView = canvasView
 
-        // Defer tool picker setup to next run loop to let PencilKit
-        // finish internal initialization and reduce console warnings.
+        // Configurar ferramenta inicial via manager
         DispatchQueue.main.async {
-            let toolPicker = PKToolPicker()
-            context.coordinator.toolPicker = toolPicker
-            toolPicker.setVisible(true, forFirstResponder: canvasView)
-            toolPicker.addObserver(canvasView)
-            canvasView.becomeFirstResponder()
+            canvasManager.applyCurrentTool()
         }
 
         return canvasView
     }
 
     func updateUIView(_ canvasView: PKCanvasView, context: Context) {
-        // Update tool picker visibility
-        if let toolPicker = context.coordinator.toolPicker {
-            toolPicker.setVisible(showToolPicker, forFirstResponder: canvasView)
-        }
+        // Tool updates são gerenciadas pelo CanvasManager
     }
 
     func makeCoordinator() -> Coordinator {
@@ -69,7 +43,6 @@ struct CanvasRepresentable: UIViewRepresentable {
 
     class Coordinator: NSObject, PKCanvasViewDelegate {
         let canvasManager: CanvasManager
-        var toolPicker: PKToolPicker?
 
         init(canvasManager: CanvasManager) {
             self.canvasManager = canvasManager
@@ -79,25 +52,8 @@ struct CanvasRepresentable: UIViewRepresentable {
             canvasManager.updateUndoState()
         }
 
-        func canvasViewDidBeginUsingTool(_ canvasView: PKCanvasView) {
-            // Ensure first responder when drawing starts
-            if !canvasView.isFirstResponder {
-                canvasView.becomeFirstResponder()
-            }
-        }
-
         func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {
             canvasManager.updateUndoState()
-        }
-
-        @objc func canvasTapped(_ gesture: UITapGestureRecognizer) {
-            guard let canvasView = gesture.view as? PKCanvasView else { return }
-            if !canvasView.isFirstResponder {
-                canvasView.becomeFirstResponder()
-                if let toolPicker {
-                    toolPicker.setVisible(true, forFirstResponder: canvasView)
-                }
-            }
         }
     }
 }
