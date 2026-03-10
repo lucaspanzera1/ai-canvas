@@ -17,22 +17,7 @@ struct NotebookListView: View {
     var body: some View {
         ZStack {
             // Background
-            GameTheme.background.ignoresSafeArea()
-
-            // Background glows
-            ZStack {
-                Circle()
-                    .fill(GameTheme.neonPurple.opacity(0.12))
-                    .frame(width: 500, height: 500)
-                    .blur(radius: 100)
-                    .offset(x: -150, y: -300)
-
-                Circle()
-                    .fill(GameTheme.neonCyan.opacity(0.08))
-                    .frame(width: 400, height: 400)
-                    .blur(radius: 80)
-                    .offset(x: 200, y: 400)
-            }
+            AppTheme.background.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 listHeader
@@ -112,18 +97,18 @@ struct NotebookListView: View {
         HStack(alignment: .bottom, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
-                    Image(systemName: "book.closed.fill")
+                    Image(systemName: "book.closed")
                         .font(.system(size: 13))
-                        .foregroundStyle(GameTheme.neonPurple)
+                        .foregroundStyle(AppTheme.textSecondary)
                     Text("MEUS CADERNOS")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(GameTheme.neonPurple)
-                        .tracking(2)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .tracking(1)
                 }
 
                 Text("AI Canvas")
-                    .font(.system(size: 30, weight: .heavy, design: .rounded))
-                    .foregroundStyle(GameTheme.primaryGradient)
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
             }
 
             Spacer()
@@ -131,11 +116,11 @@ struct NotebookListView: View {
             // Stats badge
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(store.notebooks.count)")
-                    .font(.system(size: 22, weight: .heavy, design: .rounded))
-                    .foregroundStyle(GameTheme.textPrimary)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
                 Text(store.notebooks.count == 1 ? "caderno" : "cadernos")
                     .font(.system(size: 11))
-                    .foregroundStyle(GameTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textSecondary)
             }
         }
         .padding(.horizontal, 24)
@@ -151,21 +136,21 @@ struct NotebookListView: View {
 
             ZStack {
                 Circle()
-                    .fill(GameTheme.neonPurple.opacity(0.12))
-                    .frame(width: 120, height: 120)
-                    .overlay(Circle().stroke(GameTheme.neonPurple.opacity(0.3), lineWidth: 1))
+                    .fill(AppTheme.surfaceElevated)
+                    .frame(width: 90, height: 90)
+                    .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
 
                 Text("📓")
-                    .font(.system(size: 52))
+                    .font(.system(size: 40))
             }
 
             VStack(spacing: 8) {
                 Text("Nenhum caderno ainda")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundStyle(GameTheme.textPrimary)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
                 Text("Crie seu primeiro caderno\ne comece a desenhar!")
                     .font(.system(size: 14))
-                    .foregroundStyle(GameTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
@@ -174,16 +159,15 @@ struct NotebookListView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "plus")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.system(size: 14, weight: .medium))
                     Text("Criar Caderno")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.system(size: 14, weight: .semibold))
                 }
                 .foregroundStyle(.white)
-                .padding(.horizontal, 28)
-                .padding(.vertical, 14)
-                .background(GameTheme.primaryGradient)
-                .clipShape(Capsule())
-                .shadow(color: GameTheme.neonPurple.opacity(0.6), radius: 14)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(AppTheme.accent)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)
 
@@ -207,69 +191,52 @@ struct NotebookCard: View {
             // Top — emoji + color block
             ZStack(alignment: .topLeading) {
                 Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [accentColor.opacity(0.25), accentColor.opacity(0.08)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(height: 110)
-
-                // Decorative lines (ruled notebook feel)
-                VStack(spacing: 14) {
-                    ForEach(0..<5, id: \.self) { _ in
-                        Rectangle()
-                            .fill(accentColor.opacity(0.12))
-                            .frame(height: 1)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 20)
+                    .fill(accentColor.opacity(0.15))
+                    .frame(height: 60)
 
                 // Emoji
                 Text(notebook.emoji)
-                    .font(.system(size: 40))
-                    .padding(14)
-                    .shadow(color: accentColor.opacity(0.5), radius: 8)
+                    .font(.system(size: 28))
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
             }
 
             // Bottom info
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(notebook.name)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(GameTheme.textPrimary)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
                     Image(systemName: "clock")
                         .font(.system(size: 10))
-                        .foregroundStyle(GameTheme.textMuted)
+                        .foregroundStyle(AppTheme.textMuted)
                     Text(notebook.lastModified.relativeString)
                         .font(.system(size: 11))
-                        .foregroundStyle(GameTheme.textMuted)
+                        .foregroundStyle(AppTheme.textMuted)
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(GameTheme.surfaceElevated)
+            .background(AppTheme.surfaceElevated)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 12)
                 .stroke(
-                    hovered ? accentColor.opacity(0.6) : GameTheme.border,
-                    lineWidth: hovered ? 1.5 : 1
+                    hovered ? AppTheme.borderHover : AppTheme.border,
+                    lineWidth: 1
                 )
         )
         .shadow(
-            color: hovered ? accentColor.opacity(0.3) : .black.opacity(0.3),
-            radius: hovered ? 16 : 8,
+            color: hovered ? AppTheme.shadowColor : .clear,
+            radius: hovered ? 12 : 4,
             x: 0,
-            y: hovered ? 8 : 4
+            y: hovered ? 4 : 2
         )
-        .scaleEffect(hovered ? 1.02 : 1.0)
+        .scaleEffect(hovered ? 1.01 : 1.0)
         .animation(.spring(response: 0.25, dampingFraction: 0.7), value: hovered)
         .onHover { h in hovered = h }
     }
@@ -283,44 +250,37 @@ struct NewNotebookCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 14) {
+            VStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(GameTheme.neonPurple.opacity(hovered ? 0.2 : 0.1))
-                        .frame(width: 56, height: 56)
-                        .overlay(
-                            Circle()
-                                .stroke(GameTheme.neonPurple.opacity(hovered ? 0.7 : 0.3), lineWidth: 1.5)
-                        )
-                        .shadow(color: GameTheme.neonPurple.opacity(hovered ? 0.6 : 0.0), radius: 12)
+                        .fill(hovered ? AppTheme.borderActive : AppTheme.border)
+                        .frame(width: 44, height: 44)
 
                     Image(systemName: "plus")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(GameTheme.neonPurple)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(AppTheme.textPrimary)
                 }
 
                 Text("Novo Caderno")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(hovered ? GameTheme.neonPurple : GameTheme.textSecondary)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(AppTheme.textSecondary)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 168)
+            .frame(height: 120)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(hovered ? GameTheme.neonPurple.opacity(0.06) : GameTheme.surfaceElevated)
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(hovered ? AppTheme.surfaceElevated : .clear)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: 12)
                             .stroke(
-                                hovered
-                                ? GameTheme.neonPurple.opacity(0.5)
-                                : Color(white: 1, opacity: 0.06),
-                                style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
+                                hovered ? AppTheme.borderHover : AppTheme.border,
+                                style: StrokeStyle(lineWidth: 1, dash: [4, 4])
                             )
                     )
             )
         }
         .buttonStyle(.plain)
-        .scaleEffect(hovered ? 1.02 : 1.0)
+        .scaleEffect(hovered ? 1.01 : 1.0)
         .animation(.spring(response: 0.25), value: hovered)
         .onHover { h in hovered = h }
     }
@@ -341,78 +301,59 @@ struct CreateNotebookSheet: View {
 
     var body: some View {
         ZStack {
-            GameTheme.background.ignoresSafeArea()
-
-            Circle()
-                .fill(GameTheme.neonPurple.opacity(0.12))
-                .frame(width: 300, height: 300)
-                .blur(radius: 60)
-                .offset(x: 100, y: -200)
+            AppTheme.background.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
                     Button("Cancelar") { isPresented = false }
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(GameTheme.textSecondary)
+                        .foregroundStyle(AppTheme.textSecondary)
                         .buttonStyle(.plain)
 
                     Spacer()
 
                     Text("Novo Caderno")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(GameTheme.textPrimary)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
 
                     Spacer()
 
                     Button("Criar") {
                         createAndOpen()
                     }
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(name.isEmpty ? GameTheme.textMuted : GameTheme.neonCyan)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(name.isEmpty ? AppTheme.textMuted : AppTheme.accent)
                     .disabled(name.isEmpty)
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
-
-                LinearGradient(
-                    colors: [GameTheme.neonPurple.opacity(0), GameTheme.neonPurple.opacity(0.5), GameTheme.neonCyan.opacity(0.5), GameTheme.neonCyan.opacity(0)],
-                    startPoint: .leading, endPoint: .trailing
-                )
-                .frame(height: 1)
+                .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
 
                 ScrollView {
                     VStack(spacing: 28) {
                         // Preview Card
                         ZStack(alignment: .topLeading) {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [notebookSwiftColor(at: selectedColorIndex).opacity(0.3), notebookSwiftColor(at: selectedColorIndex).opacity(0.08)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(height: 100)
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(AppTheme.surfaceElevated)
+                                .frame(height: 80)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(notebookSwiftColor(at: selectedColorIndex).opacity(0.5), lineWidth: 1.5)
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(AppTheme.border, lineWidth: 1)
                                 )
-                                .shadow(color: notebookSwiftColor(at: selectedColorIndex).opacity(0.3), radius: 16)
 
                             HStack(spacing: 14) {
                                 Text(selectedEmoji)
-                                    .font(.system(size: 42))
-                                    .shadow(color: notebookSwiftColor(at: selectedColorIndex).opacity(0.6), radius: 10)
+                                    .font(.system(size: 32))
 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(name.isEmpty ? "Nome do caderno" : name)
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundStyle(name.isEmpty ? GameTheme.textMuted : GameTheme.textPrimary)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(name.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary)
                                     Text("Agora mesmo")
                                         .font(.system(size: 11))
-                                        .foregroundStyle(GameTheme.textMuted)
+                                        .foregroundStyle(AppTheme.textMuted)
                                 }
                             }
                             .padding(16)
@@ -422,55 +363,52 @@ struct CreateNotebookSheet: View {
                         // Name input
                         VStack(alignment: .leading, spacing: 8) {
                             Text("NOME")
-                                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                .foregroundStyle(GameTheme.textMuted)
-                                .tracking(2)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(AppTheme.textMuted)
 
                             TextField("Ex: Anotações de Matemática", text: $name)
                                 .textFieldStyle(.plain)
-                                .font(.system(size: 15))
-                                .foregroundStyle(GameTheme.textPrimary)
+                                .font(.system(size: 14))
+                                .foregroundStyle(AppTheme.textPrimary)
                                 .focused($nameFocused)
                                 .padding(14)
-                                .background(GameTheme.surfaceElevated)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .background(AppTheme.surfaceElevated)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(nameFocused ? GameTheme.neonPurple.opacity(0.6) : GameTheme.border, lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(nameFocused ? AppTheme.accent : AppTheme.border, lineWidth: 1)
                                 )
                         }
 
                         // Emoji picker
                         VStack(alignment: .leading, spacing: 12) {
                             Text("ÍCONE")
-                                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                .foregroundStyle(GameTheme.textMuted)
-                                .tracking(2)
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(AppTheme.textMuted)
 
-                            LazyVGrid(columns: Array(repeating: GridItem(.fixed(48), spacing: 10), count: 5), spacing: 10) {
+                            LazyVGrid(columns: Array(repeating: GridItem(.fixed(44), spacing: 10), count: 5), spacing: 10) {
                                 ForEach(emojis, id: \.self) { emoji in
                                     Button {
                                         selectedEmoji = emoji
                                     } label: {
                                         Text(emoji)
-                                            .font(.system(size: 26))
-                                            .frame(width: 48, height: 48)
+                                            .font(.system(size: 24))
+                                            .frame(width: 44, height: 44)
                                             .background(
-                                                RoundedRectangle(cornerRadius: 10)
+                                                RoundedRectangle(cornerRadius: 8)
                                                     .fill(selectedEmoji == emoji
-                                                          ? GameTheme.neonPurple.opacity(0.2)
-                                                          : GameTheme.surfaceElevated)
+                                                          ? AppTheme.border
+                                                          : AppTheme.surfaceElevated)
                                                     .overlay(
-                                                        RoundedRectangle(cornerRadius: 10)
+                                                        RoundedRectangle(cornerRadius: 8)
                                                             .stroke(selectedEmoji == emoji
-                                                                    ? GameTheme.neonPurple.opacity(0.7)
-                                                                    : GameTheme.border, lineWidth: 1)
+                                                                    ? AppTheme.borderHover
+                                                                    : AppTheme.border, lineWidth: 1)
                                                     )
                                             )
-                                            .shadow(color: selectedEmoji == emoji ? GameTheme.neonPurple.opacity(0.4) : .clear, radius: 6)
                                     }
                                     .buttonStyle(.plain)
-                                    .scaleEffect(selectedEmoji == emoji ? 1.08 : 1.0)
+                                    .scaleEffect(selectedEmoji == emoji ? 1.05 : 1.0)
                                     .animation(.spring(response: 0.2), value: selectedEmoji)
                                 }
                             }
@@ -478,31 +416,28 @@ struct CreateNotebookSheet: View {
 
                         // Color picker
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("COR")
-                                .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                .foregroundStyle(GameTheme.textMuted)
-                                .tracking(2)
+                            Text("TITULO DA COR")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(AppTheme.textMuted)
 
-                            HStack(spacing: 10) {
-                                ForEach(0..<notebookNeonColors.count, id: \.self) { idx in
+                            HStack(spacing: 12) {
+                                ForEach(0..<8, id: \.self) { idx in
                                     Button {
                                         selectedColorIndex = idx
                                     } label: {
                                         ZStack {
                                             Circle()
                                                 .fill(notebookSwiftColor(at: idx))
-                                                .frame(width: 32, height: 32)
-                                                .shadow(color: notebookSwiftColor(at: idx).opacity(selectedColorIndex == idx ? 0.9 : 0.0), radius: 8)
+                                                .frame(width: 28, height: 28)
 
                                             if selectedColorIndex == idx {
                                                 Circle()
-                                                    .stroke(Color.white, lineWidth: 2.5)
-                                                    .frame(width: 32, height: 32)
+                                                    .stroke(AppTheme.accent, lineWidth: 2)
+                                                    .frame(width: 34, height: 34)
                                             }
                                         }
                                     }
                                     .buttonStyle(.plain)
-                                    .scaleEffect(selectedColorIndex == idx ? 1.15 : 1.0)
                                     .animation(.spring(response: 0.2), value: selectedColorIndex)
                                 }
                             }
@@ -512,26 +447,13 @@ struct CreateNotebookSheet: View {
                         Button {
                             createAndOpen()
                         } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.system(size: 15, weight: .bold))
-                                Text("Criar Caderno")
-                                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                            }
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
-                            .background(
-                                name.isEmpty
-                                ? AnyView(GameTheme.surfaceElevated)
-                                : AnyView(GameTheme.primaryGradient)
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(name.isEmpty ? GameTheme.border : Color.clear, lineWidth: 1)
-                            )
-                            .shadow(color: name.isEmpty ? .clear : GameTheme.neonPurple.opacity(0.5), radius: 14)
+                            Text("Criar Caderno")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(name.isEmpty ? AppTheme.borderHover : AppTheme.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                         .buttonStyle(.plain)
                         .disabled(name.isEmpty)
@@ -556,14 +478,14 @@ struct CreateNotebookSheet: View {
 
 func notebookSwiftColor(at index: Int) -> Color {
     let colors: [Color] = [
-        Color(red: 0.58, green: 0.22, blue: 1.0),   // Roxo
-        Color(red: 0.0,  green: 0.85, blue: 1.0),   // Cyan
-        Color(red: 0.18, green: 1.0,  blue: 0.58),  // Verde
-        Color(red: 1.0,  green: 0.2,  blue: 0.6),   // Rosa
-        Color(red: 1.0,  green: 0.6,  blue: 0.0),   // Laranja
-        Color(red: 0.3,  green: 0.6,  blue: 1.0),   // Azul
-        Color(red: 1.0,  green: 0.9,  blue: 0.0),   // Amarelo
-        Color(red: 1.0,  green: 0.25, blue: 0.25),  // Vermelho
+        Color(red: 0.44, green: 0.58, blue: 0.88),   // Periwinkle
+        Color(red: 0.55, green: 0.85, blue: 0.76),   // Mint
+        Color(red: 0.98, green: 0.70, blue: 0.58),   // Peach
+        Color(red: 0.88, green: 0.56, blue: 0.56),   // Soft Red
+        Color(red: 0.90, green: 0.85, blue: 0.55),   // Pale Yellow
+        Color(red: 0.75, green: 0.65, blue: 0.85),   // Lavender
+        Color(red: 0.60, green: 0.60, blue: 0.60),   // Gray
+        Color(red: 0.20, green: 0.25, blue: 0.35),   // Slate
     ]
     return colors[index % colors.count]
 }

@@ -24,10 +24,10 @@ struct AIChatPanelView: View {
             chatInput
         }
         .frame(width: 360)
-        .background(GameTheme.surface)
+        .background(AppTheme.surface)
         .overlay(
             Rectangle()
-                .fill(GameTheme.border)
+                .fill(AppTheme.border)
                 .frame(width: 1),
             alignment: .leading
         )
@@ -47,32 +47,25 @@ struct AIChatPanelView: View {
                 // AI Avatar
                 ZStack {
                     Circle()
-                        .fill(GameTheme.primaryGradient)
+                        .fill(AppTheme.accent)
                         .frame(width: 36, height: 36)
-                        .shadow(color: GameTheme.neonPurple.opacity(pulseGlow ? 0.8 : 0.3), radius: pulseGlow ? 12 : 6)
                     
                     Image(systemName: "sparkles")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-                .onAppear {
-                    withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
-                        pulseGlow = true
-                    }
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(AppTheme.surface)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("AI Assistant")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
-                        .foregroundStyle(GameTheme.textPrimary)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
                     HStack(spacing: 4) {
                         Circle()
-                            .fill(GameTheme.neonGreen)
+                            .fill(AppTheme.action)
                             .frame(width: 6, height: 6)
-                            .shadow(color: GameTheme.neonGreen, radius: 3)
                         Text("Online")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(GameTheme.neonGreen)
+                            .foregroundStyle(AppTheme.textSecondary)
                     }
                 }
 
@@ -103,11 +96,11 @@ struct AIChatPanelView: View {
                     } label: {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(GameTheme.textSecondary)
+                            .foregroundStyle(AppTheme.textSecondary)
                             .frame(width: 32, height: 32)
-                            .background(GameTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(GameTheme.border, lineWidth: 1))
+                            .background(AppTheme.surfaceElevated)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppTheme.border, lineWidth: 1))
                     }
 
                     Button {
@@ -117,11 +110,11 @@ struct AIChatPanelView: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(GameTheme.textSecondary)
+                            .foregroundStyle(AppTheme.textSecondary)
                             .frame(width: 32, height: 32)
-                            .background(GameTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(GameTheme.border, lineWidth: 1))
+                            .background(AppTheme.surfaceElevated)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppTheme.border, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -129,13 +122,10 @@ struct AIChatPanelView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
             
-            // Neon divider
-            LinearGradient(
-                colors: [GameTheme.neonPurple.opacity(0.0), GameTheme.neonPurple.opacity(0.6), GameTheme.neonCyan.opacity(0.6), GameTheme.neonCyan.opacity(0.0)],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            .frame(height: 1)
+            // Divider
+            Rectangle()
+                .fill(AppTheme.border)
+                .frame(height: 1)
         }
     }
 
@@ -180,26 +170,26 @@ struct AIChatPanelView: View {
             // Animated icon
             ZStack {
                 Circle()
-                    .fill(GameTheme.neonPurple.opacity(0.1))
+                    .fill(AppTheme.surfaceElevated)
                     .frame(width: 80, height: 80)
                     .overlay(
                         Circle()
-                            .stroke(GameTheme.neonPurple.opacity(0.3), lineWidth: 1)
+                            .stroke(AppTheme.border, lineWidth: 1)
                     )
                 
                 Image(systemName: "sparkles")
-                    .font(.system(size: 32))
-                    .foregroundStyle(GameTheme.primaryGradient)
+                    .font(.system(size: 28))
+                    .foregroundStyle(AppTheme.textSecondary)
             }
 
             VStack(spacing: 6) {
                 Text("Pronto para criar!")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(GameTheme.textPrimary)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
 
-                Text("Peça ideias, análise seus desenhos\nou desafie a IA com qualquer pergunta.")
+                Text("Peça ideias, análise seus desenhos\nou sugerir melhorias para o projeto.")
                     .font(.system(size: 13))
-                    .foregroundStyle(GameTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
             }
             
@@ -226,20 +216,20 @@ struct AIChatPanelView: View {
             HStack(spacing: 10) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(GameTheme.neonPurple.opacity(0.2))
+                        .fill(AppTheme.background)
                         .frame(width: 26, height: 26)
                     Image(systemName: aiConfig.selectedModel.provider.icon)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(GameTheme.neonPurple)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(AppTheme.textPrimary)
                 }
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(aiConfig.selectedModel.name)
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(GameTheme.textPrimary)
+                        .foregroundStyle(AppTheme.textPrimary)
                     Text(aiConfig.selectedModel.provider.displayName)
                         .font(.system(size: 10))
-                        .foregroundStyle(GameTheme.textSecondary)
+                        .foregroundStyle(AppTheme.textSecondary)
                 }
 
                 Spacer()
@@ -247,19 +237,19 @@ struct AIChatPanelView: View {
                 HStack(spacing: 4) {
                     Text("Trocar")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(GameTheme.neonCyan)
+                        .foregroundStyle(AppTheme.textSecondary)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 9))
-                        .foregroundStyle(GameTheme.neonCyan)
+                        .foregroundStyle(AppTheme.textMuted)
                 }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(GameTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .background(AppTheme.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(GameTheme.border, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(AppTheme.borderHover, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -272,19 +262,19 @@ struct AIChatPanelView: View {
     private func errorBanner(_ message: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(GameTheme.neonOrange)
+                .foregroundStyle(AppTheme.danger)
                 .font(.system(size: 13))
             Text(message)
                 .font(.system(size: 12))
-                .foregroundStyle(GameTheme.textSecondary)
+                .foregroundStyle(AppTheme.danger)
                 .lineLimit(2)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
-        .background(GameTheme.neonOrange.opacity(0.1))
+        .background(AppTheme.danger.opacity(0.1))
         .overlay(
             Rectangle()
-                .fill(GameTheme.neonOrange)
+                .fill(AppTheme.danger)
                 .frame(width: 3),
             alignment: .leading
         )
@@ -294,12 +284,9 @@ struct AIChatPanelView: View {
 
     private var chatInput: some View {
         VStack(spacing: 0) {
-            LinearGradient(
-                colors: [GameTheme.neonPurple.opacity(0.0), GameTheme.neonPurple.opacity(0.3), GameTheme.neonCyan.opacity(0.3), GameTheme.neonCyan.opacity(0.0)],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            .frame(height: 1)
+            Rectangle()
+                .fill(AppTheme.border)
+                .frame(height: 1)
             
             HStack(alignment: .bottom, spacing: 10) {
                 TextField("Mensagem...", text: $viewModel.inputText, axis: .vertical)
@@ -307,7 +294,7 @@ struct AIChatPanelView: View {
                     .lineLimit(1...5)
                     .focused($isInputFocused)
                     .font(.system(size: 14))
-                    .foregroundStyle(GameTheme.textPrimary)
+                    .foregroundStyle(AppTheme.textPrimary)
                     .onSubmit {
                         viewModel.sendMessage()
                     }
@@ -318,19 +305,19 @@ struct AIChatPanelView: View {
                     ZStack {
                         if viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isLoading {
                             Circle()
-                                .fill(GameTheme.surfaceElevated)
-                                .frame(width: 36, height: 36)
+                                .fill(AppTheme.surfaceElevated)
+                                .frame(width: 32, height: 32)
+                                .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
                             Image(systemName: "arrow.up")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(GameTheme.textMuted)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(AppTheme.textMuted)
                         } else {
                             Circle()
-                                .fill(GameTheme.primaryGradient)
-                                .frame(width: 36, height: 36)
-                                .shadow(color: GameTheme.neonPurple.opacity(0.6), radius: 8)
+                                .fill(AppTheme.accent)
+                                .frame(width: 32, height: 32)
                             Image(systemName: "arrow.up")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(.white)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(AppTheme.surface)
                         }
                     }
                 }
@@ -338,15 +325,14 @@ struct AIChatPanelView: View {
                 .disabled(viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isLoading)
                 .animation(.spring(response: 0.3), value: viewModel.inputText.isEmpty)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(GameTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(AppTheme.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(isInputFocused ? GameTheme.neonPurple.opacity(0.6) : GameTheme.border, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isInputFocused ? AppTheme.borderActive : AppTheme.borderHover, lineWidth: 1)
             )
-            .shadow(color: isInputFocused ? GameTheme.neonPurple.opacity(0.2) : .clear, radius: 10)
             .animation(.easeInOut(duration: 0.2), value: isInputFocused)
             .padding(.horizontal, 12)
             .padding(.vertical, 12)
@@ -368,18 +354,18 @@ struct QuickPromptChip: View {
         } label: {
             Text(text)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(isHovered ? GameTheme.neonCyan : GameTheme.textSecondary)
-                .padding(.horizontal, 14)
+                .foregroundStyle(isHovered ? AppTheme.textPrimary : AppTheme.textSecondary)
+                .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
                     isHovered
-                    ? GameTheme.neonCyan.opacity(0.1)
-                    : GameTheme.surfaceElevated
+                    ? AppTheme.border
+                    : AppTheme.surfaceElevated
                 )
-                .clipShape(Capsule())
+                .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(
-                    Capsule()
-                        .stroke(isHovered ? GameTheme.neonCyan.opacity(0.5) : GameTheme.border, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(AppTheme.border, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -405,11 +391,11 @@ struct MessageBubble: View {
                 // AI Avatar
                 ZStack {
                     Circle()
-                        .fill(GameTheme.primaryGradient)
-                        .frame(width: 28, height: 28)
+                        .fill(AppTheme.accent)
+                        .frame(width: 24, height: 24)
                     Image(systemName: "sparkles")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(AppTheme.surface)
                 }
             }
 
@@ -417,35 +403,29 @@ struct MessageBubble: View {
                 Text(message.content)
                     .font(.system(size: 14))
                     .textSelection(.enabled)
-                    .foregroundStyle(isUser ? .white : GameTheme.textPrimary)
+                    .foregroundStyle(isUser ? AppTheme.surface : AppTheme.textPrimary)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .background(
                         Group {
                             if isUser {
-                                AnyView(GameTheme.primaryGradient)
+                                AnyView(AppTheme.accent)
                             } else {
-                                AnyView(GameTheme.surfaceElevated)
+                                AnyView(AppTheme.surfaceElevated)
                             }
                         }
                     )
                     .clipShape(
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: 12)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: 16)
+                        RoundedRectangle(cornerRadius: 12)
                             .stroke(
                                 isUser
                                 ? Color.clear
-                                : GameTheme.border,
+                                : AppTheme.border,
                                 lineWidth: 1
                             )
-                    )
-                    .shadow(
-                        color: isUser ? GameTheme.neonPurple.opacity(0.4) : .clear,
-                        radius: 8,
-                        x: 0,
-                        y: 4
                     )
             }
             .scaleEffect(appeared ? 1 : 0.85, anchor: isUser ? .bottomTrailing : .bottomLeading)
@@ -462,12 +442,12 @@ struct MessageBubble: View {
                 // User avatar
                 ZStack {
                     Circle()
-                        .fill(GameTheme.neonCyan.opacity(0.2))
-                        .frame(width: 28, height: 28)
-                        .overlay(Circle().stroke(GameTheme.neonCyan.opacity(0.4), lineWidth: 1))
+                        .fill(AppTheme.surfaceElevated)
+                        .frame(width: 24, height: 24)
+                        .overlay(Circle().stroke(AppTheme.borderActive, lineWidth: 1))
                     Image(systemName: "person.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(GameTheme.neonCyan)
+                        .font(.system(size: 10))
+                        .foregroundStyle(AppTheme.textPrimary)
                 }
             }
         }
@@ -483,41 +463,31 @@ struct TypingIndicator: View {
         HStack(alignment: .bottom, spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(GameTheme.primaryGradient)
-                    .frame(width: 28, height: 28)
+                    .fill(AppTheme.accent)
+                    .frame(width: 24, height: 24)
                 Image(systemName: "sparkles")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(AppTheme.surface)
             }
             
-            HStack(spacing: 5) {
+            HStack(spacing: 4) {
                 ForEach(0..<3, id: \.self) { index in
-                    RoundedRectangle(cornerRadius: 3)
-                        .fill(
-                            index == 0 ? GameTheme.neonPurple :
-                            index == 1 ? GameTheme.neonCyan :
-                            GameTheme.neonGreen
-                        )
-                        .frame(width: 6, height: animate ? 14 : 6)
+                    Circle()
+                        .fill(AppTheme.textMuted)
+                        .frame(width: 5, height: animate ? 8 : 5)
                         .animation(
                             .easeInOut(duration: 0.45)
                                 .repeatForever(autoreverses: true)
                                 .delay(Double(index) * 0.15),
                             value: animate
                         )
-                        .shadow(
-                            color: (index == 0 ? GameTheme.neonPurple :
-                                   index == 1 ? GameTheme.neonCyan :
-                                   GameTheme.neonGreen).opacity(0.8),
-                            radius: 4
-                        )
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
-            .background(GameTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(GameTheme.border, lineWidth: 1))
+            .background(AppTheme.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
             .onAppear { animate = true }
             
             Spacer(minLength: 48)
@@ -537,5 +507,5 @@ extension Notification.Name {
         aiConfig: AIConfiguration(),
         isVisible: .constant(true)
     )
-    .background(GameTheme.background)
+    .background(AppTheme.background)
 }

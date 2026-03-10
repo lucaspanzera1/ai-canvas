@@ -10,7 +10,7 @@ struct ModelSelectionView: View {
 
     var body: some View {
         ZStack {
-            GameTheme.background
+            AppTheme.background
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -55,12 +55,12 @@ struct ModelSelectionView: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Arsenal de IA")
-                        .font(.system(size: 18, weight: .heavy, design: .rounded))
-                        .foregroundStyle(GameTheme.textPrimary)
-                    Text("Escolha seu modelo de combate")
+                    Text("Modelos de IA")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text("Escolha seu provedor e modelo")
                         .font(.system(size: 12))
-                        .foregroundStyle(GameTheme.textSecondary)
+                        .foregroundStyle(AppTheme.textSecondary)
                 }
                 
                 Spacer()
@@ -69,27 +69,23 @@ struct ModelSelectionView: View {
                     isPresented = false
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(GameTheme.textSecondary)
-                        .frame(width: 34, height: 34)
-                        .background(GameTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(GameTheme.border, lineWidth: 1))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(width: 32, height: 32)
+                        .background(AppTheme.surfaceElevated)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 16)
+            .padding(.vertical, 14)
             
-            // Neon divider
-            LinearGradient(
-                colors: [GameTheme.neonPurple.opacity(0.0), GameTheme.neonPurple.opacity(0.6), GameTheme.neonCyan.opacity(0.6), GameTheme.neonCyan.opacity(0.0)],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-            .frame(height: 1)
+            Rectangle()
+                .fill(AppTheme.border)
+                .frame(height: 1)
         }
-        .background(GameTheme.surface)
+        .background(AppTheme.surface)
     }
     
     // MARK: - Current Model Banner
@@ -98,60 +94,47 @@ struct ModelSelectionView: View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(GameTheme.primaryGradient)
+                    .fill(AppTheme.accent)
                     .frame(width: 44, height: 44)
-                    .shadow(color: GameTheme.neonPurple.opacity(0.6), radius: 8)
                 
                 Image(systemName: aiConfig.selectedModel.provider.icon)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(.white)
             }
             
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text("MODELO ATIVO")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundStyle(GameTheme.neonCyan)
-                    .tracking(2)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(AppTheme.action)
                 
                 Text(aiConfig.selectedModel.name)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(GameTheme.textPrimary)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
                 
                 Text(aiConfig.selectedModel.provider.displayName)
                     .font(.system(size: 12))
-                    .foregroundStyle(GameTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textSecondary)
             }
             
             Spacer()
             
             ZStack {
                 Circle()
-                    .fill(GameTheme.neonGreen.opacity(0.2))
-                    .frame(width: 32, height: 32)
-                    .shadow(color: GameTheme.neonGreen.opacity(0.7), radius: 6)
+                    .fill(AppTheme.action.opacity(0.1))
+                    .frame(width: 28, height: 28)
                 
                 Image(systemName: "checkmark")
-                    .font(.system(size: 12, weight: .heavy))
-                    .foregroundStyle(GameTheme.neonGreen)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AppTheme.action)
             }
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(GameTheme.surface)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(
-                            LinearGradient(
-                                colors: [GameTheme.neonPurple.opacity(0.5), GameTheme.neonCyan.opacity(0.5)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1.5
-                        )
-                )
+        .background(AppTheme.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(AppTheme.action, lineWidth: 1)
         )
-        .shadow(color: GameTheme.neonPurple.opacity(0.2), radius: 12)
     }
     
     // MARK: - Provider Section
@@ -164,18 +147,17 @@ struct ModelSelectionView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Image(systemName: provider.icon)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(GameTheme.neonCyan)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(AppTheme.textPrimary)
                 Text(provider.displayName.uppercased())
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundStyle(GameTheme.neonCyan)
-                    .tracking(1.5)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
                 
                 Spacer()
                 
                 Text("\(groupedModels[provider]?.count ?? 0) modelos")
-                    .font(.system(size: 10))
-                    .foregroundStyle(GameTheme.textMuted)
+                    .font(.system(size: 11))
+                    .foregroundStyle(AppTheme.textMuted)
             }
             .padding(.horizontal, 4)
             
@@ -202,53 +184,50 @@ struct ModelSelectionView: View {
                 // Selection indicator
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? GameTheme.neonPurple : GameTheme.border, lineWidth: 1.5)
+                        .stroke(isSelected ? AppTheme.accent : AppTheme.border, lineWidth: 1.5)
                         .frame(width: 18, height: 18)
                     
                     if isSelected {
                         Circle()
-                            .fill(GameTheme.primaryGradient)
+                            .fill(AppTheme.accent)
                             .frame(width: 10, height: 10)
-                            .shadow(color: GameTheme.neonPurple.opacity(0.8), radius: 4)
                     }
                 }
                 
                 Text(model.name)
-                    .font(.system(size: 14, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(isSelected ? GameTheme.textPrimary : GameTheme.textSecondary)
+                    .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
+                    .foregroundStyle(isSelected ? AppTheme.textPrimary : AppTheme.textSecondary)
                 
                 Spacer()
                 
                 if isSelected {
                     Text("SELECIONADO")
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundStyle(GameTheme.neonGreen)
-                        .tracking(1)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(AppTheme.action)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(GameTheme.neonGreen.opacity(0.1))
+                        .background(AppTheme.action.opacity(0.1))
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(GameTheme.neonGreen.opacity(0.4), lineWidth: 1))
+                        .overlay(Capsule().stroke(AppTheme.action.opacity(0.4), lineWidth: 1))
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .background(
                 isSelected
-                ? GameTheme.neonPurple.opacity(0.1)
-                : GameTheme.surfaceElevated
+                ? AppTheme.accent.opacity(0.1)
+                : AppTheme.surfaceElevated
             )
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 10)
                     .stroke(
                         isSelected
-                        ? GameTheme.neonPurple.opacity(0.4)
-                        : GameTheme.border,
+                        ? AppTheme.borderActive
+                        : AppTheme.border,
                         lineWidth: 1
                     )
             )
-            .shadow(color: isSelected ? GameTheme.neonPurple.opacity(0.2) : .clear, radius: 8)
         }
         .buttonStyle(.plain)
         .animation(.spring(response: 0.3), value: isSelected)
@@ -260,22 +239,22 @@ struct ModelSelectionView: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(GameTheme.neonPurple.opacity(0.1))
+                    .fill(AppTheme.surfaceElevated)
                     .frame(width: 80, height: 80)
-                    .overlay(Circle().stroke(GameTheme.neonPurple.opacity(0.3), lineWidth: 1))
+                    .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
                 
                 Image(systemName: "brain.head.profile")
                     .font(.system(size: 32))
-                    .foregroundStyle(GameTheme.primaryGradient)
+                    .foregroundStyle(AppTheme.textSecondary)
             }
             
             Text("Nenhum modelo disponível")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(GameTheme.textPrimary)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(AppTheme.textPrimary)
             
             Text("Configure uma API Key para\ndesbloquear seus modelos.")
                 .font(.system(size: 13))
-                .foregroundStyle(GameTheme.textSecondary)
+                .foregroundStyle(AppTheme.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .padding(.top, 40)
@@ -292,11 +271,10 @@ struct ModelSelectionView: View {
                     HStack(spacing: 6) {
                         Image(systemName: "plus.circle.fill")
                             .font(.system(size: 11))
-                            .foregroundStyle(GameTheme.neonOrange)
+                            .foregroundStyle(AppTheme.textPrimary)
                         Text("DESBLOQUEAR PROVEDORES")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundStyle(GameTheme.neonOrange)
-                            .tracking(1.5)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(AppTheme.textPrimary)
                     }
                     .padding(.horizontal, 4)
                     
@@ -319,21 +297,21 @@ struct ModelSelectionView: View {
             VStack(spacing: 10) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(GameTheme.neonOrange.opacity(0.1))
+                        .fill(AppTheme.surfaceElevated)
                         .frame(width: 44, height: 44)
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
-                                .stroke(GameTheme.neonOrange.opacity(0.4), lineWidth: 1)
+                                .stroke(AppTheme.border, lineWidth: 1)
                         )
                     
                     Image(systemName: provider.icon)
                         .font(.system(size: 18))
-                        .foregroundStyle(GameTheme.neonOrange)
+                        .foregroundStyle(AppTheme.textPrimary)
                 }
                 
                 Text(provider.displayName)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(GameTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textPrimary)
                 
                 HStack(spacing: 4) {
                     Image(systemName: "lock.fill")
@@ -341,15 +319,15 @@ struct ModelSelectionView: View {
                     Text("Desbloquear")
                         .font(.system(size: 10, weight: .medium))
                 }
-                .foregroundStyle(GameTheme.neonOrange.opacity(0.8))
+                .foregroundStyle(AppTheme.textSecondary)
             }
             .frame(maxWidth: .infinity)
             .padding(16)
-            .background(GameTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .background(AppTheme.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(GameTheme.border, lineWidth: 1)
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(AppTheme.border, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
@@ -370,15 +348,8 @@ struct ProviderSetupView: View {
     
     var body: some View {
         ZStack {
-            GameTheme.background
+            AppTheme.background
                 .ignoresSafeArea()
-            
-            // Background glow
-            Circle()
-                .fill(GameTheme.neonPurple.opacity(0.12))
-                .frame(width: 300, height: 300)
-                .blur(radius: 60)
-                .offset(x: 100, y: -150)
             
             VStack(spacing: 0) {
                 // Header
@@ -387,14 +358,14 @@ struct ProviderSetupView: View {
                         isPresented = false
                     }
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(GameTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .buttonStyle(.plain)
                     
                     Spacer()
                     
                     Text("Configurar \(provider.displayName)")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(GameTheme.textPrimary)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
                     
                     Spacer()
                     
@@ -404,12 +375,9 @@ struct ProviderSetupView: View {
                 .padding(.horizontal, 20)
                 .padding(.vertical, 16)
                 
-                LinearGradient(
-                    colors: [GameTheme.neonPurple.opacity(0.0), GameTheme.neonPurple.opacity(0.4), GameTheme.neonCyan.opacity(0.4), GameTheme.neonCyan.opacity(0.0)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                .frame(height: 1)
+                Rectangle()
+                    .fill(AppTheme.border)
+                    .frame(height: 1)
                 
                 ScrollView {
                     VStack(spacing: 32) {
@@ -418,36 +386,30 @@ struct ProviderSetupView: View {
                         // Icon
                         ZStack {
                             Circle()
-                                .stroke(GameTheme.primaryGradient, lineWidth: 2)
-                                .frame(width: 90, height: 90)
-                                .shadow(color: GameTheme.neonPurple.opacity(0.5), radius: 10)
-                            
-                            Circle()
-                                .fill(GameTheme.surfaceElevated)
-                                .frame(width: 84, height: 84)
+                                .fill(AppTheme.accent)
+                                .frame(width: 80, height: 80)
                             
                             Image(systemName: provider.icon)
-                                .font(.system(size: 36, weight: .medium))
-                                .foregroundStyle(GameTheme.primaryGradient)
+                                .font(.system(size: 32, weight: .medium))
+                                .foregroundStyle(AppTheme.surface)
                         }
                         
                         VStack(spacing: 8) {
                             Text("Desbloquear \(provider.displayName)")
-                                .font(.system(size: 24, weight: .heavy, design: .rounded))
-                                .foregroundStyle(GameTheme.textPrimary)
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundStyle(AppTheme.textPrimary)
                             
                             Text("Digite sua API Key para acessar\nos modelos do \(provider.displayName).")
                                 .font(.system(size: 14))
-                                .foregroundStyle(GameTheme.textSecondary)
+                                .foregroundStyle(AppTheme.textSecondary)
                                 .multilineTextAlignment(.center)
                         }
                         
                         // Input
                         VStack(alignment: .leading, spacing: 10) {
                             Text("API KEY")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundStyle(GameTheme.textMuted)
-                                .tracking(2)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(AppTheme.textMuted)
                             
                             HStack {
                                 Group {
@@ -462,25 +424,25 @@ struct ProviderSetupView: View {
                                     }
                                 }
                                 .textFieldStyle(.plain)
-                                .font(.system(size: 13, design: .monospaced))
-                                .foregroundStyle(GameTheme.textPrimary)
+                                .font(.system(size: 14))
+                                .foregroundStyle(AppTheme.textPrimary)
                                 
                                 Button {
                                     showKey.toggle()
                                 } label: {
                                     Image(systemName: showKey ? "eye.slash" : "eye")
                                         .font(.system(size: 14))
-                                        .foregroundStyle(GameTheme.textSecondary)
+                                        .foregroundStyle(AppTheme.textSecondary)
                                 }
                                 .buttonStyle(.plain)
                             }
                             .padding(14)
-                            .background(GameTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .background(AppTheme.surfaceElevated)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 12)
+                                RoundedRectangle(cornerRadius: 10)
                                     .stroke(
-                                        apiKey.isEmpty ? GameTheme.border : GameTheme.neonPurple.opacity(0.5),
+                                        apiKey.isEmpty ? AppTheme.border : AppTheme.borderActive,
                                         lineWidth: 1
                                     )
                             )
@@ -492,7 +454,7 @@ struct ProviderSetupView: View {
                                     Text(errorMessage)
                                         .font(.system(size: 12))
                                 }
-                                .foregroundStyle(GameTheme.neonPink)
+                                .foregroundStyle(AppTheme.danger)
                             }
                         }
                         
@@ -507,28 +469,20 @@ struct ProviderSetupView: View {
                                         .scaleEffect(0.8)
                                 } else {
                                     Image(systemName: "key.fill")
-                                        .font(.system(size: 13, weight: .bold))
+                                        .font(.system(size: 13, weight: .medium))
                                 }
                                 Text(isValidating ? "Validando..." : "Salvar")
-                                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                                    .font(.system(size: 15, weight: .semibold))
                             }
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
-                            .padding(.vertical, 15)
+                            .padding(.vertical, 14)
                             .background(
                                 apiKey.isEmpty
-                                ? AnyView(GameTheme.surfaceElevated)
-                                : AnyView(GameTheme.primaryGradient)
+                                ? AppTheme.borderHover
+                                : AppTheme.accent
                             )
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(apiKey.isEmpty ? GameTheme.border : Color.clear, lineWidth: 1)
-                            )
-                            .shadow(
-                                color: apiKey.isEmpty ? .clear : GameTheme.neonPurple.opacity(0.5),
-                                radius: 12
-                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                         .buttonStyle(.plain)
                         .disabled(apiKey.isEmpty || isValidating)
@@ -541,7 +495,7 @@ struct ProviderSetupView: View {
                                 Text("Obter API Key")
                                     .font(.system(size: 12, weight: .medium))
                             }
-                            .foregroundStyle(GameTheme.neonCyan)
+                            .foregroundStyle(AppTheme.link)
                         }
                         
                         Spacer(minLength: 40)

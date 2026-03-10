@@ -15,13 +15,13 @@
 		AA000006 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000016 /* Preview Assets.xcassets */; };
 		AA000007 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000017 /* KeychainManager.swift */; };
 		AA000008 /* APIKeyOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000018 /* APIKeyOnboardingView.swift */; };
+		AA000009 /* GameDrawingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000019 /* GameDrawingToolbar.swift */; };
 		AA00000A /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001A /* ChatViewModel.swift */; };
 		AA00000B /* AIChatPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001B /* AIChatPanelView.swift */; };
 		AA00000C /* AIProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001C /* AIProvider.swift */; };
 		AA00000D /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001D /* AIService.swift */; };
 		AA00000E /* ModelSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001E /* ModelSelectionView.swift */; };
 		AA00000F /* MultiProviderOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001F /* MultiProviderOnboardingView.swift */; };
-		AA000009 /* GameDrawingToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000019 /* GameDrawingToolbar.swift */; };
 		AB000001 /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011 /* Notebook.swift */; };
 		AB000002 /* NotebookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* NotebookListView.swift */; };
 /* End PBXBuildFile section */
@@ -36,13 +36,13 @@
 		AA000016 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		AA000017 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		AA000018 /* APIKeyOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIKeyOnboardingView.swift; sourceTree = "<group>"; };
+		AA000019 /* GameDrawingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDrawingToolbar.swift; sourceTree = "<group>"; };
 		AA00001A /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		AA00001B /* AIChatPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIChatPanelView.swift; sourceTree = "<group>"; };
 		AA00001C /* AIProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProvider.swift; sourceTree = "<group>"; };
 		AA00001D /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
 		AA00001E /* ModelSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelSelectionView.swift; sourceTree = "<group>"; };
 		AA00001F /* MultiProviderOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderOnboardingView.swift; sourceTree = "<group>"; };
-		AA000019 /* GameDrawingToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDrawingToolbar.swift; sourceTree = "<group>"; };
 		AB000011 /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
 		AB000012 /* NotebookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookListView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -324,6 +324,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"AICanvas/Preview Content\"";
+				DEVELOPMENT_TEAM = L8422P85XN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "AI Canvas";
@@ -356,6 +357,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"AICanvas/Preview Content\"";
+				DEVELOPMENT_TEAM = L8422P85XN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "AI Canvas";

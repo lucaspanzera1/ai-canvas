@@ -6,44 +6,11 @@ struct MultiProviderOnboardingView: View {
     @ObservedObject var aiConfig: AIConfiguration
     @State private var selectedTab = 0
     @State private var hasConfiguredAny = false
-    @State private var starParticles: [StarParticle] = (0..<30).map { _ in StarParticle() }
-    @State private var animateStars = false
     
     var body: some View {
         ZStack {
-            // Dark background
-            GameTheme.background
+            AppTheme.background
                 .ignoresSafeArea()
-            
-            // Star particles
-            ForEach(starParticles) { star in
-                Circle()
-                    .fill(.white.opacity(star.opacity))
-                    .frame(width: star.size, height: star.size)
-                    .position(x: star.x, y: star.y)
-                    .animation(
-                        .easeInOut(duration: star.duration)
-                            .repeatForever(autoreverses: true)
-                            .delay(star.delay),
-                        value: animateStars
-                    )
-                    .opacity(animateStars ? star.opacity : star.opacity * 0.3)
-            }
-            
-            // Glow orbs
-            ZStack {
-                Circle()
-                    .fill(GameTheme.neonPurple.opacity(0.15))
-                    .frame(width: 400, height: 400)
-                    .blur(radius: 80)
-                    .offset(x: -100, y: -200)
-                
-                Circle()
-                    .fill(GameTheme.neonCyan.opacity(0.1))
-                    .frame(width: 300, height: 300)
-                    .blur(radius: 60)
-                    .offset(x: 150, y: 200)
-            }
             
             VStack(spacing: 0) {
                 // Header
@@ -68,38 +35,32 @@ struct MultiProviderOnboardingView: View {
                 navigationView
             }
         }
-        .onAppear {
-            withAnimation { animateStars = true }
-        }
     }
     
     // MARK: - Header
     
     private var headerView: some View {
         VStack(spacing: 20) {
-            // Logo icon with glow
+            // Logo icon
             ZStack {
                 Circle()
-                    .fill(GameTheme.primaryGradient)
+                    .fill(AppTheme.accent)
                     .frame(width: 80, height: 80)
-                    .shadow(color: GameTheme.neonPurple.opacity(0.8), radius: 20)
-                    .shadow(color: GameTheme.neonCyan.opacity(0.4), radius: 40)
                 
                 Image(systemName: "paintbrush.pointed.fill")
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 36, weight: .semibold))
+                    .foregroundStyle(AppTheme.surface)
             }
             
             VStack(spacing: 8) {
-                // Title with gradient
+                // Title
                 Text("AI Canvas")
-                    .font(.system(size: 36, weight: .heavy, design: .rounded))
-                    .foregroundStyle(GameTheme.primaryGradient)
-                    .shadow(color: GameTheme.neonPurple.opacity(0.5), radius: 10)
+                    .font(.system(size: 32, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
                 
                 Text("Configure seu arsenal de IA")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(GameTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textSecondary)
             }
             
             // Step indicators
@@ -108,15 +69,14 @@ struct MultiProviderOnboardingView: View {
                     Capsule()
                         .fill(
                             selectedTab == index
-                            ? AnyShapeStyle(GameTheme.primaryGradient)
+                            ? AnyShapeStyle(AppTheme.textPrimary)
                             : AnyShapeStyle(
                                 KeychainManager.shared.hasAPIKey(for: provider)
-                                ? GameTheme.neonGreen.opacity(0.6)
-                                : Color.white.opacity(0.1)
+                                ? AppTheme.action
+                                : AppTheme.border
                               )
                         )
                         .frame(width: selectedTab == index ? 24 : 8, height: 8)
-                        .shadow(color: selectedTab == index ? GameTheme.neonPurple.opacity(0.8) : .clear, radius: 6)
                         .animation(.spring(response: 0.3), value: selectedTab)
                 }
             }
@@ -136,16 +96,16 @@ struct MultiProviderOnboardingView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "chevron.left")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 12, weight: .medium))
                         Text("Anterior")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.system(size: 14, weight: .medium))
                     }
-                    .foregroundStyle(GameTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textSecondary)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
-                    .background(GameTheme.surfaceElevated)
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(GameTheme.border, lineWidth: 1))
+                    .background(AppTheme.surfaceElevated)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -162,14 +122,13 @@ struct MultiProviderOnboardingView: View {
                         Text("Próximo")
                             .font(.system(size: 14, weight: .semibold))
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.system(size: 12, weight: .semibold))
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
-                    .background(GameTheme.primaryGradient)
-                    .clipShape(Capsule())
-                    .shadow(color: GameTheme.neonPurple.opacity(0.5), radius: 10)
+                    .background(AppTheme.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 .buttonStyle(.plain)
             } else if hasConfiguredAny || KeychainManager.shared.hasAnyAPIKey {
@@ -180,18 +139,16 @@ struct MultiProviderOnboardingView: View {
                     }
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "gamecontroller.fill")
-                            .font(.system(size: 14, weight: .bold))
-                        Text("Entrar no jogo!")
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 14, weight: .semibold))
+                        Text("Concluir")
+                            .font(.system(size: 15, weight: .semibold))
                     }
                     .foregroundStyle(.white)
                     .padding(.horizontal, 28)
                     .padding(.vertical, 14)
-                    .background(GameTheme.primaryGradient)
-                    .clipShape(Capsule())
-                    .shadow(color: GameTheme.neonPurple.opacity(0.7), radius: 16)
-                    .shadow(color: GameTheme.neonCyan.opacity(0.3), radius: 30)
+                    .background(AppTheme.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
                 }
                 .buttonStyle(.plain)
             }
@@ -201,17 +158,7 @@ struct MultiProviderOnboardingView: View {
     }
 }
 
-// MARK: - Star Particle
-
-struct StarParticle: Identifiable {
-    let id = UUID()
-    let x: CGFloat = CGFloat.random(in: 0...800)
-    let y: CGFloat = CGFloat.random(in: 0...1100)
-    let size: CGFloat = CGFloat.random(in: 1...3)
-    let opacity: Double = Double.random(in: 0.1...0.5)
-    let duration: Double = Double.random(in: 1.5...4.0)
-    let delay: Double = Double.random(in: 0...3.0)
-}
+// MARK: - Star Particle Removed
 
 // MARK: - Provider Card
 
@@ -234,19 +181,13 @@ struct ProviderOnboardingCard: View {
                 
                 // Provider badge
                 ZStack {
-                    // Outer glow ring
                     Circle()
-                        .stroke(GameTheme.primaryGradient, lineWidth: 2)
-                        .frame(width: 90, height: 90)
-                        .shadow(color: GameTheme.neonPurple.opacity(0.5), radius: 10)
-                    
-                    Circle()
-                        .fill(GameTheme.surfaceElevated)
-                        .frame(width: 84, height: 84)
+                        .fill(AppTheme.accent)
+                        .frame(width: 80, height: 80)
                     
                     Image(systemName: provider.icon)
-                        .font(.system(size: 36, weight: .medium))
-                        .foregroundStyle(GameTheme.primaryGradient)
+                        .font(.system(size: 32, weight: .medium))
+                        .foregroundStyle(AppTheme.surface)
                 }
                 .scaleEffect(cardAppear ? 1 : 0.6)
                 .opacity(cardAppear ? 1 : 0)
@@ -254,12 +195,12 @@ struct ProviderOnboardingCard: View {
                 // Title
                 VStack(spacing: 8) {
                     Text(provider.displayName)
-                        .font(.system(size: 26, weight: .heavy, design: .rounded))
-                        .foregroundStyle(GameTheme.textPrimary)
+                        .font(.system(size: 26, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
                     
                     Text("Configure sua API Key para\ndesbloquear os modelos do \(provider.displayName).")
                         .font(.system(size: 14))
-                        .foregroundStyle(GameTheme.textSecondary)
+                        .foregroundStyle(AppTheme.textSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .opacity(cardAppear ? 1 : 0)
@@ -282,7 +223,7 @@ struct ProviderOnboardingCard: View {
                         Text("Como obter API Key")
                             .font(.system(size: 12, weight: .medium))
                     }
-                    .foregroundStyle(GameTheme.neonCyan)
+                    .foregroundStyle(AppTheme.link)
                 }
                 .opacity(cardAppear ? 1 : 0)
                 
@@ -307,31 +248,30 @@ struct ProviderOnboardingCard: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(GameTheme.neonGreen.opacity(0.2))
+                        .fill(AppTheme.action.opacity(0.1))
                         .frame(width: 40, height: 40)
-                        .overlay(Circle().stroke(GameTheme.neonGreen.opacity(0.5), lineWidth: 1))
-                        .shadow(color: GameTheme.neonGreen.opacity(0.6), radius: 8)
+                        .overlay(Circle().stroke(AppTheme.action.opacity(0.3), lineWidth: 1))
                     
                     Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(GameTheme.neonGreen)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppTheme.action)
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Configurado!")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundStyle(GameTheme.neonGreen)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppTheme.action)
                     Text("API Key salva com sucesso")
                         .font(.system(size: 12))
-                        .foregroundStyle(GameTheme.textSecondary)
+                        .foregroundStyle(AppTheme.textSecondary)
                 }
                 
                 Spacer()
             }
             .padding(16)
-            .background(GameTheme.neonGreen.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(GameTheme.neonGreen.opacity(0.3), lineWidth: 1))
+            .background(AppTheme.action.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.action.opacity(0.2), lineWidth: 1))
             
             Button(role: .destructive) {
                 KeychainManager.shared.deleteKey(for: provider)
@@ -341,7 +281,7 @@ struct ProviderOnboardingCard: View {
             } label: {
                 Text("Reconfigurar")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(GameTheme.neonPink.opacity(0.8))
+                    .foregroundStyle(AppTheme.danger)
             }
             .buttonStyle(.plain)
         }
@@ -354,9 +294,8 @@ struct ProviderOnboardingCard: View {
             // Key input
             VStack(alignment: .leading, spacing: 8) {
                 Text("API KEY")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundStyle(GameTheme.textMuted)
-                    .tracking(2)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(AppTheme.textMuted)
                 
                 HStack {
                     Group {
@@ -371,26 +310,26 @@ struct ProviderOnboardingCard: View {
                         }
                     }
                     .textFieldStyle(.plain)
-                    .font(.system(size: 13, design: .monospaced))
-                    .foregroundStyle(GameTheme.textPrimary)
+                    .font(.system(size: 14))
+                    .foregroundStyle(AppTheme.textPrimary)
                     
                     Button {
                         showKey.toggle()
                     } label: {
                         Image(systemName: showKey ? "eye.slash" : "eye")
                             .font(.system(size: 14))
-                            .foregroundStyle(GameTheme.textSecondary)
+                            .foregroundStyle(AppTheme.textSecondary)
                     }
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 14)
-                .background(GameTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .background(AppTheme.surfaceElevated)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 10)
                         .stroke(
-                            apiKey.isEmpty ? GameTheme.border : GameTheme.neonPurple.opacity(0.5),
+                            apiKey.isEmpty ? AppTheme.border : AppTheme.borderActive,
                             lineWidth: 1
                         )
                 )
@@ -402,7 +341,7 @@ struct ProviderOnboardingCard: View {
                         Text(errorMessage)
                             .font(.system(size: 12))
                     }
-                    .foregroundStyle(GameTheme.neonPink)
+                    .foregroundStyle(AppTheme.danger)
                 }
             }
             
@@ -417,28 +356,20 @@ struct ProviderOnboardingCard: View {
                             .scaleEffect(0.8)
                     } else {
                         Image(systemName: "key.fill")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.system(size: 13, weight: .medium))
                     }
                     Text(isValidating ? "Validando..." : "Salvar \(provider.displayName)")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.system(size: 15, weight: .semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 15)
+                .padding(.vertical, 14)
                 .background(
                     apiKey.isEmpty
-                    ? AnyView(GameTheme.surfaceElevated)
-                    : AnyView(GameTheme.primaryGradient)
+                    ? AppTheme.borderHover
+                    : AppTheme.accent
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(apiKey.isEmpty ? GameTheme.border : Color.clear, lineWidth: 1)
-                )
-                .shadow(
-                    color: apiKey.isEmpty ? .clear : GameTheme.neonPurple.opacity(0.5),
-                    radius: 12
-                )
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)
             .disabled(apiKey.isEmpty || isValidating)
@@ -449,7 +380,7 @@ struct ProviderOnboardingCard: View {
                 // Just move on
             }
             .font(.system(size: 12))
-            .foregroundStyle(GameTheme.textMuted)
+            .foregroundStyle(AppTheme.textSecondary)
             .buttonStyle(.plain)
         }
     }

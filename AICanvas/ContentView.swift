@@ -1,38 +1,26 @@
 import SwiftUI
 import PencilKit
 
-// MARK: - Game Theme
+// MARK: - App Theme
 
-struct GameTheme {
-    static let background = Color(red: 0.05, green: 0.05, blue: 0.12)
-    static let surface = Color(red: 0.08, green: 0.08, blue: 0.18)
-    static let surfaceElevated = Color(red: 0.11, green: 0.11, blue: 0.22)
-    static let neonPurple = Color(red: 0.58, green: 0.22, blue: 1.0)
-    static let neonCyan = Color(red: 0.0, green: 0.85, blue: 1.0)
-    static let neonGreen = Color(red: 0.18, green: 1.0, blue: 0.58)
-    static let neonPink = Color(red: 1.0, green: 0.2, blue: 0.6)
-    static let neonOrange = Color(red: 1.0, green: 0.6, blue: 0.0)
-    static let textPrimary = Color.white
-    static let textSecondary = Color(white: 0.65)
-    static let textMuted = Color(white: 0.4)
-    static let border = Color(white: 1.0, opacity: 0.08)
-    static let borderGlow = Color(red: 0.58, green: 0.22, blue: 1.0).opacity(0.5)
-
-    static var primaryGradient: LinearGradient {
-        LinearGradient(
-            colors: [neonPurple, neonCyan],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    static var heroGradient: LinearGradient {
-        LinearGradient(
-            colors: [neonPurple.opacity(0.8), neonPink.opacity(0.6), neonCyan.opacity(0.4)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+struct AppTheme {
+    static let background = Color(red: 0.97, green: 0.97, blue: 0.96)
+    static let surface = Color.white
+    static let surfaceElevated = Color.white
+    static let accent = Color(red: 0.1, green: 0.1, blue: 0.1)
+    static let action = Color(red: 0.2, green: 0.4, blue: 0.9)
+    static let danger = Color(red: 0.9, green: 0.3, blue: 0.3)
+    
+    static let textPrimary = Color(red: 0.1, green: 0.1, blue: 0.1)
+    static let textSecondary = Color(red: 0.4, green: 0.4, blue: 0.4)
+    static let textMuted = Color(red: 0.6, green: 0.6, blue: 0.6)
+    
+    static let border = Color(red: 0.88, green: 0.88, blue: 0.88)
+    static let borderHover = Color(red: 0.75, green: 0.75, blue: 0.75)
+    static let borderActive = Color(red: 0.1, green: 0.1, blue: 0.1)
+    
+    static let shadowColor = Color.black.opacity(0.04)
+    static let link = Color(red: 0.2, green: 0.4, blue: 0.9)
 }
 
 // MARK: - Content View (Canvas for a specific notebook)
@@ -66,7 +54,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            GameTheme.background.ignoresSafeArea()
+            AppTheme.background.ignoresSafeArea()
 
             HStack(spacing: 0) {
                 // Canvas area
@@ -91,10 +79,10 @@ struct ContentView: View {
                         )
                         .ignoresSafeArea(edges: .bottom)
 
-                        // Gamified drawing toolbar
-                        GameDrawingToolbar(canvasManager: canvasManager)
-                            .padding(.bottom, 28)
-                            .padding(.leading, 20)
+                        // Minimalist drawing toolbar
+                        DrawingToolbar(canvasManager: canvasManager)
+                            .padding(.bottom, 24)
+                            .padding(.leading, 24)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
@@ -156,67 +144,66 @@ struct CanvasToolbar: View {
                     Text("Cadernos")
                         .font(.system(size: 13, weight: .semibold))
                 }
-                .foregroundStyle(GameTheme.textSecondary)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
-                .background(GameTheme.surfaceElevated)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(GameTheme.border, lineWidth: 1))
+                .foregroundStyle(AppTheme.textSecondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(AppTheme.surfaceElevated)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
 
             // Notebook title
             HStack(spacing: 8) {
                 Text(notebook.emoji)
-                    .font(.system(size: 18))
-                    .shadow(color: accentColor.opacity(0.6), radius: 6)
+                    .font(.system(size: 16))
 
                 Text(notebook.name)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(GameTheme.textPrimary)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
             }
 
             Spacer()
 
             // Action buttons
-            HStack(spacing: 4) {
-                GameToolButton(
+            HStack(spacing: 6) {
+                ToolButtonSimple(
                     icon: "arrow.uturn.backward",
                     isDisabled: !canvasManager.canUndo,
-                    color: GameTheme.neonCyan
+                    color: AppTheme.textPrimary
                 ) {
                     canvasManager.undo()
                 }
 
-                GameToolButton(
+                ToolButtonSimple(
                     icon: "arrow.uturn.forward",
                     isDisabled: !canvasManager.canRedo,
-                    color: GameTheme.neonCyan
+                    color: AppTheme.textPrimary
                 ) {
                     canvasManager.redo()
                 }
 
-                GameToolButton(
+                ToolButtonSimple(
                     icon: "trash",
                     isDisabled: false,
-                    color: GameTheme.neonPink
+                    color: AppTheme.danger
                 ) {
                     canvasManager.clearCanvas()
                 }
 
-                GameToolButton(
+                ToolButtonSimple(
                     icon: "square.and.arrow.up",
                     isDisabled: false,
-                    color: GameTheme.neonGreen
+                    color: AppTheme.action
                 ) {
                     canvasManager.exportDrawing()
                 }
             }
 
             Rectangle()
-                .fill(GameTheme.border)
-                .frame(width: 1, height: 24)
+                .fill(AppTheme.border)
+                .frame(width: 1, height: 20)
                 .padding(.horizontal, 8)
 
             // AI Panel Toggle
@@ -227,72 +214,57 @@ struct CanvasToolbar: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: showAIPanel ? "sparkles.rectangle.stack.fill" : "sparkles.rectangle.stack")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 14, weight: .medium))
                     Text(showAIPanel ? "Fechar IA" : "Abrir IA")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(size: 13, weight: .medium))
                 }
-                .foregroundStyle(showAIPanel ? GameTheme.background : .white)
+                .foregroundStyle(showAIPanel ? .white : AppTheme.textPrimary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
-                .background(
-                    Group {
-                        if showAIPanel {
-                            AnyView(GameTheme.primaryGradient)
-                        } else {
-                            AnyView(GameTheme.surfaceElevated)
-                        }
-                    }
-                )
-                .clipShape(Capsule())
+                .background(showAIPanel ? AppTheme.accent : AppTheme.surfaceElevated)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(
-                    Capsule()
-                        .stroke(
-                            showAIPanel ? Color.clear : GameTheme.neonPurple.opacity(0.5),
-                            lineWidth: 1
-                        )
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(showAIPanel ? Color.clear : AppTheme.border, lineWidth: 1)
                 )
-                .shadow(color: showAIPanel ? GameTheme.neonPurple.opacity(0.5) : .clear, radius: 8, x: 0, y: 4)
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(GameTheme.surface.ignoresSafeArea(edges: .top))
-        .overlay(Rectangle().fill(GameTheme.border).frame(height: 1), alignment: .bottom)
+        .background(AppTheme.surface.ignoresSafeArea(edges: .top))
+        .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
+        .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
     }
 }
 
-// MARK: - Game Tool Button
+// MARK: - Tool Button Simple
 
-struct GameToolButton: View {
+struct ToolButtonSimple: View {
     let icon: String
     let isDisabled: Bool
     let color: Color
     let action: () -> Void
-    @State private var isPressed = false
+    @State private var isHovered = false
 
     var body: some View {
-        Button(action: {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) { isPressed = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) { isPressed = false }
-            }
-            action()
-        }) {
+        Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(isDisabled ? GameTheme.textMuted : color)
-                .frame(width: 36, height: 36)
-                .background(isPressed ? color.opacity(0.2) : GameTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .foregroundStyle(isDisabled ? AppTheme.textMuted : (isHovered ? color : AppTheme.textSecondary))
+                .frame(width: 32, height: 32)
+                .background(isHovered && !isDisabled ? AppTheme.background : AppTheme.surfaceElevated)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(isPressed ? color.opacity(0.5) : GameTheme.border, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(isHovered && !isDisabled ? AppTheme.borderHover : AppTheme.border, lineWidth: 1)
                 )
-                .scaleEffect(isPressed ? 0.92 : 1.0)
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
+        .onHover { hover in
+            withAnimation(.easeInOut(duration: 0.15)) { isHovered = hover }
+        }
     }
 }
 
