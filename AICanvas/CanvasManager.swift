@@ -8,6 +8,10 @@ enum DrawingToolType: CaseIterable, Equatable {
     case pen
     case pencil
     case marker
+    case monoline
+    case fountainPen
+    case watercolor
+    case crayon
     case eraser
 }
 
@@ -69,6 +73,30 @@ final class CanvasManager: ObservableObject {
             canvasView.tool = PKInkingTool(.pencil, color: uiColor, width: width)
         case .marker:
             canvasView.tool = PKInkingTool(.marker, color: uiColor, width: width * 3)
+        case .monoline:
+            if #available(iOS 17.0, *) {
+                canvasView.tool = PKInkingTool(.monoline, color: uiColor, width: width)
+            } else {
+                canvasView.tool = PKInkingTool(.pen, color: uiColor, width: width)
+            }
+        case .fountainPen:
+            if #available(iOS 17.0, *) {
+                canvasView.tool = PKInkingTool(.fountainPen, color: uiColor, width: width)
+            } else {
+                canvasView.tool = PKInkingTool(.pen, color: uiColor, width: width)
+            }
+        case .watercolor:
+            if #available(iOS 17.0, *) {
+                canvasView.tool = PKInkingTool(.watercolor, color: uiColor, width: width * 2)
+            } else {
+                canvasView.tool = PKInkingTool(.marker, color: uiColor, width: width * 2)
+            }
+        case .crayon:
+            if #available(iOS 17.0, *) {
+                canvasView.tool = PKInkingTool(.crayon, color: uiColor, width: width * 1.5)
+            } else {
+                canvasView.tool = PKInkingTool(.pencil, color: uiColor, width: width * 1.5)
+            }
         case .eraser:
             canvasView.tool = PKEraserTool(.vector)
         }

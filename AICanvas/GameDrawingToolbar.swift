@@ -4,16 +4,23 @@ import PencilKit
 // MARK: - Palette de cores
 
 private let drawingColors: [(Color, String)] = [
-    (Color(red: 0.06, green: 0.06, blue: 0.14), "Preto"),
+    (Color.black, "Preto"),
+    (Color(uiColor: .darkGray), "Cinza Escuro"),
+    (Color.gray, "Cinza"),
+    (Color(uiColor: .lightGray), "Cinza Claro"),
     (.white, "Branco"),
-    (Color(red: 0.58, green: 0.22, blue: 1.0), "Roxo"),
-    (Color(red: 0.0, green: 0.85, blue: 1.0), "Cyan"),
-    (Color(red: 0.18, green: 1.0, blue: 0.58), "Verde"),
-    (Color(red: 1.0, green: 0.2, blue: 0.6), "Rosa"),
-    (Color(red: 1.0, green: 0.6, blue: 0.0), "Laranja"),
-    (Color(red: 1.0, green: 0.9, blue: 0.0), "Amarelo"),
-    (Color(red: 0.3, green: 0.6, blue: 1.0), "Azul"),
-    (Color(red: 1.0, green: 0.35, blue: 0.25), "Vermelho"),
+    
+    (Color.red, "Vermelho"),
+    (Color.orange, "Laranja"),
+    (Color.yellow, "Amarelo"),
+    (Color.green, "Verde"),
+    (Color.mint, "Menta"),
+    
+    (Color.cyan, "Ciano"),
+    (Color.blue, "Azul"),
+    (Color.indigo, "Índigo"),
+    (Color.purple, "Roxo"),
+    (Color.pink, "Rosa")
 ]
 
 // MARK: - Drawing Toolbar
@@ -95,23 +102,29 @@ struct DrawingToolbar: View {
             toolbarDivider
 
             // Drawing tools
-            ForEach(DrawingToolType.allCases, id: \.self) { tool in
-                ToolButton(
-                    tool: tool,
-                    isSelected: !canvasManager.isSelectionMode && canvasManager.toolConfig.type == tool,
-                    selectedColor: canvasManager.toolConfig.color
-                ) {
-                    if canvasManager.toolConfig.type == tool && tool != .eraser {
-                        // Mesma tool: toggle width picker
-                        showColorPicker = false
-                        withAnimation { showWidthPicker.toggle() }
-                    } else {
-                        showColorPicker = false
-                        showWidthPicker = false
-                        canvasManager.selectTool(tool)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(DrawingToolType.allCases, id: \.self) { tool in
+                        ToolButton(
+                            tool: tool,
+                            isSelected: !canvasManager.isSelectionMode && canvasManager.toolConfig.type == tool,
+                            selectedColor: canvasManager.toolConfig.color
+                        ) {
+                            if canvasManager.toolConfig.type == tool && tool != .eraser {
+                                // Mesma tool: toggle width picker
+                                showColorPicker = false
+                                withAnimation { showWidthPicker.toggle() }
+                            } else {
+                                showColorPicker = false
+                                showWidthPicker = false
+                                canvasManager.selectTool(tool)
+                            }
+                        }
                     }
                 }
+                .padding(.horizontal, 4)
             }
+            .frame(maxWidth: 240)
 
             toolbarDivider
 
@@ -332,6 +345,10 @@ struct DrawingToolbar: View {
         case .pen: return "pencil.tip"
         case .pencil: return "pencil"
         case .marker: return "highlighter"
+        case .monoline: return "pencil.line"
+        case .fountainPen: return "nib"
+        case .watercolor: return "drop.fill"
+        case .crayon: return "pencil.and.outline"
         case .eraser: return "eraser"
         }
     }
@@ -392,6 +409,10 @@ struct ToolButton: View {
         case .pen: return "pencil.tip"
         case .pencil: return "pencil"
         case .marker: return "highlighter"
+        case .monoline: return "pencil.line"
+        case .fountainPen: return "nib"
+        case .watercolor: return "drop.fill"
+        case .crayon: return "pencil.and.outline"
         case .eraser: return "eraser"
         }
     }
