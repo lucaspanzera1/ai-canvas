@@ -8,7 +8,7 @@ struct CanvasRepresentable: UIViewRepresentable {
     @Binding var pattern: BackgroundPattern
 
     func makeUIView(context: Context) -> PKCanvasView {
-        let canvasView = PKCanvasView()
+        let canvasView = CenteredCanvasView()
 
         canvasView.drawingPolicy = .anyInput
         canvasView.backgroundColor = .clear
@@ -143,5 +143,16 @@ struct CanvasRepresentable: UIViewRepresentable {
                 bgView.transform = CGAffineTransform(scaleX: scrollView.zoomScale, y: scrollView.zoomScale)
             }
         }
+    }
+}
+
+class CenteredCanvasView: PKCanvasView {
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        let horizontalInset = max(0, (bounds.width - contentSize.width * zoomScale) / 2)
+        let verticalInset = max(0, (bounds.height - contentSize.height * zoomScale) / 2)
+        
+        self.contentInset = UIEdgeInsets(top: verticalInset, left: horizontalInset, bottom: verticalInset, right: horizontalInset)
     }
 }
