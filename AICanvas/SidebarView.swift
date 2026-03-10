@@ -16,10 +16,10 @@ struct SidebarView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Workspace Header
             HStack(spacing: 10) {
-                Text("🔥")
-                    .font(.system(size: 18))
+                Image("AppImage")
+                    .resizable()
+                    .scaledToFit()
                     .frame(width: 28, height: 28)
-                    .background(AppTheme.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                     .shadow(color: AppTheme.shadowColor, radius: 2, y: 1)
                 
