@@ -18,6 +18,19 @@ struct NotebookListView: View {
         ZStack {
             // Background
             AppTheme.background.ignoresSafeArea()
+            
+            // Decorative background blobs
+            Circle()
+                .fill(AppTheme.textSecondary.opacity(0.04))
+                .blur(radius: 60)
+                .frame(width: 400, height: 400)
+                .offset(x: -200, y: -200)
+            
+            Circle()
+                .fill(AppTheme.textSecondary.opacity(0.03))
+                .blur(radius: 80)
+                .frame(width: 500, height: 500)
+                .offset(x: 300, y: 100)
 
             VStack(spacing: 0) {
                 listHeader
@@ -95,37 +108,47 @@ struct NotebookListView: View {
 
     private var listHeader: some View {
         HStack(alignment: .bottom, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 6) {
-                    Image(systemName: "book.closed")
-                        .font(.system(size: 13))
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(AppTheme.textSecondary)
-                    Text("MEUS CADERNOS")
+                    Text("ESPAÇO CRIATIVO")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(AppTheme.textSecondary)
-                        .tracking(1)
+                        .tracking(1.5)
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(AppTheme.textSecondary.opacity(0.08))
+                .clipShape(Capsule())
 
-                Text("AI Canvas")
-                    .font(.system(size: 30, weight: .semibold))
+                Text("Meus Cadernos")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
             }
 
             Spacer()
 
             // Stats badge
-            VStack(alignment: .trailing, spacing: 2) {
-                Text("\(store.notebooks.count)")
-                    .font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                Text(store.notebooks.count == 1 ? "caderno" : "cadernos")
-                    .font(.system(size: 11))
+            HStack(spacing: 8) {
+                Image(systemName: "books.vertical.fill")
+                    .font(.system(size: 16))
+                    .foregroundStyle(AppTheme.textSecondary)
+                Text("\(store.notebooks.count) \(store.notebooks.count == 1 ? "caderno" : "cadernos")")
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(AppTheme.textSecondary)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(AppTheme.surfaceElevated)
+            .clipShape(Capsule())
+            .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+            .shadow(color: AppTheme.shadowColor, radius: 4, y: 2)
         }
         .padding(.horizontal, 24)
         .padding(.top, 60)
-        .padding(.bottom, 16)
+        .padding(.bottom, 20)
     }
 
     // MARK: - Empty State
@@ -136,38 +159,52 @@ struct NotebookListView: View {
 
             ZStack {
                 Circle()
+                    .fill(
+                        LinearGradient(
+                            stops: [.init(color: AppTheme.accent.opacity(0.06), location: 0), .init(color: .clear, location: 1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 140, height: 140)
+
+                Circle()
                     .fill(AppTheme.surfaceElevated)
                     .frame(width: 90, height: 90)
+                    .shadow(color: AppTheme.shadowColor, radius: 10, y: 5)
                     .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
 
-                Text("📓")
-                    .font(.system(size: 40))
+                Text("✨")
+                    .font(.system(size: 44))
+                    .offset(x: 2, y: -2)
             }
 
             VStack(spacing: 8) {
                 Text("Nenhum caderno ainda")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
-                Text("Crie seu primeiro caderno\ne comece a desenhar!")
-                    .font(.system(size: 14))
+                Text("Crie seu primeiro caderno e solte a imaginação\ncom a ajuda de IA poderosa.")
+                    .font(.system(size: 15))
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
+                    .lineSpacing(4)
             }
 
             Button {
                 showCreateSheet = true
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 14, weight: .medium))
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 16))
                     Text("Criar Caderno")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 15, weight: .bold))
                 }
                 .foregroundStyle(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 14)
                 .background(AppTheme.accent)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(Capsule())
+                .shadow(color: AppTheme.accent.opacity(0.3), radius: 8, y: 4)
             }
             .buttonStyle(.plain)
 
@@ -190,54 +227,58 @@ struct NotebookCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // Top — emoji + color block
             ZStack(alignment: .topLeading) {
-                Rectangle()
-                    .fill(accentColor.opacity(0.15))
-                    .frame(height: 60)
+                LinearGradient(
+                    gradient: Gradient(colors: [accentColor.opacity(0.4), accentColor.opacity(0.1)]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .frame(height: 70)
 
                 // Emoji
                 Text(notebook.emoji)
-                    .font(.system(size: 28))
+                    .font(.system(size: 34))
                     .padding(.horizontal, 16)
-                    .padding(.top, 14)
+                    .padding(.top, 16)
+                    .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
             }
 
             // Bottom info
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(notebook.name)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
                     Image(systemName: "clock")
-                        .font(.system(size: 10))
+                        .font(.system(size: 11))
                         .foregroundStyle(AppTheme.textMuted)
                     Text(notebook.lastModified.relativeString)
-                        .font(.system(size: 11))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(AppTheme.textMuted)
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 14)
+            .padding(.vertical, 16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(AppTheme.surfaceElevated)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(
-                    hovered ? AppTheme.borderHover : AppTheme.border,
-                    lineWidth: 1
+                    hovered ? accentColor.opacity(0.5) : AppTheme.border,
+                    lineWidth: hovered ? 2 : 1
                 )
         )
         .shadow(
-            color: hovered ? AppTheme.shadowColor : .clear,
-            radius: hovered ? 12 : 4,
+            color: hovered ? accentColor.opacity(0.2) : AppTheme.shadowColor,
+            radius: hovered ? 12 : 6,
             x: 0,
-            y: hovered ? 4 : 2
+            y: hovered ? 6 : 2
         )
-        .scaleEffect(hovered ? 1.01 : 1.0)
-        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: hovered)
+        .scaleEffect(hovered ? 1.02 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
         .onHover { h in hovered = h }
     }
 }
@@ -268,13 +309,13 @@ struct NewNotebookCard: View {
             .frame(maxWidth: .infinity)
             .frame(height: 120)
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(hovered ? AppTheme.surfaceElevated : .clear)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .stroke(
-                                hovered ? AppTheme.borderHover : AppTheme.border,
-                                style: StrokeStyle(lineWidth: 1, dash: [4, 4])
+                                hovered ? AppTheme.accent.opacity(0.6) : AppTheme.border,
+                                style: StrokeStyle(lineWidth: 1, dash: [6, 4])
                             )
                     )
             )

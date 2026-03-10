@@ -12,6 +12,13 @@ struct MultiProviderOnboardingView: View {
             AppTheme.background
                 .ignoresSafeArea()
             
+            // Subtle glowing orb top-center
+            Circle()
+                .fill(AppTheme.accent.opacity(0.04))
+                .blur(radius: 80)
+                .frame(width: 400, height: 400)
+                .offset(y: -250)
+            
             VStack(spacing: 0) {
                 // Header
                 headerView
@@ -44,18 +51,25 @@ struct MultiProviderOnboardingView: View {
             // Logo icon
             ZStack {
                 Circle()
-                    .fill(AppTheme.accent)
+                    .fill(
+                        LinearGradient(
+                            stops: [.init(color: AppTheme.accent.opacity(0.8), location: 0), .init(color: AppTheme.accent, location: 1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .frame(width: 80, height: 80)
+                    .shadow(color: AppTheme.accent.opacity(0.3), radius: 10, y: 5)
                 
                 Image(systemName: "paintbrush.pointed.fill")
-                    .font(.system(size: 36, weight: .semibold))
+                    .font(.system(size: 32, weight: .semibold))
                     .foregroundStyle(AppTheme.surface)
             }
             
             VStack(spacing: 8) {
                 // Title
                 Text("AI Canvas")
-                    .font(.system(size: 32, weight: .semibold))
+                    .font(.system(size: 32, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
                 
                 Text("Configure seu arsenal de IA")
@@ -182,11 +196,16 @@ struct ProviderOnboardingCard: View {
                 // Provider badge
                 ZStack {
                     Circle()
+                        .fill(AppTheme.accent.opacity(0.08))
+                        .frame(width: 100, height: 100)
+                        
+                    Circle()
                         .fill(AppTheme.accent)
-                        .frame(width: 80, height: 80)
+                        .frame(width: 72, height: 72)
+                        .shadow(color: AppTheme.accent.opacity(0.4), radius: 12, y: 6)
                     
                     Image(systemName: provider.icon)
-                        .font(.system(size: 32, weight: .medium))
+                        .font(.system(size: 30, weight: .medium))
                         .foregroundStyle(AppTheme.surface)
                 }
                 .scaleEffect(cardAppear ? 1 : 0.6)
@@ -195,13 +214,14 @@ struct ProviderOnboardingCard: View {
                 // Title
                 VStack(spacing: 8) {
                     Text(provider.displayName)
-                        .font(.system(size: 26, weight: .semibold))
+                        .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(AppTheme.textPrimary)
                     
                     Text("Configure sua API Key para\ndesbloquear os modelos do \(provider.displayName).")
                         .font(.system(size: 14))
                         .foregroundStyle(AppTheme.textSecondary)
                         .multilineTextAlignment(.center)
+                        .lineSpacing(4)
                 }
                 .opacity(cardAppear ? 1 : 0)
                 .offset(y: cardAppear ? 0 : 10)
@@ -310,27 +330,27 @@ struct ProviderOnboardingCard: View {
                         }
                     }
                     .textFieldStyle(.plain)
-                    .font(.system(size: 14))
+                    .font(.system(size: 15))
                     .foregroundStyle(AppTheme.textPrimary)
                     
                     Button {
                         showKey.toggle()
                     } label: {
-                        Image(systemName: showKey ? "eye.slash" : "eye")
+                        Image(systemName: showKey ? "eye.slash.fill" : "eye.fill")
                             .font(.system(size: 14))
                             .foregroundStyle(AppTheme.textSecondary)
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 14)
                 .background(AppTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            apiKey.isEmpty ? AppTheme.border : AppTheme.borderActive,
-                            lineWidth: 1
+                            apiKey.isEmpty ? AppTheme.border : AppTheme.accent.opacity(0.5),
+                            lineWidth: apiKey.isEmpty ? 1 : 2
                         )
                 )
                 
@@ -369,7 +389,8 @@ struct ProviderOnboardingCard: View {
                     ? AppTheme.borderHover
                     : AppTheme.accent
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(Capsule())
+                .shadow(color: apiKey.isEmpty ? .clear : AppTheme.accent.opacity(0.3), radius: 8, y: 4)
             }
             .buttonStyle(.plain)
             .disabled(apiKey.isEmpty || isValidating)
