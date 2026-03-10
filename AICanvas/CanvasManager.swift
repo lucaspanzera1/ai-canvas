@@ -23,6 +23,16 @@ final class CanvasManager: ObservableObject {
     @Published var canRedo = false
     @Published var imageToExport: UIImage? = nil  // SwiftUI observes this to show share sheet
 
+    // Selection mode state
+    @Published var isSelectionMode = false {
+        didSet {
+            if !isSelectionMode {
+                selectionRect = nil
+            }
+        }
+    }
+    @Published var selectionRect: CGRect?
+
     // Tool state
     @Published var toolConfig = DrawingToolConfig()
 
@@ -66,6 +76,7 @@ final class CanvasManager: ObservableObject {
 
     func selectTool(_ type: DrawingToolType) {
         toolConfig.type = type
+        isSelectionMode = false // desativa modo de selecao ao escolher ferramenta
         applyCurrentTool()
     }
 
@@ -110,10 +121,15 @@ final class CanvasManager: ObservableObject {
         guard let canvasView else { return nil }
         let drawing = canvasView.drawing
 
-        // Use at least a min size so blank canvases still send something
-        let bounds = drawing.bounds.isEmpty
-            ? CGRect(x: 0, y: 0, width: 800, height: 600)
-            : drawing.bounds.insetBy(dx: -20, dy: -20)
+        // Use selection bounds if available, else fallback to drawing bounds
+        let bounds: CGRect
+        if let selRect = selectionRect, selRect.width > 10, selRect.height > 10 {
+            bounds = selRect
+        } else {
+            bounds = drawing.bounds.isEmpty
+                ? CGRect(x: 0, y: 0, width: 800, height: 600)
+                : drawing.bounds.insetBy(dx: -20, dy: -20)
+        }
 
         let canvasSize = bounds.size
         let scale = UIScreen.main.scale

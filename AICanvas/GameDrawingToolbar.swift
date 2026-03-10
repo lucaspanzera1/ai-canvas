@@ -77,11 +77,28 @@ struct DrawingToolbar: View {
 
             toolbarDivider
 
+            // Selection toggle
+            Button {
+                showColorPicker = false
+                showWidthPicker = false
+                withAnimation { canvasManager.isSelectionMode.toggle() }
+            } label: {
+                Image(systemName: "viewfinder")
+                    .font(.system(size: 15, weight: canvasManager.isSelectionMode ? .semibold : .regular))
+                    .foregroundStyle(canvasManager.isSelectionMode ? AppTheme.accent : AppTheme.textSecondary)
+                    .frame(width: 34, height: 30)
+                    .background(RoundedRectangle(cornerRadius: 8).fill(canvasManager.isSelectionMode ? AppTheme.background : Color.clear))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(canvasManager.isSelectionMode ? AppTheme.borderHover : Color.clear, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+
+            toolbarDivider
+
             // Drawing tools
             ForEach(DrawingToolType.allCases, id: \.self) { tool in
                 ToolButton(
                     tool: tool,
-                    isSelected: canvasManager.toolConfig.type == tool,
+                    isSelected: !canvasManager.isSelectionMode && canvasManager.toolConfig.type == tool,
                     selectedColor: canvasManager.toolConfig.color
                 ) {
                     if canvasManager.toolConfig.type == tool && tool != .eraser {
@@ -281,7 +298,7 @@ struct DrawingToolbar: View {
                     Circle()
                         .fill(AppTheme.surface)
                         .frame(width: 24, height: 24)
-                    Image(systemName: toolIcon(canvasManager.toolConfig.type))
+                    Image(systemName: canvasManager.isSelectionMode ? "viewfinder" : toolIcon(canvasManager.toolConfig.type))
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(AppTheme.textPrimary)
                 }

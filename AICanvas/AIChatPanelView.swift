@@ -309,13 +309,14 @@ struct AIChatPanelView: View {
 
             // Canvas attachment toggle bar
             HStack(spacing: 8) {
+                let hasSelection = viewModel.canvasManager?.selectionRect != nil
                 Button {
                     viewModel.analyzeCanvas()
                 } label: {
                     HStack(spacing: 5) {
-                        Image(systemName: "eye.fill")
+                        Image(systemName: hasSelection ? "viewfinder" : "eye.fill")
                             .font(.system(size: 11, weight: .semibold))
-                        Text("Analisar Canvas")
+                        Text(hasSelection ? "Analisar Seleção" : "Analisar Canvas")
                             .font(.system(size: 11, weight: .semibold))
                     }
                     .foregroundStyle(AppTheme.action)
@@ -332,9 +333,9 @@ struct AIChatPanelView: View {
                     attachCanvas.toggle()
                 } label: {
                     HStack(spacing: 5) {
-                        Image(systemName: attachCanvas ? "photo.fill" : "photo")
+                        Image(systemName: attachCanvas ? (hasSelection ? "viewfinder" : "photo.fill") : "photo")
                             .font(.system(size: 11, weight: .semibold))
-                        Text(attachCanvas ? "Canvas anexado" : "Anexar canvas")
+                        Text(attachCanvas ? (hasSelection ? "Seleção anexada" : "Canvas anexado") : "Anexar imagem")
                             .font(.system(size: 11, weight: .semibold))
                     }
                     .foregroundStyle(attachCanvas ? .white : AppTheme.textSecondary)

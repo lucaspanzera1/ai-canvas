@@ -37,6 +37,27 @@ struct CanvasRepresentable: UIViewRepresentable {
         // Registrar canvas no manager e aplicar desenho inicial + ferramenta
         canvasManager.canvasView = canvasView
 
+        // Ocultar a caixa de seleção inicial
+        let selectionBox = UIView()
+        selectionBox.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        selectionBox.isHidden = true
+        selectionBox.tag = 888
+        // Adiciona uma borda tracejada via CAShapeLayer
+        let dashed = CAShapeLayer()
+        dashed.strokeColor = UIColor.systemBlue.cgColor
+        dashed.fillColor = UIColor.clear.cgColor
+        dashed.lineWidth = 2
+        dashed.lineDashPattern = [6, 4]
+        dashed.name = "selectionDashed"
+        selectionBox.layer.addSublayer(dashed)
+        canvasView.addSubview(selectionBox)
+
+        let selectionRecognizer = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleSelectionPan(_:)))
+        selectionRecognizer.maximumNumberOfTouches = 1
+        selectionRecognizer.isEnabled = false
+        canvasView.addGestureRecognizer(selectionRecognizer)
+        context.coordinator.selectionRecognizer = selectionRecognizer
+
         DispatchQueue.main.async {
             canvasManager.setup()
         }
@@ -48,6 +69,17 @@ struct CanvasRepresentable: UIViewRepresentable {
         if let bgView = canvasView.viewWithTag(999) {
             updateBackgroundPattern(for: bgView, pattern: pattern)
             bgView.transform = CGAffineTransform(scaleX: canvasView.zoomScale, y: canvasView.zoomScale)
+        }
+        
+        if canvasManager.isSelectionMode {
+            canvasView.drawingGestureRecognizer.isEnabled = false
+            context.coordinator.selectionRecognizer?.isEnabled = true
+        } else {
+            canvasView.drawingGestureRecognizer.isEnabled = true
+            context.coordinator.selectionRecognizer?.isEnabled = false
+            if let box = canvasView.viewWithTag(888) {
+                box.isHidden = true
+            }
         }
     }
     
@@ -142,6 +174,46 @@ struct CanvasRepresentable: UIViewRepresentable {
             if let bgView = scrollView.viewWithTag(999) {
                 bgView.transform = CGAffineTransform(scaleX: scrollView.zoomScale, y: scrollView.zoomScale)
             }
+        }
+
+        var selectionStart: CGPoint = .zero
+        weak var selectionRecognizer: UIPanGestureRecognizer?
+
+        @objc func handleSelectionPan(_ gesture: UIPanGestureRecognizer) {
+            guard let canvasView = gesture.view as? PKCanvasView,
+                  let selectionBox = canvasView.viewWithTag(888) else { return }
+
+            let point = gesture.location(in: canvasView)
+            
+            switch gesture.state {
+            case .began:
+                selectionStart = point
+                selectionBox.frame = CGRect(x: point.x, y: point.y, width: 0, height: 0)
+                selectionBox.isHidden = true // keep hidden until there is a visible size
+                updateSelectionDashedLayer(in: selectionBox)
+            case .changed:
+                let minX = min(selectionStart.x, point.x)
+                let minY = min(selectionStart.y, point.y)
+                let maxX = max(selectionStart.x, point.x)
+                let maxY = max(selectionStart.y, point.y)
+                selectionBox.frame = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+                selectionBox.isHidden = selectionBox.frame.width < 1 || selectionBox.frame.height < 1
+                updateSelectionDashedLayer(in: selectionBox)
+            case .ended, .cancelled:
+                selectionBox.isHidden = selectionBox.frame.width < 1 || selectionBox.frame.height < 1
+                canvasManager.selectionRect = selectionBox.isHidden ? nil : selectionBox.frame
+                updateSelectionDashedLayer(in: selectionBox)
+            default:
+                break
+            }
+        }
+
+        private func updateSelectionDashedLayer(in selectionBox: UIView) {
+            let bounds = selectionBox.bounds
+            guard let dashed = selectionBox.layer.sublayers?.first(where: { $0.name == "selectionDashed" }) as? CAShapeLayer else { return }
+            dashed.frame = bounds
+            let path = UIBezierPath(roundedRect: bounds.insetBy(dx: 1, dy: 1), cornerRadius: 4).cgPath
+            dashed.path = path
         }
     }
 }
