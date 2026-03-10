@@ -115,12 +115,20 @@ struct ContentView: View {
             canvasManager.onDrawingChange = { [weak store] drawing in
                 store?.saveDrawing(drawing, for: notebook)
             }
+            // Conecta o canvasManager ao viewModel para captura de visão
+            chatViewModel.canvasManager = canvasManager
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             MultiProviderOnboardingView(
                 isPresented: $showOnboarding,
                 aiConfig: aiConfig
             )
+        }
+        .sheet(item: Binding(
+            get: { canvasManager.imageToExport.map { ExportableImage(image: $0) } },
+            set: { if $0 == nil { canvasManager.imageToExport = nil } }
+        )) { exportable in
+            ShareSheet(image: exportable.image)
         }
         .onReceive(NotificationCenter.default.publisher(for: .apiKeyDidChange)) { _ in
             showOnboarding = true

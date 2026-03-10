@@ -66,10 +66,10 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .groq:
             return [
+                AIModel(id: "meta-llama/llama-4-scout-17b-16e-instruct", name: "Llama 4 Scout 17B 👁", provider: .groq),
                 AIModel(id: "llama-3.1-70b-versatile", name: "Llama 3.1 70B", provider: .groq),
                 AIModel(id: "llama-3.1-8b-instant", name: "Llama 3.1 8B", provider: .groq),
-                AIModel(id: "mixtral-8x7b-32768", name: "Mixtral 8x7B", provider: .groq),
-                AIModel(id: "gemma-7b-it", name: "Gemma 7B", provider: .groq)
+                AIModel(id: "mixtral-8x7b-32768", name: "Mixtral 8x7B", provider: .groq)
             ]
         case .openai:
             return [
@@ -85,8 +85,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
             ]
         case .gemini:
             return [
-                AIModel(id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", provider: .gemini),
-                AIModel(id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", provider: .gemini)
+                AIModel(id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite", provider: .gemini)
             ]
         }
     }

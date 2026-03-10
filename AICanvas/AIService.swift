@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 /// Universal AI service that supports multiple providers (Groq, OpenAI, Claude, Gemini).
 final class AIService {
@@ -43,7 +44,254 @@ final class AIService {
             )
         }
     }
-    
+
+    // MARK: - Vision (Image + Text)
+
+    /// Sends a message along with a canvas image to a vision-capable model.
+    func sendMessageWithImage(
+        messages: [ChatMessage],
+        image: UIImage,
+        model: AIModel,
+        systemPrompt: String? = nil
+    ) async throws -> String {
+
+        guard let apiKey = KeychainManager.shared.apiKey(for: model.provider) else {
+            throw AIError.noAPIKey(provider: model.provider)
+        }
+
+        guard let imageData = image.jpegData(compressionQuality: 0.7) else {
+            throw AIError.parsingError
+        }
+        let base64Image = imageData.base64EncodedString()
+
+        switch model.provider {
+        case .groq:
+            // Groq also uses OpenAI-compatible vision format (Llama 4 Scout supports images)
+            return try await sendOpenAIVisionMessage(
+                messages: messages,
+                base64Image: base64Image,
+                model: model,
+                systemPrompt: systemPrompt,
+                apiKey: apiKey
+            )
+        case .openai:
+            return try await sendOpenAIVisionMessage(
+                messages: messages,
+                base64Image: base64Image,
+                model: model,
+                systemPrompt: systemPrompt,
+                apiKey: apiKey
+            )
+        case .anthropic:
+            return try await sendClaudeVisionMessage(
+                messages: messages,
+                base64Image: base64Image,
+                model: model,
+                systemPrompt: systemPrompt,
+                apiKey: apiKey
+            )
+        case .gemini:
+            return try await sendGeminiVisionMessage(
+                messages: messages,
+                base64Image: base64Image,
+                imageData: imageData,
+                model: model,
+                systemPrompt: systemPrompt,
+                apiKey: apiKey
+            )
+        }
+    }
+
+    // MARK: - OpenAI Vision
+
+    private func sendOpenAIVisionMessage(
+        messages: [ChatMessage],
+        base64Image: String,
+        model: AIModel,
+        systemPrompt: String?,
+        apiKey: String
+    ) async throws -> String {
+
+        guard let url = URL(string: model.provider.baseURL) else {
+            throw AIError.invalidURL
+        }
+
+        var apiMessages: [[String: Any]] = []
+
+        if let systemPrompt {
+            apiMessages.append(["role": "system", "content": systemPrompt])
+        }
+
+        // Add previous messages as plain text
+        for msg in messages.dropLast() {
+            apiMessages.append(["role": msg.role.rawValue, "content": msg.content])
+        }
+
+        // Last user message gets image attached
+        let lastText = messages.last?.content ?? ""
+        let userContent: [[String: Any]] = [
+            ["type": "text", "text": lastText],
+            ["type": "image_url", "image_url": ["url": "data:image/jpeg;base64,\(base64Image)", "detail": "high"]]
+        ]
+        apiMessages.append(["role": "user", "content": userContent])
+
+        let body: [String: Any] = [
+            "model": model.id,
+            "messages": apiMessages,
+            "max_tokens": 2048
+        ]
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        request.timeoutInterval = 90
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw AIError.apiError(statusCode: statusCode, message: errorBody)
+        }
+
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let message = choices.first?["message"] as? [String: Any],
+              let text = message["content"] as? String else {
+            throw AIError.parsingError
+        }
+
+        return cleanAIResponse(text)
+    }
+
+    // MARK: - Claude Vision
+
+    private func sendClaudeVisionMessage(
+        messages: [ChatMessage],
+        base64Image: String,
+        model: AIModel,
+        systemPrompt: String?,
+        apiKey: String
+    ) async throws -> String {
+
+        guard let url = URL(string: model.provider.baseURL) else {
+            throw AIError.invalidURL
+        }
+
+        var apiMessages: [[String: Any]] = []
+
+        // History (text only)
+        for msg in messages.dropLast() where msg.role != .system {
+            apiMessages.append(["role": msg.role.rawValue, "content": msg.content])
+        }
+
+        // Last message includes the image
+        let lastText = messages.last?.content ?? ""
+        let userContent: [[String: Any]] = [
+            ["type": "image", "source": [
+                "type": "base64",
+                "media_type": "image/jpeg",
+                "data": base64Image
+            ]],
+            ["type": "text", "text": lastText]
+        ]
+        apiMessages.append(["role": "user", "content": userContent])
+
+        var body: [String: Any] = [
+            "model": model.id,
+            "max_tokens": 2048,
+            "messages": apiMessages
+        ]
+        if let systemPrompt {
+            body["system"] = systemPrompt
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        request.timeoutInterval = 90
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw AIError.apiError(statusCode: statusCode, message: errorBody)
+        }
+
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let content = json["content"] as? [[String: Any]],
+              let text = content.first?["text"] as? String else {
+            throw AIError.parsingError
+        }
+
+        return cleanAIResponse(text)
+    }
+
+    // MARK: - Gemini Vision
+
+    private func sendGeminiVisionMessage(
+        messages: [ChatMessage],
+        base64Image: String,
+        imageData: Data,
+        model: AIModel,
+        systemPrompt: String?,
+        apiKey: String
+    ) async throws -> String {
+
+        let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/\(model.id):generateContent"
+        guard let url = URL(string: baseURL) else {
+            throw AIError.invalidURL
+        }
+
+        let lastText = messages.last?.content ?? ""
+
+        // Build a single "user" turn with image + text
+        let parts: [[String: Any]] = [
+            ["inline_data": ["mime_type": "image/jpeg", "data": base64Image]],
+            ["text": lastText]
+        ]
+
+        var body: [String: Any] = [
+            "contents": [["role": "user", "parts": parts]],
+            "generationConfig": ["temperature": 0.7, "maxOutputTokens": 2048]
+        ]
+
+        if let systemPrompt {
+            body["systemInstruction"] = ["parts": [["text": systemPrompt]]]
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        request.timeoutInterval = 90
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            throw AIError.apiError(statusCode: statusCode, message: errorBody)
+        }
+
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let candidates = json["candidates"] as? [[String: Any]],
+              let content = candidates.first?["content"] as? [String: Any],
+              let parts = content["parts"] as? [[String: Any]],
+              let text = parts.first?["text"] as? String else {
+            throw AIError.parsingError
+        }
+
+        return cleanAIResponse(text)
+    }
+
     /// Quick validation check for an API key.
     func validateKey(_ key: String, for provider: AIProvider) async -> Bool {
         // Quick format check first
@@ -226,7 +474,7 @@ final class AIService {
     }
     
     private func validateGeminiKey(_ key: String) async -> Bool {
-        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\(key)"
+        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent"
         guard let url = URL(string: urlString) else {
             return false
         }
@@ -239,7 +487,8 @@ final class AIService {
         ]
         
         return await performValidation(url: url, body: body, headers: [
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "x-goog-api-key": key
         ], provider: "Gemini")
     }
     
@@ -307,7 +556,7 @@ final class AIService {
     
     private func validateGeminiKeyWithDebug(_ key: String) async -> Bool {
         print("🔑 [DEBUG] Testing Gemini API...")
-        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\(key)"
+        let urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent"
         guard let url = URL(string: urlString) else {
             print("❌ [DEBUG] Invalid Gemini URL")
             return false
@@ -321,7 +570,8 @@ final class AIService {
         ]
         
         return await performValidationWithDebug(url: url, body: body, headers: [
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "x-goog-api-key": key
         ], provider: "Gemini")
     }
     
@@ -488,7 +738,7 @@ final class AIService {
     ) async throws -> String {
         
         let baseURL = "https://generativelanguage.googleapis.com/v1beta/models/\(model.id):generateContent"
-        guard let url = URL(string: "\(baseURL)?key=\(apiKey)") else {
+        guard let url = URL(string: baseURL) else {
             throw AIError.invalidURL
         }
         
@@ -523,6 +773,7 @@ final class AIService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(apiKey, forHTTPHeaderField: "x-goog-api-key")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         request.timeoutInterval = 60
         

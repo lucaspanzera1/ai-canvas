@@ -8,6 +8,7 @@ struct AIChatPanelView: View {
     @FocusState private var isInputFocused: Bool
     @State private var showModelSelection = false
     @State private var pulseGlow = false
+    @State private var attachCanvas = false // toggle: send with canvas snapshot
 
     var body: some View {
         VStack(spacing: 0) {
@@ -187,17 +188,35 @@ struct AIChatPanelView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary)
 
-                Text("Peça ideias, análise seus desenhos\nou sugerir melhorias para o projeto.")
+                Text("Peça ideias, analise seu canvas\nou resolva cálculos desenhados.")
                     .font(.system(size: 13))
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
             }
             
+            // One-tap canvas analysis
+            Button {
+                viewModel.analyzeCanvas()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "eye.fill")
+                        .font(.system(size: 13))
+                    Text("Analisar meu canvas agora")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 11)
+                .background(AppTheme.action)
+                .clipShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            
             // Quick prompts
             VStack(spacing: 8) {
-                QuickPromptChip(text: "💡 Me dê ideias de desenho", viewModel: viewModel)
-                QuickPromptChip(text: "🎨 Analise meu canvas", viewModel: viewModel)
-                QuickPromptChip(text: "✨ Sugira melhorias", viewModel: viewModel)
+                QuickPromptChip(text: "💡 Me dê ideias de desenho", viewModel: viewModel, withCanvas: false)
+                QuickPromptChip(text: "🧮 Resolva os cálculos do canvas", viewModel: viewModel, withCanvas: true)
+                QuickPromptChip(text: "✨ Sugira melhorias para este canvas", viewModel: viewModel, withCanvas: true)
             }
             
             Spacer()
@@ -287,7 +306,52 @@ struct AIChatPanelView: View {
             Rectangle()
                 .fill(AppTheme.border)
                 .frame(height: 1)
-            
+
+            // Canvas attachment toggle bar
+            HStack(spacing: 8) {
+                Button {
+                    viewModel.analyzeCanvas()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "eye.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text("Analisar Canvas")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(AppTheme.action)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(AppTheme.action.opacity(0.08))
+                    .clipShape(Capsule())
+                    .overlay(Capsule().stroke(AppTheme.action.opacity(0.25), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isLoading)
+
+                Button {
+                    attachCanvas.toggle()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: attachCanvas ? "photo.fill" : "photo")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(attachCanvas ? "Canvas anexado" : "Anexar canvas")
+                            .font(.system(size: 11, weight: .semibold))
+                    }
+                    .foregroundStyle(attachCanvas ? .white : AppTheme.textSecondary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(attachCanvas ? AppTheme.accent : AppTheme.surfaceElevated)
+                    .clipShape(Capsule())
+                    .overlay(Capsule().stroke(attachCanvas ? Color.clear : AppTheme.border, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.top, 10)
+            .padding(.bottom, 6)
+
             HStack(alignment: .bottom, spacing: 10) {
                 TextField("Mensagem...", text: $viewModel.inputText, axis: .vertical)
                     .textFieldStyle(.plain)
@@ -296,26 +360,36 @@ struct AIChatPanelView: View {
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textPrimary)
                     .onSubmit {
-                        viewModel.sendMessage()
+                        if attachCanvas {
+                            viewModel.sendMessageWithCanvas()
+                        } else {
+                            viewModel.sendMessage()
+                        }
                     }
 
                 Button {
-                    viewModel.sendMessage()
+                    if attachCanvas {
+                        viewModel.sendMessageWithCanvas()
+                        attachCanvas = false
+                    } else {
+                        viewModel.sendMessage()
+                    }
                 } label: {
                     ZStack {
-                        if viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isLoading {
+                        let isEmpty = viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty
+                        if isEmpty || viewModel.isLoading {
                             Circle()
                                 .fill(AppTheme.surfaceElevated)
                                 .frame(width: 32, height: 32)
                                 .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
-                            Image(systemName: "arrow.up")
+                            Image(systemName: attachCanvas ? "camera.fill" : "arrow.up")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(AppTheme.textMuted)
                         } else {
                             Circle()
-                                .fill(AppTheme.accent)
+                                .fill(attachCanvas ? AppTheme.action : AppTheme.accent)
                                 .frame(width: 32, height: 32)
-                            Image(systemName: "arrow.up")
+                            Image(systemName: attachCanvas ? "camera.fill" : "arrow.up")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(AppTheme.surface)
                         }
@@ -324,6 +398,7 @@ struct AIChatPanelView: View {
                 .buttonStyle(.plain)
                 .disabled(viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isLoading)
                 .animation(.spring(response: 0.3), value: viewModel.inputText.isEmpty)
+                .animation(.spring(response: 0.3), value: attachCanvas)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
@@ -345,28 +420,40 @@ struct AIChatPanelView: View {
 struct QuickPromptChip: View {
     let text: String
     @ObservedObject var viewModel: ChatViewModel
+    var withCanvas: Bool = false
     @State private var isHovered = false
 
     var body: some View {
         Button {
-            viewModel.inputText = text
-            viewModel.sendMessage()
+            if withCanvas {
+                viewModel.sendMessageWithCanvas(customPrompt: text)
+            } else {
+                viewModel.inputText = text
+                viewModel.sendMessage()
+            }
         } label: {
-            Text(text)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(isHovered ? AppTheme.textPrimary : AppTheme.textSecondary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    isHovered
-                    ? AppTheme.border
-                    : AppTheme.surfaceElevated
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(AppTheme.border, lineWidth: 1)
-                )
+            HStack(spacing: 6) {
+                if withCanvas {
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(AppTheme.action.opacity(0.7))
+                }
+                Text(text)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(isHovered ? AppTheme.textPrimary : AppTheme.textSecondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                isHovered
+                ? AppTheme.border
+                : AppTheme.surfaceElevated
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(withCanvas ? AppTheme.action.opacity(0.3) : AppTheme.border, lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
         .onHover { hover in
@@ -399,7 +486,35 @@ struct MessageBubble: View {
                 }
             }
 
-            VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
+            VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
+                // Canvas thumbnail (if attached)
+                if isUser, let img = message.attachedImage {
+                    Image(uiImage: img)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: 200, maxHeight: 120)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(AppTheme.border, lineWidth: 1)
+                        )
+                        .overlay(
+                            HStack(spacing: 3) {
+                                Image(systemName: "photo.fill")
+                                    .font(.system(size: 9))
+                                Text("canvas")
+                                    .font(.system(size: 9, weight: .semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(.black.opacity(0.45))
+                            .clipShape(Capsule())
+                            .padding(6),
+                            alignment: .bottomLeading
+                        )
+                }
+
                 Text(message.content)
                     .font(.system(size: 14))
                     .textSelection(.enabled)

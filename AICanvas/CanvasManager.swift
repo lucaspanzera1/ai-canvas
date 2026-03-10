@@ -21,6 +21,7 @@ struct DrawingToolConfig: Equatable {
 final class CanvasManager: ObservableObject {
     @Published var canUndo = false
     @Published var canRedo = false
+    @Published var imageToExport: UIImage? = nil  // SwiftUI observes this to show share sheet
 
     // Tool state
     @Published var toolConfig = DrawingToolConfig()
@@ -104,31 +105,48 @@ final class CanvasManager: ObservableObject {
         canvasView?.drawing ?? PKDrawing()
     }
 
+    /// Returns a UIImage representation of the current canvas for AI vision analysis.
+    func captureCanvasImage() -> UIImage? {
+        guard let canvasView else { return nil }
+        let drawing = canvasView.drawing
+
+        // Use at least a min size so blank canvases still send something
+        let bounds = drawing.bounds.isEmpty
+            ? CGRect(x: 0, y: 0, width: 800, height: 600)
+            : drawing.bounds.insetBy(dx: -20, dy: -20)
+
+        let scale = UIScreen.main.scale
+        let image = drawing.image(from: bounds, scale: scale)
+
+        // Composite onto white background so the image makes sense for the AI
+        let renderer = UIGraphicsImageRenderer(size: bounds.size)
+        return renderer.image { ctx in
+            UIColor.white.setFill()
+            ctx.fill(bounds)
+            image.draw(in: CGRect(origin: .zero, size: bounds.size))
+        }
+    }
+
+    /// Renders the canvas to a UIImage and publishes it so SwiftUI can present the share sheet.
     func exportDrawing() {
         guard let canvasView else { return }
-        let image = canvasView.drawing.image(
-            from: canvasView.drawing.bounds,
-            scale: UIScreen.main.scale
-        )
 
-        let activityVC = UIActivityViewController(
-            activityItems: [image],
-            applicationActivities: nil
-        )
+        let drawing = canvasView.drawing
+        let bounds = drawing.bounds.isEmpty
+            ? CGRect(x: 0, y: 0, width: 800, height: 600)
+            : drawing.bounds.insetBy(dx: -20, dy: -20)
 
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = windowScene.windows.first?.rootViewController {
-            if let popover = activityVC.popoverPresentationController {
-                popover.sourceView = rootVC.view
-                popover.sourceRect = CGRect(
-                    x: rootVC.view.bounds.midX,
-                    y: rootVC.view.bounds.midY,
-                    width: 0,
-                    height: 0
-                )
-                popover.permittedArrowDirections = []
-            }
-            rootVC.present(activityVC, animated: true)
+        let scale = UIScreen.main.scale
+        let rawImage = drawing.image(from: bounds, scale: scale)
+
+        // Composite onto white background
+        let renderer = UIGraphicsImageRenderer(size: bounds.size)
+        let finalImage = renderer.image { ctx in
+            UIColor.white.setFill()
+            ctx.fill(CGRect(origin: .zero, size: bounds.size))
+            rawImage.draw(in: CGRect(origin: .zero, size: bounds.size))
         }
+
+        imageToExport = finalImage
     }
 }
