@@ -1,18 +1,52 @@
 import SwiftUI
 
+// MARK: - Enums & State
+
+enum ItemActionType {
+    case edit
+    case delete
+}
+
+enum ItemSelection: Identifiable {
+    case notebook(Notebook, ItemActionType)
+    case folder(Folder, ItemActionType)
+    
+    var id: String {
+        switch self {
+        case .notebook(let nb, let type): return "nb_\(nb.id)_\(type)"
+        case .folder(let f, let type): return "f_\(f.id)_\(type)"
+        }
+    }
+}
+
 // MARK: - Notebook List View
 
 struct NotebookListView: View {
     @ObservedObject var store: NotebookStore
     @Binding var selectedNotebook: Notebook?
-    @State private var showCreateSheet = false
-    @State private var notebookToDelete: Notebook?
-    @State private var showDeleteConfirm = false
+    
+    @State private var currentFolder: Folder? = nil
+    
+    @State private var showCreateNotebook = false
+    @State private var showCreateFolder = false
+    @State private var activeAction: ItemSelection?
+    
     @State private var appeared = false
 
     private let columns = [
         GridItem(.adaptive(minimum: 180, maximum: 240), spacing: 16)
     ]
+    
+    private var visibleFolders: [Folder] {
+        if currentFolder == nil {
+            return store.folders
+        }
+        return []
+    }
+    
+    private var visibleNotebooks: [Notebook] {
+        store.notebooks.filter { $0.folderId == currentFolder?.id }
+    }
 
     var body: some View {
         ZStack {
@@ -36,42 +70,77 @@ struct NotebookListView: View {
                 listHeader
                     .padding(.bottom, 8)
 
-                if store.notebooks.isEmpty {
+                if visibleFolders.isEmpty && visibleNotebooks.isEmpty {
                     emptyState
                 } else {
                     ScrollView {
                         LazyVGrid(columns: columns, spacing: 16) {
-                            ForEach(store.notebooks) { notebook in
+                            // FOLDERS
+                            ForEach(visibleFolders) { folder in
+                                FolderCard(folder: folder)
+                                    .onTapGesture {
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                            currentFolder = folder
+                                        }
+                                    }
+                                    .contextMenu {
+                                        Button {
+                                            activeAction = .folder(folder, .edit)
+                                        } label: {
+                                            Label("Editar Pasta", systemImage: "pencil")
+                                        }
+                                        Button(role: .destructive) {
+                                            activeAction = .folder(folder, .delete)
+                                        } label: {
+                                            Label("Apagar Pasta", systemImage: "trash")
+                                        }
+                                    }
+                                    .scaleEffect(appeared ? 1 : 0.85)
+                                    .opacity(appeared ? 1 : 0)
+                                    .animation(.spring(response: 0.45).delay(Double(store.folders.firstIndex(of: folder) ?? 0) * 0.05), value: appeared)
+                            }
+                            
+                            // NOTEBOOKS
+                            ForEach(visibleNotebooks) { notebook in
                                 NotebookCard(notebook: notebook)
                                     .onTapGesture {
                                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                                             selectedNotebook = notebook
                                         }
                                     }
-                                    .onLongPressGesture {
-                                        notebookToDelete = notebook
-                                        showDeleteConfirm = true
+                                    .contextMenu {
+                                        Button {
+                                            activeAction = .notebook(notebook, .edit)
+                                        } label: {
+                                            Label("Editar Caderno", systemImage: "pencil")
+                                        }
+                                        Button(role: .destructive) {
+                                            activeAction = .notebook(notebook, .delete)
+                                        } label: {
+                                            Label("Apagar Caderno", systemImage: "trash")
+                                        }
                                     }
                                     .scaleEffect(appeared ? 1 : 0.85)
                                     .opacity(appeared ? 1 : 0)
-                                    .animation(
-                                        .spring(response: 0.45, dampingFraction: 0.8)
-                                            .delay(Double(store.notebooks.firstIndex(of: notebook) ?? 0) * 0.06),
-                                        value: appeared
-                                    )
+                                    .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + (store.notebooks.firstIndex(of: notebook) ?? 0)) * 0.05), value: appeared)
                             }
 
-                            // New Notebook Card
-                            NewNotebookCard {
-                                showCreateSheet = true
+                            // CREATE NEW CARDS
+                            if currentFolder == nil {
+                                NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") {
+                                    showCreateFolder = true
+                                }
+                                .scaleEffect(appeared ? 1 : 0.85)
+                                .opacity(appeared ? 1 : 0)
+                                .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count) * 0.05), value: appeared)
+                            }
+                            
+                            NewItemCard(title: "Novo Caderno", icon: "plus") {
+                                showCreateNotebook = true
                             }
                             .scaleEffect(appeared ? 1 : 0.85)
                             .opacity(appeared ? 1 : 0)
-                            .animation(
-                                .spring(response: 0.45, dampingFraction: 0.8)
-                                    .delay(Double(store.notebooks.count) * 0.06),
-                                value: appeared
-                            )
+                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + 1) * 0.05), value: appeared)
                         }
                         .padding(20)
                         .padding(.bottom, 40)
@@ -83,24 +152,59 @@ struct NotebookListView: View {
             withAnimation { appeared = true }
         }
         .onDisappear { appeared = false }
-        .sheet(isPresented: $showCreateSheet) {
-            CreateNotebookSheet(store: store, isPresented: $showCreateSheet)
+        .sheet(isPresented: $showCreateNotebook) {
+            ItemEditorSheet(store: store, mode: .createNotebook(folderId: currentFolder?.id), isPresented: $showCreateNotebook)
+        }
+        .sheet(isPresented: $showCreateFolder) {
+            ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
+        }
+        .sheet(item: Binding(
+            get: {
+                if case .notebook(let nb, .edit) = activeAction { return ItemSelection.notebook(nb, .edit) }
+                if case .folder(let f, .edit) = activeAction { return ItemSelection.folder(f, .edit) }
+                return nil
+            },
+            set: { if $0 == nil { activeAction = nil } }
+        )) { _ in
+            if case .notebook(let nb, .edit) = activeAction {
+                ItemEditorSheet(store: store, mode: .editNotebook(nb), isPresented: Binding(
+                    get: { activeAction != nil },
+                    set: { if !$0 { activeAction = nil } }
+                ))
+            } else if case .folder(let f, .edit) = activeAction {
+                ItemEditorSheet(store: store, mode: .editFolder(f), isPresented: Binding(
+                    get: { activeAction != nil },
+                    set: { if !$0 { activeAction = nil } }
+                ))
+            }
         }
         .confirmationDialog(
-            "Apagar \"\(notebookToDelete?.name ?? "")\"?",
-            isPresented: $showDeleteConfirm,
+            "Tem certeza?",
+            isPresented: Binding(
+                get: {
+                    if case .notebook(_, .delete) = activeAction { return true }
+                    if case .folder(_, .delete) = activeAction { return true }
+                    return false
+                },
+                set: { if !$0 { activeAction = nil } }
+            ),
             titleVisibility: .visible
         ) {
             Button("Apagar", role: .destructive) {
-                if let nb = notebookToDelete {
-                    withAnimation(.spring(response: 0.35)) {
-                        store.deleteNotebook(nb)
-                    }
+                if case .notebook(let nb, .delete) = activeAction {
+                    withAnimation { store.deleteNotebook(nb) }
+                } else if case .folder(let f, .delete) = activeAction {
+                    withAnimation { store.deleteFolder(f) }
                 }
+                activeAction = nil
             }
-            Button("Cancelar", role: .cancel) {}
+            Button("Cancelar", role: .cancel) { activeAction = nil }
         } message: {
-            Text("O desenho será perdido permanentemente.")
+            if case .folder = activeAction {
+                Text("A pasta e todos os cadernos nela serão apagados permanentemente.")
+            } else {
+                Text("Este caderno será apagado permanentemente.")
+            }
         }
     }
 
@@ -109,33 +213,59 @@ struct NotebookListView: View {
     private var listHeader: some View {
         HStack(alignment: .bottom, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 6) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 13, weight: .semibold))
+                if let folder = currentFolder {
+                    Button(action: {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            currentFolder = nil
+                        }
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                            Text("Voltar")
+                        }
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(AppTheme.textSecondary)
-                    Text("ESPAÇO CRIATIVO")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .tracking(1.5)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(AppTheme.textSecondary.opacity(0.08))
-                .clipShape(Capsule())
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(AppTheme.textSecondary.opacity(0.1))
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 4)
 
-                Text("Meus Cadernos")
-                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppTheme.textPrimary)
+                    Text("\(folder.emoji) \(folder.name)")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.textPrimary)
+                } else {
+                    HStack(spacing: 6) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppTheme.textSecondary)
+                        Text("ESPAÇO CRIATIVO")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .tracking(1.5)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(AppTheme.textSecondary.opacity(0.08))
+                    .clipShape(Capsule())
+
+                    Text("Meus Cadernos")
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.textPrimary)
+                }
             }
 
             Spacer()
 
             // Stats badge
             HStack(spacing: 8) {
-                Image(systemName: "books.vertical.fill")
+                Image(systemName: currentFolder == nil ? "books.vertical.fill" : "folder.fill")
                     .font(.system(size: 16))
                     .foregroundStyle(AppTheme.textSecondary)
-                Text("\(store.notebooks.count) \(store.notebooks.count == 1 ? "caderno" : "cadernos")")
+                let count = currentFolder == nil ? store.notebooks.count + store.folders.count : visibleNotebooks.count
+                Text("\(count) \(count == 1 ? "item" : "itens")")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -180,36 +310,116 @@ struct NotebookListView: View {
             }
 
             VStack(spacing: 8) {
-                Text("Nenhum caderno ainda")
+                Text(currentFolder == nil ? "Espaço vazio" : "Pasta vazia")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
-                Text("Crie seu primeiro caderno e solte a imaginação\ncom a ajuda de IA poderosa.")
+                Text("Crie seu primeiro item e solte a imaginação\ncom a ajuda de IA poderosa.")
                     .font(.system(size: 15))
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
             }
 
-            Button {
-                showCreateSheet = true
-            } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 16))
-                    Text("Criar Caderno")
+            HStack(spacing: 12) {
+                if currentFolder == nil {
+                    Button {
+                        showCreateFolder = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "folder.badge.plus")
+                            Text("Nova Pasta")
+                        }
                         .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
+                        .background(AppTheme.surfaceElevated)
+                        .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
                 }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 28)
-                .padding(.vertical, 14)
-                .background(AppTheme.accent)
-                .clipShape(Capsule())
-                .shadow(color: AppTheme.accent.opacity(0.3), radius: 8, y: 4)
+                
+                Button {
+                    showCreateNotebook = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Criar Caderno")
+                    }
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background(AppTheme.accent)
+                    .clipShape(Capsule())
+                    .shadow(color: AppTheme.accent.opacity(0.3), radius: 8, y: 4)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
 
             Spacer()
         }
+    }
+}
+
+// MARK: - Folder Card
+
+struct FolderCard: View {
+    let folder: Folder
+    @State private var hovered = false
+
+    private var accentColor: Color {
+        notebookSwiftColor(at: folder.colorIndex)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .topLeading) {
+                LinearGradient(
+                    gradient: Gradient(colors: [accentColor.opacity(0.3), accentColor.opacity(0.05)]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .frame(height: 60)
+
+                HStack {
+                    Text(folder.emoji)
+                        .font(.system(size: 28))
+                        .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
+                    Spacer()
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(AppTheme.textPrimary.opacity(0.2))
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(folder.name)
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .lineLimit(1)
+
+                Text(folder.lastModified.relativeString)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(AppTheme.textMuted)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(AppTheme.surfaceElevated)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(hovered ? accentColor.opacity(0.5) : AppTheme.border, lineWidth: hovered ? 2 : 1)
+        )
+        .shadow(color: hovered ? accentColor.opacity(0.2) : AppTheme.shadowColor, radius: hovered ? 12 : 6, y: hovered ? 6 : 2)
+        .scaleEffect(hovered ? 1.02 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
+        .onHover { h in hovered = h }
     }
 }
 
@@ -225,7 +435,6 @@ struct NotebookCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Top — emoji + color block
             ZStack(alignment: .topLeading) {
                 LinearGradient(
                     gradient: Gradient(colors: [accentColor.opacity(0.4), accentColor.opacity(0.1)]),
@@ -234,7 +443,6 @@ struct NotebookCard: View {
                 )
                 .frame(height: 70)
 
-                // Emoji
                 Text(notebook.emoji)
                     .font(.system(size: 34))
                     .padding(.horizontal, 16)
@@ -242,7 +450,6 @@ struct NotebookCard: View {
                     .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
             }
 
-            // Bottom info
             VStack(alignment: .leading, spacing: 6) {
                 Text(notebook.name)
                     .font(.system(size: 15, weight: .bold, design: .rounded))
@@ -266,26 +473,20 @@ struct NotebookCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(
-                    hovered ? accentColor.opacity(0.5) : AppTheme.border,
-                    lineWidth: hovered ? 2 : 1
-                )
+                .stroke(hovered ? accentColor.opacity(0.5) : AppTheme.border, lineWidth: hovered ? 2 : 1)
         )
-        .shadow(
-            color: hovered ? accentColor.opacity(0.2) : AppTheme.shadowColor,
-            radius: hovered ? 12 : 6,
-            x: 0,
-            y: hovered ? 6 : 2
-        )
+        .shadow(color: hovered ? accentColor.opacity(0.2) : AppTheme.shadowColor, radius: hovered ? 12 : 6, y: hovered ? 6 : 2)
         .scaleEffect(hovered ? 1.02 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
         .onHover { h in hovered = h }
     }
 }
 
-// MARK: - New Notebook Card
+// MARK: - New Item Card
 
-struct NewNotebookCard: View {
+struct NewItemCard: View {
+    let title: String
+    let icon: String
     let action: () -> Void
     @State private var hovered = false
 
@@ -297,12 +498,12 @@ struct NewNotebookCard: View {
                         .fill(hovered ? AppTheme.borderActive : AppTheme.border)
                         .frame(width: 44, height: 44)
 
-                    Image(systemName: "plus")
+                    Image(systemName: icon)
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(AppTheme.textPrimary)
                 }
 
-                Text("Novo Caderno")
+                Text(title)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -327,18 +528,49 @@ struct NewNotebookCard: View {
     }
 }
 
-// MARK: - Create Notebook Sheet
+// MARK: - Editor Sheet (Create/Edit)
 
-struct CreateNotebookSheet: View {
+enum EditorMode {
+    case createNotebook(folderId: UUID?)
+    case createFolder
+    case editNotebook(Notebook)
+    case editFolder(Folder)
+    
+    var title: String {
+        switch self {
+        case .createNotebook: return "Novo Caderno"
+        case .createFolder: return "Nova Pasta"
+        case .editNotebook: return "Editar Caderno"
+        case .editFolder: return "Editar Pasta"
+        }
+    }
+    
+    var buttonTitle: String {
+        switch self {
+        case .createNotebook, .createFolder: return "Criar"
+        case .editNotebook, .editFolder: return "Salvar"
+        }
+    }
+    
+    var defaultEmoji: String {
+        switch self {
+        case .createNotebook, .editNotebook: return "📓"
+        case .createFolder, .editFolder: return "📁"
+        }
+    }
+}
+
+struct ItemEditorSheet: View {
     @ObservedObject var store: NotebookStore
+    let mode: EditorMode
     @Binding var isPresented: Bool
 
     @State private var name = ""
-    @State private var selectedEmoji = "📓"
+    @State private var selectedEmoji = ""
     @State private var selectedColorIndex = 0
     @FocusState private var nameFocused: Bool
 
-    private let emojis = ["📓", "✏️", "🎨", "💡", "🔥", "⚡️", "🌙", "🎯", "🗺️", "🔮", "🧠", "🎮", "🚀", "🌊", "🦋"]
+    private let emojis = ["📓", "📁", "✏️", "🎨", "💡", "🔥", "⚡️", "🌙", "🎯", "🗺️", "🔮", "🧠", "🎮", "🚀", "🌊", "🦋"]
 
     var body: some View {
         ZStack {
@@ -354,14 +586,14 @@ struct CreateNotebookSheet: View {
 
                     Spacer()
 
-                    Text("Novo Caderno")
+                    Text(mode.title)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
 
                     Spacer()
 
-                    Button("Criar") {
-                        createAndOpen()
+                    Button(mode.buttonTitle) {
+                        save()
                     }
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(name.isEmpty ? AppTheme.textMuted : AppTheme.accent)
@@ -389,7 +621,7 @@ struct CreateNotebookSheet: View {
                                     .font(.system(size: 32))
 
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(name.isEmpty ? "Nome do caderno" : name)
+                                    Text(name.isEmpty ? "Nome" : name)
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(name.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary)
                                     Text("Agora mesmo")
@@ -407,7 +639,7 @@ struct CreateNotebookSheet: View {
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(AppTheme.textMuted)
 
-                            TextField("Ex: Anotações de Matemática", text: $name)
+                            TextField("Ex: Ideias", text: $name)
                                 .textFieldStyle(.plain)
                                 .font(.system(size: 14))
                                 .foregroundStyle(AppTheme.textPrimary)
@@ -437,14 +669,10 @@ struct CreateNotebookSheet: View {
                                             .frame(width: 44, height: 44)
                                             .background(
                                                 RoundedRectangle(cornerRadius: 8)
-                                                    .fill(selectedEmoji == emoji
-                                                          ? AppTheme.border
-                                                          : AppTheme.surfaceElevated)
+                                                    .fill(selectedEmoji == emoji ? AppTheme.border : AppTheme.surfaceElevated)
                                                     .overlay(
                                                         RoundedRectangle(cornerRadius: 8)
-                                                            .stroke(selectedEmoji == emoji
-                                                                    ? AppTheme.borderHover
-                                                                    : AppTheme.border, lineWidth: 1)
+                                                            .stroke(selectedEmoji == emoji ? AppTheme.borderHover : AppTheme.border, lineWidth: 1)
                                                     )
                                             )
                                     }
@@ -457,7 +685,7 @@ struct CreateNotebookSheet: View {
 
                         // Color picker
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("TITULO DA COR")
+                            Text("COR DO TEMA")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(AppTheme.textMuted)
 
@@ -484,11 +712,11 @@ struct CreateNotebookSheet: View {
                             }
                         }
 
-                        // Create button
+                        // Submit button
                         Button {
-                            createAndOpen()
+                            save()
                         } label: {
-                            Text("Criar Caderno")
+                            Text(mode.buttonTitle)
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
@@ -505,12 +733,37 @@ struct CreateNotebookSheet: View {
                 }
             }
         }
-        .onAppear { nameFocused = true }
+        .onAppear {
+            switch mode {
+            case .createNotebook, .createFolder:
+                selectedEmoji = mode.defaultEmoji
+            case .editNotebook(let nb):
+                name = nb.name
+                selectedEmoji = nb.emoji
+                selectedColorIndex = nb.colorIndex
+            case .editFolder(let f):
+                name = f.name
+                selectedEmoji = f.emoji
+                selectedColorIndex = f.colorIndex
+            }
+            nameFocused = true
+        }
     }
 
-    private func createAndOpen() {
+    private func save() {
         guard !name.isEmpty else { return }
-        store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex)
+        
+        switch mode {
+        case .createNotebook(let folderId):
+            store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId)
+        case .createFolder:
+            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex)
+        case .editNotebook(let nb):
+            store.renameNotebook(nb, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex)
+        case .editFolder(let f):
+            store.renameFolder(f, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex)
+        }
+        
         isPresented = false
     }
 }
@@ -538,11 +791,4 @@ extension Date {
         formatter.locale = Locale(identifier: "pt_BR")
         return formatter.localizedString(for: self, relativeTo: Date())
     }
-}
-
-#Preview {
-    NotebookListView(
-        store: NotebookStore(),
-        selectedNotebook: .constant(nil)
-    )
 }
