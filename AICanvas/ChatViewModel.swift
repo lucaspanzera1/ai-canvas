@@ -2,16 +2,19 @@ import Foundation
 import UIKit
 
 /// Represents a single message in the AI chat conversation.
-struct ChatMessage: Identifiable, Equatable {
-    let id = UUID()
+struct ChatMessage: Identifiable, Equatable, Codable {
+    let id: UUID
     let role: Role
     let content: String
-    let timestamp = Date()
-    let attachedImage: UIImage? // canvas snapshot shown in the bubble
+    let timestamp: Date
+    // Image is purposely ignored during Codable serialization to keep chat history light.
+    var attachedImage: UIImage? = nil
 
-    init(role: Role, content: String, attachedImage: UIImage? = nil) {
+    init(id: UUID = UUID(), role: Role, content: String, timestamp: Date = Date(), attachedImage: UIImage? = nil) {
+        self.id = id
         self.role = role
         self.content = content
+        self.timestamp = timestamp
         self.attachedImage = attachedImage
     }
 
@@ -23,6 +26,28 @@ struct ChatMessage: Identifiable, Equatable {
         case user
         case assistant
         case system
+    }
+
+    // Custom Codable implementation to ignore UIImage
+    enum CodingKeys: String, CodingKey {
+        case id, role, content, timestamp
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        role = try container.decode(Role.self, forKey: .role)
+        content = try container.decode(String.self, forKey: .content)
+        timestamp = try container.decode(Date.self, forKey: .timestamp)
+        attachedImage = nil
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(role, forKey: .role)
+        try container.encode(content, forKey: .content)
+        try container.encode(timestamp, forKey: .timestamp)
     }
 }
 
@@ -41,33 +66,35 @@ final class ChatViewModel: ObservableObject {
 
     private let systemPrompt = """
     Você é um tutor de matemática excepcional e um assistente criativo integrado a um app de desenho (AI Canvas). \
-    Sua especialidade é ajudar pessoas a entenderem e resolverem cálculos matemáticos passo a passo. \
+    Sua especialidade é ajudar pessoas a entenderem e resolverem cálculos matemáticos, além de dar ótimas dicas e ideias. \
     Quando receber uma imagem do canvas, analise-a com atenção: identifique as equações, contas ou problemas manuscritos. \
-    Resolva os cálculos de maneira didática, amigável e encorajadora. Explique o raciocínio por trás de cada etapa. \
     
     IMPORTANTE SOBRE A FORMATAÇÃO (MATEMÁTICA E TEXTO): \
-    - Formate sua resposta para ser visualmente agradável, bem espaçada e fácil de ler na interface. \
+    - Formate sua resposta para ser visualmente agradável, bem espaçada e fácil de ler na interface do chat. \
     - Use caracteres Unicode elegantes para operações matemáticas (ex: potências como x², y³, raízes como √16, frações como ½, ¾). \
     - Escreva equações matemáticas de forma clara, utilizando itálico (*x + y = z*) ou negrito para destacar expressões importantes. \
-    - Organize resoluções longas alinhando etapas e usando espaçamento apropriado para simular uma resolução em caderno. \
     
-    🔥 NOVO PODER: DESENHAR NO CANVAS DO USUÁRIO 🔥 \
-    - Se a imagem contiver um cálculo matemático ou problema, você DEVE fornecer uma versão resumida da resolução ou a resposta final dentro de uma tag <canvas_text> ... </canvas_text>. \
-    - O conteúdo dentro dessa tag será "desenhado" automaticamente usando uma fonte com estilo de caligrafia diretamente no quadro do usuário ao lado do problema! \
-    - Seja conciso e use espaços e quebras de linha limpas dentro dessa tag. \
+    🔥 NOVO PODER: INTERAÇÃO DIRETO NO CANVAS 🔥 \
+    Você tem a habilidade de enviar conteúdo mágico direto para o quadro do usuário! Siga estas regras OBRIGATORIAMENTE: \
+    
+    1. RESOLUÇÕES E RESPOSTAS (Texto Simples): \
+    - Se o usuário pedir a **resolução**, a **conta**, ou a **resposta** matemática, forneça o passo a passo resumido ou a resposta final dentro de uma tag <canvas_text> ... </canvas_text>. \
+    - Isso será "escrito à mão" no quadro dele. \
+    
     Exemplo:
+    Aqui está a conta resolvida no quadro:
     <canvas_text>
-    Resolvendo: 2x = 10
-    ▶ x = 5
+    2x + 4 = 10
+    2x = 6
+    ▶ x = 3
     </canvas_text>
     
-    No restante da sua resposta (fora da tag), você pode dar a explicação passo a passo completa, usar listas, emojis, etc. \
-    
-    Caso não haja cálculos na imagem, ajude o usuário com ideias gerais, sugestões criativas ou explicações sobre suas anotações.
+    Sempre dê explicações extras e converse de forma amigável no corpo normal da mensagem.
     """
 
-    init(aiConfig: AIConfiguration) {
+    init(aiConfig: AIConfiguration, initialMessages: [ChatMessage] = []) {
         self.aiConfig = aiConfig
+        self.messages = initialMessages
     }
 
     // MARK: - Send plain text message
@@ -129,7 +156,7 @@ final class ChatViewModel: ObservableObject {
                         systemPrompt: systemPrompt
                     )
                 }
-                messages.append(ChatMessage(role: .assistant, content: reply))
+                var finalReply = reply
                 
                 // Extrair <canvas_text> usando expressões regulares
                 if let range = reply.range(of: "(?<=<canvas_text>)[\\s\\S]*?(?=</canvas_text>)", options: .regularExpression) {
@@ -139,6 +166,14 @@ final class ChatViewModel: ObservableObject {
                             self.canvasManager?.addTextToCanvas(textToDraw)
                         }
                     }
+                    
+                    // Em vez de remover o texto, substituímos as tags por uma formatação bacana no chat
+                    finalReply = finalReply.replacingOccurrences(of: "<canvas_text>", with: "📝 **Enviado para o Canvas:**\n> ")
+                    finalReply = finalReply.replacingOccurrences(of: "</canvas_text>", with: "")
+                }
+                
+                if !finalReply.isEmpty {
+                    messages.append(ChatMessage(role: .assistant, content: finalReply))
                 }
             } catch {
                 errorMessage = error.localizedDescription

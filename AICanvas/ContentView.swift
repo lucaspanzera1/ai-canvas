@@ -47,7 +47,8 @@ struct ContentView: View {
 
         let config = AIConfiguration()
         _aiConfig = StateObject(wrappedValue: config)
-        _chatViewModel = StateObject(wrappedValue: ChatViewModel(aiConfig: config))
+        let loadedMessages = store.loadChatHistory(for: notebook)
+        _chatViewModel = StateObject(wrappedValue: ChatViewModel(aiConfig: config, initialMessages: loadedMessages))
         _showOnboarding = State(initialValue: !KeychainManager.shared.hasAnyAPIKey)
         _backgroundPattern = State(initialValue: notebook.backgroundPattern ?? .none)
 
@@ -137,6 +138,9 @@ struct ContentView: View {
             showOnboarding = true
             showAIPanel = false
             aiConfig.updateAvailableModels()
+        }
+        .onChange(of: chatViewModel.messages) { _, newMessages in
+            store.saveChatHistory(newMessages, for: notebook)
         }
         .statusBarHidden(false)
         .persistentSystemOverlays(.hidden)

@@ -228,6 +228,7 @@ final class CanvasManager: ObservableObject {
             textView.alpha = 1
         }, completion: nil)
     }
+    }
 }
 
 // MARK: - Components

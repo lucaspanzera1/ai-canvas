@@ -196,6 +196,22 @@ final class NotebookStore: ObservableObject {
         return drawing
     }
 
+    // MARK: - Chat Persistence
+
+    func saveChatHistory(_ messages: [ChatMessage], for notebook: Notebook) {
+        if let data = try? JSONEncoder().encode(messages) {
+            try? data.write(to: chatURL(for: notebook))
+        }
+    }
+
+    func loadChatHistory(for notebook: Notebook) -> [ChatMessage] {
+        guard let data = try? Data(contentsOf: chatURL(for: notebook)),
+              let messages = try? JSONDecoder().decode([ChatMessage].self, from: data) else {
+            return []
+        }
+        return messages
+    }
+
     func persistMetadata() {
         saveMetadata()
     }
@@ -212,6 +228,10 @@ final class NotebookStore: ObservableObject {
 
     private func drawingURL(for notebook: Notebook) -> URL {
         drawingsDirectory.appendingPathComponent("\(notebook.id.uuidString).drawing")
+    }
+
+    private func chatURL(for notebook: Notebook) -> URL {
+        drawingsDirectory.appendingPathComponent("\(notebook.id.uuidString).chat")
     }
 
     private func saveMetadata() {
