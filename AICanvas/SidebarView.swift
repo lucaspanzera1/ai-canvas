@@ -168,7 +168,7 @@ struct SidebarView: View {
                 .buttonStyle(.plain)
             }
         }
-        .background(Color(red: 0.96, green: 0.96, blue: 0.95).ignoresSafeArea()) // Lighter sidebar background like Notion
+        .background(AppTheme.background.ignoresSafeArea()) // Lighter sidebar background like Notion
         .sheet(isPresented: $showCreateFolder) {
             ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
         }
@@ -255,7 +255,7 @@ struct FolderSidebarRow: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .background(Color.black.opacity(0.05))
+                        .background(AppTheme.textPrimary.opacity(0.05))
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
                 }

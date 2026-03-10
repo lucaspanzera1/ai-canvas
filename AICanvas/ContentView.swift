@@ -4,23 +4,23 @@ import PencilKit
 // MARK: - App Theme
 
 struct AppTheme {
-    static let background = Color(red: 0.97, green: 0.97, blue: 0.96)
-    static let surface = Color.white
-    static let surfaceElevated = Color.white
-    static let accent = Color(red: 0.1, green: 0.1, blue: 0.1)
-    static let action = Color(red: 0.2, green: 0.4, blue: 0.9)
-    static let danger = Color(red: 0.9, green: 0.3, blue: 0.3)
+    static let background = Color(uiColor: .systemGroupedBackground)
+    static let surface = Color(uiColor: .systemBackground)
+    static let surfaceElevated = Color(uiColor: .secondarySystemBackground)
+    static let accent = Color.primary
+    static let action = Color.blue
+    static let danger = Color.red
     
-    static let textPrimary = Color(red: 0.1, green: 0.1, blue: 0.1)
-    static let textSecondary = Color(red: 0.4, green: 0.4, blue: 0.4)
-    static let textMuted = Color(red: 0.6, green: 0.6, blue: 0.6)
+    static let textPrimary = Color.primary
+    static let textSecondary = Color.secondary
+    static let textMuted = Color(uiColor: .tertiaryLabel)
     
-    static let border = Color(red: 0.88, green: 0.88, blue: 0.88)
-    static let borderHover = Color(red: 0.75, green: 0.75, blue: 0.75)
-    static let borderActive = Color(red: 0.1, green: 0.1, blue: 0.1)
+    static let border = Color(uiColor: .separator)
+    static let borderHover = Color(uiColor: .opaqueSeparator)
+    static let borderActive = Color.primary
     
-    static let shadowColor = Color.black.opacity(0.04)
-    static let link = Color(red: 0.2, green: 0.4, blue: 0.9)
+    static let shadowColor = Color.black.opacity(0.1)
+    static let link = Color.blue
 }
 
 // MARK: - Content View (Canvas for a specific notebook)

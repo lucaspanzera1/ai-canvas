@@ -6,6 +6,7 @@ struct CanvasRepresentable: UIViewRepresentable {
     @ObservedObject var canvasManager: CanvasManager
     @Binding var showToolPicker: Bool
     @Binding var pattern: BackgroundPattern
+    @Environment(\.colorScheme) var colorScheme
 
     func makeUIView(context: Context) -> PKCanvasView {
         let canvasView = CenteredCanvasView()
@@ -104,7 +105,7 @@ struct CanvasRepresentable: UIViewRepresentable {
         
         // Sombra da folha
         context.setShadow(offset: CGSize(width: 0, height: 4), blur: 12, color: UIColor.black.withAlphaComponent(0.08).cgColor)
-        UIColor.white.setFill()
+        UIColor.systemBackground.setFill()
         let path = UIBezierPath(roundedRect: paperRect, cornerRadius: 2)
         path.fill()
         
@@ -113,7 +114,7 @@ struct CanvasRepresentable: UIViewRepresentable {
         
         // Desenhar padrões (linhas ou grade)
         if pattern != .none {
-            context.setStrokeColor(UIColor(red: 0.9, green: 0.9, blue: 0.9, alpha: 1.0).cgColor)
+            context.setStrokeColor(UIColor.separator.cgColor)
             context.setLineWidth(1)
             
             let linePath = UIBezierPath()
