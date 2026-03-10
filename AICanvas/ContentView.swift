@@ -80,11 +80,10 @@ struct ContentView: View {
                     )
 
                     ZStack(alignment: .bottom) {
-                        CanvasPatternView(pattern: backgroundPattern)
-                        
                         CanvasRepresentable(
                             canvasManager: canvasManager,
-                            showToolPicker: .constant(false)
+                            showToolPicker: .constant(false),
+                            pattern: $backgroundPattern
                         )
                         .ignoresSafeArea(edges: .bottom)
 
@@ -306,41 +305,7 @@ struct ToolButtonSimple: View {
     }
 }
 
-// MARK: - Canvas Pattern View
-
-struct CanvasPatternView: View {
-    let pattern: BackgroundPattern
-    
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .topLeading) {
-                Color.white
-                
-                if pattern != .none {
-                    Path { path in
-                        let step: CGFloat = 34
-                        
-                        // Horizontal lines
-                        for y in stride(from: step, through: geometry.size.height, by: step) {
-                            path.move(to: CGPoint(x: 0, y: y))
-                            path.addLine(to: CGPoint(x: geometry.size.width, y: y))
-                        }
-                        
-                        // Vertical lines for grid
-                        if pattern == .grid {
-                            for x in stride(from: step, through: geometry.size.width, by: step) {
-                                path.move(to: CGPoint(x: x, y: 0))
-                                path.addLine(to: CGPoint(x: x, y: geometry.size.height))
-                            }
-                        }
-                    }
-                    .stroke(Color(red: 0.9, green: 0.9, blue: 0.9), lineWidth: 1)
-                }
-            }
-        }
-        .ignoresSafeArea()
-    }
-}
+// MARK: - Previews
 
 #Preview {
     ContentView(
