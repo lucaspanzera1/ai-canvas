@@ -32,6 +32,8 @@ struct NotebookListView: View {
     @State private var activeAction: ItemSelection?
     
     @State private var appeared = false
+    @State private var showOnboarding = false
+    @StateObject private var aiConfig = AIConfiguration()
 
     private let columns = [
         GridItem(.adaptive(minimum: 180, maximum: 240), spacing: 16)
@@ -178,6 +180,12 @@ struct NotebookListView: View {
                 ))
             }
         }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            MultiProviderOnboardingView(
+                isPresented: $showOnboarding,
+                aiConfig: aiConfig
+            )
+        }
         .confirmationDialog(
             "Tem certeza?",
             isPresented: Binding(
@@ -259,22 +267,45 @@ struct NotebookListView: View {
 
             Spacer()
 
-            // Stats badge
-            HStack(spacing: 8) {
-                Image(systemName: currentFolder == nil ? "books.vertical.fill" : "folder.fill")
-                    .font(.system(size: 16))
-                    .foregroundStyle(AppTheme.textSecondary)
-                let count = currentFolder == nil ? store.notebooks.count + store.folders.count : visibleNotebooks.count
-                Text("\(count) \(count == 1 ? "item" : "itens")")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(AppTheme.textSecondary)
+            // Header Actions
+            VStack(alignment: .trailing, spacing: 12) {
+                HStack(spacing: 12) {
+                    // Open Source Action
+                    Link(destination: URL(string: "https://github.com/lucaspanzera1/ai-canvas")!) {
+                        Image(systemName: "chevron.left.forwardslash.chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    // Config IAs
+                    Button {
+                        showOnboarding = true
+                    } label: {
+                        Image(systemName: "cpu")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                // Stats badge
+                HStack(spacing: 8) {
+                    Image(systemName: currentFolder == nil ? "books.vertical.fill" : "folder.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(AppTheme.textSecondary)
+                    let count = currentFolder == nil ? store.notebooks.count + store.folders.count : visibleNotebooks.count
+                    Text("\(count) \(count == 1 ? "item" : "itens")")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(AppTheme.surfaceElevated)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                .shadow(color: AppTheme.shadowColor, radius: 4, y: 2)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(AppTheme.surfaceElevated)
-            .clipShape(Capsule())
-            .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
-            .shadow(color: AppTheme.shadowColor, radius: 4, y: 2)
         }
         .padding(.horizontal, 24)
         .padding(.top, 60)
