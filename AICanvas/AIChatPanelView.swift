@@ -468,7 +468,16 @@ struct MessageBubble: View {
     let message: ChatMessage
     @State private var appeared = false
 
-    var isUser: Bool { message.role == .user }
+    private var attributedContent: AttributedString {
+        do {
+            var options = AttributedString.MarkdownParsingOptions()
+            options.interpretedSyntax = .full
+            options.failurePolicy = .returnPartiallyParsedIfPossible
+            return try AttributedString(markdown: message.content, options: options)
+        } catch {
+            return AttributedString(message.content)
+        }
+    }
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
@@ -502,21 +511,23 @@ struct MessageBubble: View {
                             HStack(spacing: 3) {
                                 Image(systemName: "photo.fill")
                                     .font(.system(size: 9))
+                                    .foregroundStyle(.white)
                                 Text("canvas")
                                     .font(.system(size: 9, weight: .semibold))
+                                    .foregroundStyle(.white)
                             }
-                            .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 3)
-                            .background(.black.opacity(0.45))
+                            .background(Color.black.opacity(0.45))
                             .clipShape(Capsule())
                             .padding(6),
                             alignment: .bottomLeading
                         )
                 }
 
-                Text(message.content)
+                Text(attributedContent)
                     .font(.system(size: 14))
+                    .lineSpacing(4)
                     .textSelection(.enabled)
                     .foregroundStyle(isUser ? AppTheme.surface : AppTheme.textPrimary)
                     .padding(.horizontal, 14)
