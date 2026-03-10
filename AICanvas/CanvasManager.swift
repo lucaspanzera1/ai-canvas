@@ -115,15 +115,26 @@ final class CanvasManager: ObservableObject {
             ? CGRect(x: 0, y: 0, width: 800, height: 600)
             : drawing.bounds.insetBy(dx: -20, dy: -20)
 
+        let canvasSize = bounds.size
         let scale = UIScreen.main.scale
-        let image = drawing.image(from: bounds, scale: scale)
 
-        // Composite onto white background so the image makes sense for the AI
-        let renderer = UIGraphicsImageRenderer(size: bounds.size)
+        // Render the PencilKit strokes within the drawing's bounds
+        let strokeImage = drawing.image(from: bounds, scale: scale)
+
+        // Composite onto an opaque white background.
+        // IMPORTANT: use CGRect(origin: .zero) — the renderer coordinate space always
+        // starts at (0,0), NOT at bounds.origin. Using bounds directly here would
+        // paint the white fill at the wrong position, leaving transparent pixels that
+        // JPEG encodes as black (hence the "all black" image the AI was seeing).
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = scale
+        format.opaque = true  // no alpha channel → no transparent→black JPEG artifacts
+
+        let renderer = UIGraphicsImageRenderer(size: canvasSize, format: format)
         return renderer.image { ctx in
             UIColor.white.setFill()
-            ctx.fill(bounds)
-            image.draw(in: CGRect(origin: .zero, size: bounds.size))
+            ctx.fill(CGRect(origin: .zero, size: canvasSize))
+            strokeImage.draw(in: CGRect(origin: .zero, size: canvasSize))
         }
     }
 
