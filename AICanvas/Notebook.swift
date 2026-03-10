@@ -1,6 +1,14 @@
 import Foundation
 import PencilKit
 
+// MARK: - Background Pattern
+
+enum BackgroundPattern: String, Codable, CaseIterable {
+    case none = "Vazio"
+    case lines = "Linhas"
+    case grid = "Grade"
+}
+
 // MARK: - Notebook Model
 
 struct Notebook: Identifiable, Codable, Equatable {
@@ -11,13 +19,15 @@ struct Notebook: Identifiable, Codable, Equatable {
     var createdAt: Date
     var lastModified: Date
     var pageCount: Int
+    var backgroundPattern: BackgroundPattern?
 
     init(
         id: UUID = UUID(),
         name: String,
         emoji: String = "📓",
         colorIndex: Int = 0,
-        pageCount: Int = 1
+        pageCount: Int = 1,
+        backgroundPattern: BackgroundPattern = .none
     ) {
         self.id = id
         self.name = name
@@ -26,6 +36,7 @@ struct Notebook: Identifiable, Codable, Equatable {
         self.createdAt = Date()
         self.lastModified = Date()
         self.pageCount = pageCount
+        self.backgroundPattern = backgroundPattern
     }
 
     static func == (lhs: Notebook, rhs: Notebook) -> Bool {
@@ -87,6 +98,12 @@ final class NotebookStore: ObservableObject {
     func renameNotebook(_ notebook: Notebook, to name: String) {
         guard let idx = notebooks.firstIndex(where: { $0.id == notebook.id }) else { return }
         notebooks[idx].name = name
+        saveMetadata()
+    }
+
+    func updateNotebookPattern(_ notebook: Notebook, to pattern: BackgroundPattern) {
+        guard let idx = notebooks.firstIndex(where: { $0.id == notebook.id }) else { return }
+        notebooks[idx].backgroundPattern = pattern
         saveMetadata()
     }
 

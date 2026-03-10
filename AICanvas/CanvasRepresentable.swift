@@ -10,8 +10,8 @@ struct CanvasRepresentable: UIViewRepresentable {
         let canvasView = PKCanvasView()
 
         canvasView.drawingPolicy = .anyInput
-        canvasView.backgroundColor = .white
-        canvasView.isOpaque = true
+        canvasView.backgroundColor = .clear
+        canvasView.isOpaque = false
         canvasView.allowsFingerDrawing = true
         canvasView.isScrollEnabled = false
         canvasView.minimumZoomScale = 1.0

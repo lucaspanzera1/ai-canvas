@@ -36,6 +36,7 @@ struct ContentView: View {
 
     @State private var showAIPanel = false
     @State private var showOnboarding: Bool
+    @State private var backgroundPattern: BackgroundPattern
 
     init(notebook: Notebook, store: NotebookStore, selectedNotebook: Binding<Notebook?>) {
         self.notebook = notebook
@@ -46,6 +47,7 @@ struct ContentView: View {
         _aiConfig = StateObject(wrappedValue: config)
         _chatViewModel = StateObject(wrappedValue: ChatViewModel(aiConfig: config))
         _showOnboarding = State(initialValue: !KeychainManager.shared.hasAnyAPIKey)
+        _backgroundPattern = State(initialValue: notebook.backgroundPattern ?? .none)
 
         // Carrega o desenho salvo do caderno
         let drawing = store.loadDrawing(for: notebook)
@@ -63,6 +65,11 @@ struct ContentView: View {
                         notebook: notebook,
                         canvasManager: canvasManager,
                         showAIPanel: $showAIPanel,
+                        backgroundPattern: $backgroundPattern,
+                        onPatternChange: { pattern in
+                            backgroundPattern = pattern
+                            store.updateNotebookPattern(notebook, to: pattern)
+                        },
                         onBack: {
                             // Salva metadados ao sair
                             store.persistMetadata()
@@ -73,6 +80,8 @@ struct ContentView: View {
                     )
 
                     ZStack(alignment: .bottom) {
+                        CanvasPatternView(pattern: backgroundPattern)
+                        
                         CanvasRepresentable(
                             canvasManager: canvasManager,
                             showToolPicker: .constant(false)
@@ -130,6 +139,8 @@ struct CanvasToolbar: View {
     let notebook: Notebook
     @ObservedObject var canvasManager: CanvasManager
     @Binding var showAIPanel: Bool
+    @Binding var backgroundPattern: BackgroundPattern
+    let onPatternChange: (BackgroundPattern) -> Void
     let onBack: () -> Void
 
     private var accentColor: Color { notebookSwiftColor(at: notebook.colorIndex) }
@@ -190,6 +201,33 @@ struct CanvasToolbar: View {
                     color: AppTheme.danger
                 ) {
                     canvasManager.clearCanvas()
+                }
+
+                // Linhas e grades Menu
+                Menu {
+                    ForEach(BackgroundPattern.allCases, id: \.self) { pattern in
+                        Button {
+                            onPatternChange(pattern)
+                        } label: {
+                            HStack {
+                                Text(pattern.rawValue)
+                                if backgroundPattern == pattern {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    Image(systemName: "square.grid.3x3")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(width: 32, height: 32)
+                        .background(AppTheme.surfaceElevated)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(AppTheme.border, lineWidth: 1)
+                        )
                 }
 
                 ToolButtonSimple(
@@ -265,6 +303,42 @@ struct ToolButtonSimple: View {
         .onHover { hover in
             withAnimation(.easeInOut(duration: 0.15)) { isHovered = hover }
         }
+    }
+}
+
+// MARK: - Canvas Pattern View
+
+struct CanvasPatternView: View {
+    let pattern: BackgroundPattern
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .topLeading) {
+                Color.white
+                
+                if pattern != .none {
+                    Path { path in
+                        let step: CGFloat = 34
+                        
+                        // Horizontal lines
+                        for y in stride(from: step, through: geometry.size.height, by: step) {
+                            path.move(to: CGPoint(x: 0, y: y))
+                            path.addLine(to: CGPoint(x: geometry.size.width, y: y))
+                        }
+                        
+                        // Vertical lines for grid
+                        if pattern == .grid {
+                            for x in stride(from: step, through: geometry.size.width, by: step) {
+                                path.move(to: CGPoint(x: x, y: 0))
+                                path.addLine(to: CGPoint(x: x, y: geometry.size.height))
+                            }
+                        }
+                    }
+                    .stroke(Color(red: 0.9, green: 0.9, blue: 0.9), lineWidth: 1)
+                }
+            }
+        }
+        .ignoresSafeArea()
     }
 }
 
