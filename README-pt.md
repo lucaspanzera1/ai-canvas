@@ -7,27 +7,32 @@
 ## 💡 Sobre o Projeto
 O **AICanvas** é um ecossistema de cadernos digitais de código aberto (Open Source) desenvolvido especificamente para o **iPad**. Ele une a fluidez da escrita manual com o Apple Pencil ao poder da Inteligência Artificial.
 
-A ideia principal é oferecer um ambiente minimalista e sem distrações onde você pode organizar vários cadernos, escrever usando a estética nativa da Apple e utilizar IA para acelerar seu aprendizado.
+A ideia principal é oferecer um ambiente minimalista e sem distrações onde você pode organizar vários cadernos, escrever usando a estética nativa em um canvas infinito com páginas tamanho A4 e utilizar diversas provedoras de IA Multimodal para acelerar seu aprendizado e resolução de problemas.
 
 ## ✨ Principais Funcionalidades
-* **Estética Nativa Apple:** Experiência de escrita de baixa latência otimizada para iPad e Apple Pencil.
-* **Cadernos Inteligentes:** Crie e gerencie múltiplos cadernos para diferentes matérias (Cálculo, Engenharia, etc.).
-* **Integração com IA:** Um assistente integrado para te ajudar a:
-    * Realizar cálculos matemáticos e de engenharia complexos.
+* **Estética Nativa Apple:** Experiência de escrita de baixa latência altamente otimizada, utilizando PencilKit para iPad e Apple Pencil.
+* **Área de Trabalho Infinita:** Um canvas com rolagem infinita segmentado em páginas A4, com fundos customizáveis como linhas ou grade.
+* **Gerenciamento Inteligente de Cadernos:** Crie e gerencie múltiplos cadernos em uma interface em formato de grade (gamificada) com salvamento automático local.
+* **Integração com IA Multimodal:** Um painel de chat com IA embutido que "enxerga" o seu canvas para te ajudar a:
+    * Realizar cálculos matemáticos e de engenharia complexos a partir das suas fórmulas desenhadas à mão.
     * Resumir anotações manuais ou digitadas.
-    * Explicar conceitos difíceis ou fornecer contexto extra em tempo real.
-* **Open Source:** Uma plataforma feita por estudantes para estudantes. Totalmente personalizável.
+    * Explicar conceitos difíceis ou fornecer contexto extra analisando os seus rascunhos em tempo real.
+* **Traga a sua Própria IA:** Adicione com segurança suas próprias chaves de API pelo Keychain para usar as IAs mais modernas do mercado:
+    * **Google Gemini** (Suporte à Visão Multimodal)
+    * **OpenAI (ChatGPT)** (Suporte à Visão Multimodal)
+    * **Anthropic Claude** (Suporte à Visão Multimodal)
+    * **Groq** (Inferência rápida de texto)
 
 ## 🛠 Tecnologias
-* **Frontend:** [Ex: Swift / SwiftUI]
-* **IA:** [Ex: Gemini API / OpenAI]
-* **Persistência:** [Ex: CoreData / Realm]
+* **Frontend:** Swift, SwiftUI, PencilKit
+* **Integração de IA:** APIs da Gemini, OpenAI, Claude e Groq
+* **Persistência:** File System Local (JSON) para cadernos, Apple Keychain para armazenar as chaves de API com segurança.
 
 ## 🚀 Como Começar
-1. Clone o repositório: `git clone https://github.com/lucaspanzera/eaic-canvas.git`
-2. Abra o projeto no Xcode.
-3. Adicione sua chave de API da IA no arquivo de configuração (veja `.env.example`).
-4. Execute o projeto no seu iPad ou Simulador.
+1. Clone o repositório: `git clone https://github.com/lucaspanzera/ai-canvas.git`
+2. Abra o projeto no Xcode (requer Xcode 15+ e iOS/iPadOS 17+).
+3. Execute o projeto no seu iPad ou Simulador.
+4. No primeiro acesso, siga o processo de integração (onboarding) para adicionar suas Chaves de API de IA preferidas.
 
 ## 🤝 Contribuições
 Contribuições são o que fazem a comunidade open-source um lugar incrível para aprender e criar. Sinta-se à vontade para abrir issues ou enviar pull requests!

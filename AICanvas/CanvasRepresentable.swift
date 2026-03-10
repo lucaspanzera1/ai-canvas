@@ -17,12 +17,14 @@ struct CanvasRepresentable: UIViewRepresentable {
         canvasView.isScrollEnabled = true
         
         // Define canvas grande para simular infinidade
-        let canvasWidth: CGFloat = 840 * 5  // 5 páginas lado a lado
+        let canvasWidth: CGFloat = 840  // 1 página por linha
         let canvasHeight: CGFloat = 1180 * 20 // 20 páginas para baixo
         canvasView.contentSize = CGSize(width: canvasWidth, height: canvasHeight)
         
         // Background view que contém a textura repetida das páginas
         let bgView = UIView(frame: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight))
+        bgView.layer.anchorPoint = CGPoint(x: 0, y: 0)
+        bgView.layer.position = CGPoint(x: 0, y: 0)
         bgView.tag = 999
         bgView.isUserInteractionEnabled = false
         canvasView.insertSubview(bgView, at: 0)
@@ -45,6 +47,7 @@ struct CanvasRepresentable: UIViewRepresentable {
     func updateUIView(_ canvasView: PKCanvasView, context: Context) {
         if let bgView = canvasView.viewWithTag(999) {
             updateBackgroundPattern(for: bgView, pattern: pattern)
+            bgView.transform = CGAffineTransform(scaleX: canvasView.zoomScale, y: canvasView.zoomScale)
         }
     }
     
@@ -133,6 +136,12 @@ struct CanvasRepresentable: UIViewRepresentable {
 
         func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {
             canvasManager.updateUndoState()
+        }
+
+        func scrollViewDidZoom(_ scrollView: UIScrollView) {
+            if let bgView = scrollView.viewWithTag(999) {
+                bgView.transform = CGAffineTransform(scaleX: scrollView.zoomScale, y: scrollView.zoomScale)
+            }
         }
     }
 }
