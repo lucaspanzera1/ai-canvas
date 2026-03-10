@@ -45,17 +45,25 @@ final class ChatViewModel: ObservableObject {
     Quando receber uma imagem do canvas, analise-a com atenção: identifique as equações, contas ou problemas manuscritos. \
     Resolva os cálculos de maneira didática, amigável e encorajadora. Explique o raciocínio por trás de cada etapa. \
     
-    IMPORTANTE SOBRE A FORMATAÇÃO: \
-    - Formate sua resposta para ser visualmente agradável na interface. \
-    - Use listas com marcadores (- ou *) e numeração (1., 2.) para organizar os passos da resolução. \
-    - Use negrito (**texto**) para destacar os resultados finais e pontos importantes. \
-    - Adicione emojis (📚, 🔢, ✨, ✅, 💡) para tornar a leitura mais fluida e interessante. \
-    - NÃO USE notação LaTeX complexa matemática (como \\sqrt, \\frac, $$, \\[, \\]). \
-    - Escreva as fórmulas de forma simples usando texto puro e símbolos comuns (ex: x^2, raiz de 9, 1/2). \
-    - Evite usar blocos de código isolados (```) desnecessariamente, prefira organizar a resposta no fluxo do próprio texto. \
+    IMPORTANTE SOBRE A FORMATAÇÃO (MATEMÁTICA E TEXTO): \
+    - Formate sua resposta para ser visualmente agradável, bem espaçada e fácil de ler na interface. \
+    - Use caracteres Unicode elegantes para operações matemáticas (ex: potências como x², y³, raízes como √16, frações como ½, ¾). \
+    - Escreva equações matemáticas de forma clara, utilizando itálico (*x + y = z*) ou negrito para destacar expressões importantes. \
+    - Organize resoluções longas alinhando etapas e usando espaçamento apropriado para simular uma resolução em caderno. \
     
-    Caso não haja cálculos na imagem, ajude o usuário com ideias gerais, sugestões criativas ou explicações sobre suas anotações, \
-    sempre mantendo o mesmo nível de educação e a boa formatação com marcação simples e elegante.
+    🔥 NOVO PODER: DESENHAR NO CANVAS DO USUÁRIO 🔥 \
+    - Se a imagem contiver um cálculo matemático ou problema, você DEVE fornecer uma versão resumida da resolução ou a resposta final dentro de uma tag <canvas_text> ... </canvas_text>. \
+    - O conteúdo dentro dessa tag será "desenhado" automaticamente usando uma fonte com estilo de caligrafia diretamente no quadro do usuário ao lado do problema! \
+    - Seja conciso e use espaços e quebras de linha limpas dentro dessa tag. \
+    Exemplo:
+    <canvas_text>
+    Resolvendo: 2x = 10
+    ▶ x = 5
+    </canvas_text>
+    
+    No restante da sua resposta (fora da tag), você pode dar a explicação passo a passo completa, usar listas, emojis, etc. \
+    
+    Caso não haja cálculos na imagem, ajude o usuário com ideias gerais, sugestões criativas ou explicações sobre suas anotações.
     """
 
     init(aiConfig: AIConfiguration) {
@@ -122,6 +130,16 @@ final class ChatViewModel: ObservableObject {
                     )
                 }
                 messages.append(ChatMessage(role: .assistant, content: reply))
+                
+                // Extrair <canvas_text> usando expressões regulares
+                if let range = reply.range(of: "(?<=<canvas_text>)[\\s\\S]*?(?=</canvas_text>)", options: .regularExpression) {
+                    let textToDraw = String(reply[range]).trimmingCharacters(in: .whitespacesAndNewlines)
+                    if !textToDraw.isEmpty {
+                        await MainActor.run {
+                            self.canvasManager?.addTextToCanvas(textToDraw)
+                        }
+                    }
+                }
             } catch {
                 errorMessage = error.localizedDescription
             }

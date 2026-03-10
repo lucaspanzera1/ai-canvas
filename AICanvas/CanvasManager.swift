@@ -176,4 +176,105 @@ final class CanvasManager: ObservableObject {
 
         imageToExport = finalImage
     }
+    
+    // MARK: - AI Annotation Support
+    
+    /// Adiciona um texto ao canvas simulando uma caligrafia
+    func addTextToCanvas(_ text: String) {
+        guard let canvasView = canvasView else { return }
+        
+        let textView = DraggableTextView()
+        textView.text = text
+        
+        // Tentar usar uma fonte com cara de escrita à mão, fallback para system
+        if let handwrittenFont = UIFont(name: "ChalkboardSE-Regular", size: 28) {
+            textView.font = handwrittenFont
+        } else if let handwrittenFont = UIFont(name: "Noteworthy-Light", size: 28) {
+            textView.font = handwrittenFont
+        } else {
+            textView.font = UIFont.systemFont(ofSize: 28, weight: .medium)
+        }
+        
+        // Cor azul caneta
+        textView.textColor = UIColor(red: 0.15, green: 0.25, blue: 0.85, alpha: 0.95)
+        textView.backgroundColor = .clear
+        textView.isScrollEnabled = false
+        textView.isEditable = false
+        
+        // Posicionar próximo à seleção se houver, se não, no centro da visualização atual
+        let targetPoint: CGPoint
+        if let sel = selectionRect {
+            targetPoint = CGPoint(x: sel.maxX + 40, y: sel.minY)
+        } else {
+            let cx = canvasView.bounds.width / 2 + canvasView.contentOffset.x
+            let cy = canvasView.bounds.height / 2 + canvasView.contentOffset.y
+            targetPoint = CGPoint(x: cx, y: cy)
+        }
+        
+        textView.frame = CGRect(x: targetPoint.x, y: targetPoint.y, width: 450, height: 100)
+        textView.sizeToFit()
+        
+        // Limite de largura para não ficar uma linha gigante
+        if textView.frame.width > 550 {
+            textView.frame.size.width = 550
+            textView.sizeToFit()
+        }
+        
+        // Adiciona um pequeno fade de entrada
+        textView.alpha = 0
+        canvasView.addSubview(textView)
+        
+        UIView.animate(withDuration: 0.5, delay: 0.2, options: .curveEaseOut, animations: {
+            textView.alpha = 1
+        }, completion: nil)
+    }
+}
+
+// MARK: - Components
+
+class DraggableTextView: UITextView, UIGestureRecognizerDelegate {
+    override init(frame: CGRect, textContainer: NSTextContainer?) {
+        super.init(frame: frame, textContainer: textContainer)
+        setup()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setup()
+    }
+    
+    private func setup() {
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        pan.delegate = self
+        self.addGestureRecognizer(pan)
+        self.isUserInteractionEnabled = true
+        
+        // Um duplo clique pode remover o texto ou editá-arlo
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        self.addGestureRecognizer(doubleTap)
+    }
+    
+    @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
+        guard let superview = self.superview else { return }
+        let translation = gesture.translation(in: superview)
+        if gesture.state == .changed {
+            self.center = CGPoint(x: self.center.x + translation.x, y: self.center.y + translation.y)
+            gesture.setTranslation(.zero, in: superview)
+        }
+    }
+    
+    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+        // Tocar duas vezes no texto da IA remove-o da tela
+        UIView.animate(withDuration: 0.2, animations: {
+            self.alpha = 0
+            self.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        }) { _ in
+            self.removeFromSuperview()
+        }
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return false // Prevents canvas from panning while moving the text
+    }
 }
