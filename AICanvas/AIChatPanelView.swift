@@ -468,6 +468,11 @@ struct MessageBubble: View {
     let message: ChatMessage
     @State private var appeared = false
 
+    // Determine if the message is from the user
+    private var isUser: Bool {
+        message.role == .user
+    }
+
     private var attributedContent: AttributedString {
         do {
             var options = AttributedString.MarkdownParsingOptions()

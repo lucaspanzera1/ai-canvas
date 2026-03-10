@@ -11,7 +11,6 @@
 		AA000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012 /* ContentView.swift */; };
 		AA000003 /* CanvasManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000013 /* CanvasManager.swift */; };
 		AA000004 /* CanvasRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000014 /* CanvasRepresentable.swift */; };
-		BB000002 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001 /* ShareSheet.swift */; };
 		AA000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000015 /* Assets.xcassets */; };
 		AA000006 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000016 /* Preview Assets.xcassets */; };
 		AA000007 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000017 /* KeychainManager.swift */; };
@@ -25,6 +24,8 @@
 		AA00000F /* MultiProviderOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001F /* MultiProviderOnboardingView.swift */; };
 		AB000001 /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011 /* Notebook.swift */; };
 		AB000002 /* NotebookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* NotebookListView.swift */; };
+		AB000003 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* SidebarView.swift */; };
+		BB000002 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001 /* ShareSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,7 +34,6 @@
 		AA000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA000013 /* CanvasManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasManager.swift; sourceTree = "<group>"; };
 		AA000014 /* CanvasRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasRepresentable.swift; sourceTree = "<group>"; };
-		BB000001 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		AA000015 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AA000016 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		AA000017 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
@@ -47,6 +47,8 @@
 		AA00001F /* MultiProviderOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultiProviderOnboardingView.swift; sourceTree = "<group>"; };
 		AB000011 /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
 		AB000012 /* NotebookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookListView.swift; sourceTree = "<group>"; };
+		AB000013 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		BB000001 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,7 +77,7 @@
 				AA000012 /* ContentView.swift */,
 				AA000013 /* CanvasManager.swift */,
 				AA000014 /* CanvasRepresentable.swift */,
-					BB000001 /* ShareSheet.swift */,
+				BB000001 /* ShareSheet.swift */,
 				AA000017 /* KeychainManager.swift */,
 				AA000018 /* APIKeyOnboardingView.swift */,
 				AA00001A /* ChatViewModel.swift */,
@@ -87,6 +89,7 @@
 				AA000019 /* GameDrawingToolbar.swift */,
 				AB000011 /* Notebook.swift */,
 				AB000012 /* NotebookListView.swift */,
+				AB000013 /* SidebarView.swift */,
 				AA000015 /* Assets.xcassets */,
 				AA000033 /* Preview Content */,
 			);
@@ -183,7 +186,7 @@
 				AA000002 /* ContentView.swift in Sources */,
 				AA000003 /* CanvasManager.swift in Sources */,
 				AA000004 /* CanvasRepresentable.swift in Sources */,
-					BB000002 /* ShareSheet.swift in Sources */,
+				BB000002 /* ShareSheet.swift in Sources */,
 				AA000007 /* KeychainManager.swift in Sources */,
 				AA000008 /* APIKeyOnboardingView.swift in Sources */,
 				AA00000A /* ChatViewModel.swift in Sources */,
@@ -195,6 +198,7 @@
 				AA000009 /* GameDrawingToolbar.swift in Sources */,
 				AB000001 /* Notebook.swift in Sources */,
 				AB000002 /* NotebookListView.swift in Sources */,
+				AB000003 /* SidebarView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

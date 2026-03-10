@@ -29,6 +29,7 @@ struct ContentView: View {
     let notebook: Notebook
     @ObservedObject var store: NotebookStore
     @Binding var selectedNotebook: Notebook?
+    @Binding var showSidebar: Bool
 
     @StateObject private var aiConfig = AIConfiguration()
     @StateObject private var chatViewModel: ChatViewModel
@@ -38,10 +39,11 @@ struct ContentView: View {
     @State private var showOnboarding: Bool
     @State private var backgroundPattern: BackgroundPattern
 
-    init(notebook: Notebook, store: NotebookStore, selectedNotebook: Binding<Notebook?>) {
+    init(notebook: Notebook, store: NotebookStore, selectedNotebook: Binding<Notebook?>, showSidebar: Binding<Bool>) {
         self.notebook = notebook
         self.store = store
         self._selectedNotebook = selectedNotebook
+        self._showSidebar = showSidebar
 
         let config = AIConfiguration()
         _aiConfig = StateObject(wrappedValue: config)
@@ -65,6 +67,7 @@ struct ContentView: View {
                         notebook: notebook,
                         canvasManager: canvasManager,
                         showAIPanel: $showAIPanel,
+                        showSidebar: $showSidebar,
                         backgroundPattern: $backgroundPattern,
                         onPatternChange: { pattern in
                             backgroundPattern = pattern
@@ -146,6 +149,7 @@ struct CanvasToolbar: View {
     let notebook: Notebook
     @ObservedObject var canvasManager: CanvasManager
     @Binding var showAIPanel: Bool
+    @Binding var showSidebar: Bool
     @Binding var backgroundPattern: BackgroundPattern
     let onPatternChange: (BackgroundPattern) -> Void
     let onBack: () -> Void
@@ -154,6 +158,24 @@ struct CanvasToolbar: View {
 
     var body: some View {
         HStack(spacing: 6) {
+            if !showSidebar {
+                Button {
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                        showSidebar = true
+                    }
+                } label: {
+                    Image(systemName: "sidebar.left")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(AppTheme.surfaceElevated)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+            
             // Back button
             Button(action: onBack) {
                 HStack(spacing: 6) {
@@ -319,6 +341,7 @@ struct ToolButtonSimple: View {
     ContentView(
         notebook: Notebook(name: "Preview", emoji: "✏️", colorIndex: 0),
         store: NotebookStore(),
-        selectedNotebook: .constant(nil)
+        selectedNotebook: .constant(nil),
+        showSidebar: .constant(true)
     )
 }

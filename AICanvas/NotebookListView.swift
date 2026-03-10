@@ -24,8 +24,8 @@ enum ItemSelection: Identifiable {
 struct NotebookListView: View {
     @ObservedObject var store: NotebookStore
     @Binding var selectedNotebook: Notebook?
-    
-    @State private var currentFolder: Folder? = nil
+    @Binding var selectedFolder: Folder?
+    @Binding var showSidebar: Bool
     
     @State private var showCreateNotebook = false
     @State private var showCreateFolder = false
@@ -40,14 +40,14 @@ struct NotebookListView: View {
     ]
     
     private var visibleFolders: [Folder] {
-        if currentFolder == nil {
+        if selectedFolder == nil {
             return store.folders
         }
         return []
     }
     
     private var visibleNotebooks: [Notebook] {
-        store.notebooks.filter { $0.folderId == currentFolder?.id }
+        store.notebooks.filter { $0.folderId == selectedFolder?.id }
     }
 
     var body: some View {
@@ -82,7 +82,7 @@ struct NotebookListView: View {
                                 FolderCard(folder: folder)
                                     .onTapGesture {
                                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                                            currentFolder = folder
+                                            selectedFolder = folder
                                         }
                                     }
                                     .contextMenu {
@@ -128,7 +128,7 @@ struct NotebookListView: View {
                             }
 
                             // CREATE NEW CARDS
-                            if currentFolder == nil {
+                            if selectedFolder == nil {
                                 NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") {
                                     showCreateFolder = true
                                 }
@@ -155,7 +155,7 @@ struct NotebookListView: View {
         }
         .onDisappear { appeared = false }
         .sheet(isPresented: $showCreateNotebook) {
-            ItemEditorSheet(store: store, mode: .createNotebook(folderId: currentFolder?.id), isPresented: $showCreateNotebook)
+            ItemEditorSheet(store: store, mode: .createNotebook(folderId: selectedFolder?.id), isPresented: $showCreateNotebook)
         }
         .sheet(isPresented: $showCreateFolder) {
             ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
@@ -220,48 +220,67 @@ struct NotebookListView: View {
 
     private var listHeader: some View {
         HStack(alignment: .bottom, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                if let folder = currentFolder {
-                    Button(action: {
+            HStack(spacing: 12) {
+                if !showSidebar {
+                    Button {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            currentFolder = nil
+                            showSidebar = true
                         }
-                    }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                            Text("Voltar")
-                        }
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(AppTheme.textSecondary.opacity(0.1))
-                        .clipShape(Capsule())
+                    } label: {
+                        Image(systemName: "sidebar.left")
+                            .font(.system(size: 18))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .padding(8)
+                            .background(AppTheme.surfaceElevated)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
-                    .padding(.bottom, 4)
+                }
 
-                    Text("\(folder.emoji) \(folder.name)")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppTheme.textPrimary)
-                } else {
-                    HStack(spacing: 6) {
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 13, weight: .semibold))
+                VStack(alignment: .leading, spacing: 6) {
+                    if let folder = selectedFolder {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                selectedFolder = nil
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                Text("Voltar")
+                            }
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(AppTheme.textSecondary)
-                        Text("ESPAÇO CRIATIVO")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .tracking(1.5)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(AppTheme.textSecondary.opacity(0.1))
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.bottom, 4)
+
+                        Text("\(folder.emoji) \(folder.name)")
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppTheme.textPrimary)
+                    } else {
+                        HStack(spacing: 6) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(AppTheme.textSecondary)
+                            Text("ESPAÇO CRIATIVO")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .tracking(1.5)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(AppTheme.textSecondary.opacity(0.08))
+                        .clipShape(Capsule())
+
+                        Text("Meus Cadernos")
+                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .foregroundStyle(AppTheme.textPrimary)
                     }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(AppTheme.textSecondary.opacity(0.08))
-                    .clipShape(Capsule())
-
-                    Text("Meus Cadernos")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppTheme.textPrimary)
                 }
             }
 
@@ -291,10 +310,10 @@ struct NotebookListView: View {
 
                 // Stats badge
                 HStack(spacing: 8) {
-                    Image(systemName: currentFolder == nil ? "books.vertical.fill" : "folder.fill")
+                    Image(systemName: selectedFolder == nil ? "books.vertical.fill" : "folder.fill")
                         .font(.system(size: 16))
                         .foregroundStyle(AppTheme.textSecondary)
-                    let count = currentFolder == nil ? store.notebooks.count + store.folders.count : visibleNotebooks.count
+                    let count = selectedFolder == nil ? store.notebooks.count + store.folders.count : visibleNotebooks.count
                     Text("\(count) \(count == 1 ? "item" : "itens")")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(AppTheme.textSecondary)
@@ -341,7 +360,7 @@ struct NotebookListView: View {
             }
 
             VStack(spacing: 8) {
-                Text(currentFolder == nil ? "Espaço vazio" : "Pasta vazia")
+                Text(selectedFolder == nil ? "Espaço vazio" : "Pasta vazia")
                     .font(.system(size: 22, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.textPrimary)
                 Text("Crie seu primeiro item e solte a imaginação\ncom a ajuda de IA poderosa.")
@@ -352,7 +371,7 @@ struct NotebookListView: View {
             }
 
             HStack(spacing: 12) {
-                if currentFolder == nil {
+                if selectedFolder == nil {
                     Button {
                         showCreateFolder = true
                     } label: {
