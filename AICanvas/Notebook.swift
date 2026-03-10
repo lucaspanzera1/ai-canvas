@@ -18,17 +18,20 @@ struct Folder: Identifiable, Codable, Equatable {
     var colorIndex: Int
     var createdAt: Date
     var lastModified: Date
+    var bannerImageData: Data?
     
     init(
         id: UUID = UUID(),
         name: String,
         emoji: String = "📁",
-        colorIndex: Int = 0
+        colorIndex: Int = 0,
+        bannerImageData: Data? = nil
     ) {
         self.id = id
         self.name = name
         self.emoji = emoji
         self.colorIndex = colorIndex
+        self.bannerImageData = bannerImageData
         self.createdAt = Date()
         self.lastModified = Date()
     }
@@ -46,6 +49,7 @@ struct Notebook: Identifiable, Codable, Equatable {
     var pageCount: Int
     var backgroundPattern: BackgroundPattern?
     var folderId: UUID?
+    var bannerImageData: Data?
 
     init(
         id: UUID = UUID(),
@@ -54,7 +58,8 @@ struct Notebook: Identifiable, Codable, Equatable {
         colorIndex: Int = 0,
         pageCount: Int = 1,
         backgroundPattern: BackgroundPattern = .none,
-        folderId: UUID? = nil
+        folderId: UUID? = nil,
+        bannerImageData: Data? = nil
     ) {
         self.id = id
         self.name = name
@@ -65,6 +70,7 @@ struct Notebook: Identifiable, Codable, Equatable {
         self.pageCount = pageCount
         self.backgroundPattern = backgroundPattern
         self.folderId = folderId
+        self.bannerImageData = bannerImageData
     }
 
     static func == (lhs: Notebook, rhs: Notebook) -> Bool {
@@ -121,8 +127,8 @@ final class NotebookStore: ObservableObject {
     // MARK: - CRUD Notebooks
 
     @discardableResult
-    func createNotebook(name: String, emoji: String, colorIndex: Int, folderId: UUID? = nil) -> Notebook {
-        let notebook = Notebook(name: name, emoji: emoji, colorIndex: colorIndex, folderId: folderId)
+    func createNotebook(name: String, emoji: String, colorIndex: Int, folderId: UUID? = nil, bannerImageData: Data? = nil) -> Notebook {
+        let notebook = Notebook(name: name, emoji: emoji, colorIndex: colorIndex, folderId: folderId, bannerImageData: bannerImageData)
         notebooks.append(notebook)
         saveMetadata()
         return notebook
@@ -134,11 +140,12 @@ final class NotebookStore: ObservableObject {
         saveMetadata()
     }
 
-    func renameNotebook(_ notebook: Notebook, to name: String, emoji: String? = nil, colorIndex: Int? = nil) {
+    func renameNotebook(_ notebook: Notebook, to name: String, emoji: String? = nil, colorIndex: Int? = nil, bannerImageData: Data?? = nil) {
         guard let idx = notebooks.firstIndex(where: { $0.id == notebook.id }) else { return }
         notebooks[idx].name = name
         if let emoji = emoji { notebooks[idx].emoji = emoji }
         if let colorIndex = colorIndex { notebooks[idx].colorIndex = colorIndex }
+        if let bannerImageData = bannerImageData { notebooks[idx].bannerImageData = bannerImageData }
         saveMetadata()
     }
 
@@ -151,8 +158,8 @@ final class NotebookStore: ObservableObject {
     // MARK: - CRUD Folders
 
     @discardableResult
-    func createFolder(name: String, emoji: String, colorIndex: Int) -> Folder {
-        let folder = Folder(name: name, emoji: emoji, colorIndex: colorIndex)
+    func createFolder(name: String, emoji: String, colorIndex: Int, bannerImageData: Data? = nil) -> Folder {
+        let folder = Folder(name: name, emoji: emoji, colorIndex: colorIndex, bannerImageData: bannerImageData)
         folders.append(folder)
         saveMetadata()
         return folder
@@ -167,11 +174,12 @@ final class NotebookStore: ObservableObject {
         saveMetadata()
     }
 
-    func renameFolder(_ folder: Folder, to name: String, emoji: String? = nil, colorIndex: Int? = nil) {
+    func renameFolder(_ folder: Folder, to name: String, emoji: String? = nil, colorIndex: Int? = nil, bannerImageData: Data?? = nil) {
         guard let idx = folders.firstIndex(where: { $0.id == folder.id }) else { return }
         folders[idx].name = name
         if let emoji = emoji { folders[idx].emoji = emoji }
         if let colorIndex = colorIndex { folders[idx].colorIndex = colorIndex }
+        if let bannerImageData = bannerImageData { folders[idx].bannerImageData = bannerImageData }
         saveMetadata()
     }
 

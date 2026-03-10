@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 // MARK: - Enums & State
 
@@ -426,12 +427,20 @@ struct FolderCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
-                LinearGradient(
-                    gradient: Gradient(colors: [accentColor.opacity(0.3), accentColor.opacity(0.05)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .frame(height: 60)
+                if let imageData = folder.bannerImageData, let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 60)
+                        .clipped()
+                } else {
+                    LinearGradient(
+                        gradient: Gradient(colors: [accentColor.opacity(0.3), accentColor.opacity(0.05)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .frame(height: 60)
+                }
 
                 HStack {
                     Text(folder.emoji)
@@ -486,12 +495,20 @@ struct NotebookCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ZStack(alignment: .topLeading) {
-                LinearGradient(
-                    gradient: Gradient(colors: [accentColor.opacity(0.4), accentColor.opacity(0.1)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .frame(height: 70)
+                if let imageData = notebook.bannerImageData, let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(height: 70)
+                        .clipped()
+                } else {
+                    LinearGradient(
+                        gradient: Gradient(colors: [accentColor.opacity(0.4), accentColor.opacity(0.1)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .frame(height: 70)
+                }
 
                 Text(notebook.emoji)
                     .font(.system(size: 34))
@@ -618,9 +635,9 @@ struct ItemEditorSheet: View {
     @State private var name = ""
     @State private var selectedEmoji = ""
     @State private var selectedColorIndex = 0
+    @State private var bannerImageData: Data? = nil
+    @State private var selectedBannerItem: PhotosPickerItem? = nil
     @FocusState private var nameFocused: Bool
-
-    private let emojis = ["📓", "📁", "✏️", "🎨", "💡", "🔥", "⚡️", "🌙", "🎯", "🗺️", "🔮", "🧠", "🎮", "🚀", "🌊", "🦋"]
 
     var body: some View {
         ZStack {
@@ -658,13 +675,22 @@ struct ItemEditorSheet: View {
                     VStack(spacing: 28) {
                         // Preview Card
                         ZStack(alignment: .topLeading) {
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(AppTheme.surfaceElevated)
-                                .frame(height: 80)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(AppTheme.border, lineWidth: 1)
-                                )
+                            if let data = bannerImageData, let uiImage = UIImage(data: data) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(height: 80)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+                            } else {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(AppTheme.surfaceElevated)
+                                    .frame(height: 80)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(AppTheme.border, lineWidth: 1)
+                                    )
+                            }
 
                             HStack(spacing: 14) {
                                 Text(selectedEmoji)
@@ -709,26 +735,66 @@ struct ItemEditorSheet: View {
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(AppTheme.textMuted)
 
-                            LazyVGrid(columns: Array(repeating: GridItem(.fixed(44), spacing: 10), count: 5), spacing: 10) {
-                                ForEach(emojis, id: \.self) { emoji in
-                                    Button {
-                                        selectedEmoji = emoji
-                                    } label: {
-                                        Text(emoji)
-                                            .font(.system(size: 24))
-                                            .frame(width: 44, height: 44)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 8)
-                                                    .fill(selectedEmoji == emoji ? AppTheme.border : AppTheme.surfaceElevated)
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 8)
-                                                            .stroke(selectedEmoji == emoji ? AppTheme.borderHover : AppTheme.border, lineWidth: 1)
-                                                    )
-                                            )
+                            TextField("Emoji", text: $selectedEmoji)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 32))
+                                .multilineTextAlignment(.center)
+                                .frame(width: 60, height: 60)
+                                .background(AppTheme.surfaceElevated)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                                .onChange(of: selectedEmoji) { newValue in
+                                    if newValue.count > 1 {
+                                        selectedEmoji = String(newValue.prefix(1))
                                     }
-                                    .buttonStyle(.plain)
-                                    .scaleEffect(selectedEmoji == emoji ? 1.05 : 1.0)
-                                    .animation(.spring(response: 0.2), value: selectedEmoji)
+                                }
+                        }
+
+                        // Banner Image Picker
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("BANNER PERSONALIZADO (IMAGEM)")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(AppTheme.textMuted)
+                                Spacer()
+                                if bannerImageData != nil {
+                                    Button("Remover", role: .destructive) {
+                                        bannerImageData = nil
+                                        selectedBannerItem = nil
+                                    }
+                                    .font(.system(size: 10, weight: .medium))
+                                }
+                            }
+
+                            PhotosPicker(selection: $selectedBannerItem, matching: .images) {
+                                if let data = bannerImageData, let uiImage = UIImage(data: data) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(height: 80)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                                } else {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "photo.badge.plus")
+                                        Text("Selecionar Imagem")
+                                    }
+                                    .font(.system(size: 14, weight: .medium))
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(AppTheme.surfaceElevated)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, style: StrokeStyle(lineWidth: 1, dash: [4])))
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .onChange(of: selectedBannerItem) { newItem in
+                                Task {
+                                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                                        await MainActor.run {
+                                            withAnimation { bannerImageData = data }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -791,10 +857,12 @@ struct ItemEditorSheet: View {
                 name = nb.name
                 selectedEmoji = nb.emoji
                 selectedColorIndex = nb.colorIndex
+                bannerImageData = nb.bannerImageData
             case .editFolder(let f):
                 name = f.name
                 selectedEmoji = f.emoji
                 selectedColorIndex = f.colorIndex
+                bannerImageData = f.bannerImageData
             }
             nameFocused = true
         }
@@ -805,13 +873,13 @@ struct ItemEditorSheet: View {
         
         switch mode {
         case .createNotebook(let folderId):
-            store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId)
+            store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId, bannerImageData: bannerImageData)
         case .createFolder:
-            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex)
+            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
         case .editNotebook(let nb):
-            store.renameNotebook(nb, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex)
+            store.renameNotebook(nb, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
         case .editFolder(let f):
-            store.renameFolder(f, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex)
+            store.renameFolder(f, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
         }
         
         isPresented = false

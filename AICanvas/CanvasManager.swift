@@ -229,7 +229,7 @@ final class CanvasManager: ObservableObject {
         }, completion: nil)
     }
     }
-}
+
 
 // MARK: - Components
 
