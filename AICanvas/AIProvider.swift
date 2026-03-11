@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 /// Supported AI providers and their configurations.
 enum AIProvider: String, CaseIterable, Identifiable, Codable {
@@ -18,6 +19,17 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         }
     }
     
+    /// Short description for the provider card
+    var tagline: String {
+        switch self {
+        case .groq: return "Inferência ultrarrápida"
+        case .openai: return "GPT-4o e mais"
+        case .anthropic: return "Inteligência segura"
+        case .gemini: return "IA do Google"
+        }
+    }
+    
+    /// SF Symbol icon fallback
     var icon: String {
         switch self {
         case .groq: return "bolt.fill"
@@ -25,6 +37,31 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .anthropic: return "sparkles"
         case .gemini: return "diamond.fill"
         }
+    }
+    
+    /// Asset catalog image name for the provider logo
+    var logoImageName: String {
+        switch self {
+        case .groq: return "GroqLogo"
+        case .openai: return "OpenAILogo"
+        case .anthropic: return "ClaudeLogo"
+        case .gemini: return "GeminiLogo"
+        }
+    }
+    
+    /// Brand color for UI accents
+    var brandColor: Color {
+        switch self {
+        case .groq: return Color(red: 0.91, green: 0.33, blue: 0.22) // Groq orange-red
+        case .openai: return Color(red: 0.07, green: 0.64, blue: 0.52) // OpenAI teal-green
+        case .anthropic: return Color(red: 0.82, green: 0.53, blue: 0.40) // Claude warm terracotta
+        case .gemini: return Color(red: 0.26, green: 0.52, blue: 0.96) // Google blue
+        }
+    }
+    
+    /// Lighter brand color for backgrounds
+    var brandColorLight: Color {
+        brandColor.opacity(0.12)
     }
     
     var baseURL: String {

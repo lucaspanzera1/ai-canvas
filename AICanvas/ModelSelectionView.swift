@@ -1,12 +1,28 @@
 import SwiftUI
 
-/// Model selection view — Game Edition.
+/// Reusable provider logo view with proper sizing
+struct ProviderLogoView: View {
+    let provider: AIProvider
+    var size: CGFloat = 36
+    var cornerRadius: CGFloat = 10
+    
+    var body: some View {
+        Image(provider.logoImageName)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+    }
+}
+
+/// Model selection view — Premium Edition with real logos.
 struct ModelSelectionView: View {
     @ObservedObject var aiConfig: AIConfiguration
     @Binding var isPresented: Bool
     @State private var showProviderSetup = false
     @State private var selectedProvider: AIProvider?
-    @State private var searchText = ""
+    @State private var showDeleteConfirm = false
+    @State private var providerToDelete: AIProvider?
 
     var body: some View {
         ZStack {
@@ -19,16 +35,19 @@ struct ModelSelectionView: View {
                 
                 // Content
                 ScrollView {
-                    LazyVStack(spacing: 16) {
+                    LazyVStack(spacing: 20) {
                         // Current model banner
-                        currentModelBanner
+                        if !aiConfig.availableModels.isEmpty {
+                            currentModelBanner
+                        }
+                        
+                        // Configured providers
+                        if !configuredProviders.isEmpty {
+                            configuredProvidersSection
+                        }
                         
                         if aiConfig.availableModels.isEmpty {
                             emptyState
-                        } else {
-                            ForEach(groupedModels.keys.sorted(by: { $0.displayName < $1.displayName }), id: \.self) { provider in
-                                providerSection(for: provider)
-                            }
                         }
                         
                         // Add Provider
@@ -47,6 +66,15 @@ struct ModelSelectionView: View {
                 )
             }
         }
+        .alert("Remover Provedor", isPresented: $showDeleteConfirm, presenting: providerToDelete) { provider in
+            Button("Cancelar", role: .cancel) {}
+            Button("Remover", role: .destructive) {
+                KeychainManager.shared.deleteKey(for: provider)
+                aiConfig.updateAvailableModels()
+            }
+        } message: { provider in
+            Text("A API Key do \(provider.displayName) será removida. Você poderá reconfigurá-la depois.")
+        }
     }
     
     // MARK: - Header
@@ -54,6 +82,13 @@ struct ModelSelectionView: View {
     private var gameHeader: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
+                Image("AppImage")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 34, height: 34)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .shadow(color: AppTheme.shadowColor, radius: 2, y: 1)
+                
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Modelos de IA")
                         .font(.system(size: 18, weight: .semibold))
@@ -92,20 +127,13 @@ struct ModelSelectionView: View {
     
     private var currentModelBanner: some View {
         HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(AppTheme.accent)
-                    .frame(width: 44, height: 44)
-                
-                Image(systemName: aiConfig.selectedModel.provider.icon)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(.white)
-            }
+            ProviderLogoView(provider: aiConfig.selectedModel.provider, size: 44, cornerRadius: 12)
+                .shadow(color: aiConfig.selectedModel.provider.brandColor.opacity(0.3), radius: 6, y: 3)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("MODELO ATIVO")
-                    .font(.system(size: 9, weight: .semibold))
-                    .foregroundStyle(AppTheme.action)
+                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .foregroundStyle(aiConfig.selectedModel.provider.brandColor)
                 
                 Text(aiConfig.selectedModel.name)
                     .font(.system(size: 15, weight: .semibold))
@@ -120,56 +148,132 @@ struct ModelSelectionView: View {
             
             ZStack {
                 Circle()
-                    .fill(AppTheme.action.opacity(0.1))
+                    .fill(aiConfig.selectedModel.provider.brandColor.opacity(0.12))
                     .frame(width: 28, height: 28)
                 
                 Image(systemName: "checkmark")
                     .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(AppTheme.action)
+                    .foregroundStyle(aiConfig.selectedModel.provider.brandColor)
             }
         }
         .padding(16)
         .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(AppTheme.action, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(aiConfig.selectedModel.provider.brandColor.opacity(0.4), lineWidth: 1.5)
         )
     }
     
-    // MARK: - Provider Section
+    // MARK: - Configured Providers
+    
+    private var configuredProviders: [AIProvider] {
+        AIProvider.allCases.filter { KeychainManager.shared.hasAPIKey(for: $0) }
+    }
     
     private var groupedModels: [AIProvider: [AIModel]] {
         Dictionary(grouping: aiConfig.availableModels) { $0.provider }
     }
     
-    private func providerSection(for provider: AIProvider) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: provider.icon)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(AppTheme.textPrimary)
-                Text(provider.displayName.uppercased())
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                
-                Spacer()
-                
-                Text("\(groupedModels[provider]?.count ?? 0) modelos")
+    private var configuredProvidersSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.shield.fill")
                     .font(.system(size: 11))
-                    .foregroundStyle(AppTheme.textMuted)
+                    .foregroundStyle(AppTheme.action)
+                Text("PROVEDORES CONFIGURADOS")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary)
             }
             .padding(.horizontal, 4)
             
-            VStack(spacing: 6) {
-                ForEach(groupedModels[provider] ?? []) { model in
-                    modelRow(for: model)
-                }
+            ForEach(configuredProviders) { provider in
+                configuredProviderCard(for: provider)
             }
         }
     }
     
-    private func modelRow(for model: AIModel) -> some View {
+    private func configuredProviderCard(for provider: AIProvider) -> some View {
+        VStack(spacing: 0) {
+            // Provider header with logo
+            HStack(spacing: 12) {
+                ProviderLogoView(provider: provider, size: 36, cornerRadius: 10)
+                
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(provider.displayName)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text("\(groupedModels[provider]?.count ?? 0) modelos disponíveis")
+                        .font(.system(size: 11))
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+                
+                Spacer()
+                
+                // Status badge
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Color.green)
+                        .frame(width: 6, height: 6)
+                    Text("Ativo")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color.green)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.green.opacity(0.1))
+                .clipShape(Capsule())
+                
+                // Menu with options
+                Menu {
+                    Button {
+                        selectedProvider = provider
+                        showProviderSetup = true
+                    } label: {
+                        Label("Alterar API Key", systemImage: "key.fill")
+                    }
+                    
+                    Button(role: .destructive) {
+                        providerToDelete = provider
+                        showDeleteConfirm = true
+                    } label: {
+                        Label("Remover", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(width: 28, height: 28)
+                        .background(AppTheme.background)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            
+            Rectangle()
+                .fill(AppTheme.border.opacity(0.5))
+                .frame(height: 1)
+                .padding(.horizontal, 14)
+            
+            // Models list
+            VStack(spacing: 4) {
+                ForEach(groupedModels[provider] ?? []) { model in
+                    modelRow(for: model, provider: provider)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+        }
+        .background(AppTheme.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(AppTheme.border, lineWidth: 1)
+        )
+    }
+    
+    private func modelRow(for model: AIModel, provider: AIProvider) -> some View {
         let isSelected = model.id == aiConfig.selectedModel.id
         
         return Button {
@@ -180,54 +284,44 @@ struct ModelSelectionView: View {
                 isPresented = false
             }
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 // Selection indicator
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? AppTheme.accent : AppTheme.border, lineWidth: 1.5)
+                        .stroke(isSelected ? provider.brandColor : AppTheme.border, lineWidth: 1.5)
                         .frame(width: 18, height: 18)
                     
                     if isSelected {
                         Circle()
-                            .fill(AppTheme.accent)
+                            .fill(provider.brandColor)
                             .frame(width: 10, height: 10)
                     }
                 }
                 
                 Text(model.name)
-                    .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
                     .foregroundStyle(isSelected ? AppTheme.textPrimary : AppTheme.textSecondary)
                 
                 Spacer()
                 
                 if isSelected {
-                    Text("SELECIONADO")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(AppTheme.action)
+                    Text("EM USO")
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .foregroundStyle(provider.brandColor)
                         .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(AppTheme.action.opacity(0.1))
+                        .padding(.vertical, 3)
+                        .background(provider.brandColorLight)
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(AppTheme.action.opacity(0.4), lineWidth: 1))
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
             .background(
                 isSelected
-                ? AppTheme.accent.opacity(0.1)
-                : AppTheme.surfaceElevated
+                ? provider.brandColorLight
+                : Color.clear
             )
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(
-                        isSelected
-                        ? AppTheme.borderActive
-                        : AppTheme.border,
-                        lineWidth: 1
-                    )
-            )
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
         .animation(.spring(response: 0.3), value: isSelected)
@@ -273,15 +367,13 @@ struct ModelSelectionView: View {
                             .font(.system(size: 11))
                             .foregroundStyle(AppTheme.textPrimary)
                         Text("DESBLOQUEAR PROVEDORES")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
                             .foregroundStyle(AppTheme.textPrimary)
                     }
                     .padding(.horizontal, 4)
                     
-                    LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2), spacing: 10) {
-                        ForEach(unconfiguredProviders) { provider in
-                            providerCard(for: provider)
-                        }
+                    ForEach(unconfiguredProviders) { provider in
+                        providerCard(for: provider)
                     }
                 }
                 .padding(.top, 8)
@@ -294,39 +386,39 @@ struct ModelSelectionView: View {
             selectedProvider = provider
             showProviderSetup = true
         } label: {
-            VStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(AppTheme.surfaceElevated)
-                        .frame(width: 44, height: 44)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(AppTheme.border, lineWidth: 1)
-                        )
-                    
-                    Image(systemName: provider.icon)
-                        .font(.system(size: 18))
+            HStack(spacing: 14) {
+                ProviderLogoView(provider: provider, size: 44, cornerRadius: 12)
+                    .opacity(0.7)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(provider.displayName)
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
+                    
+                    Text(provider.tagline)
+                        .font(.system(size: 12))
+                        .foregroundStyle(AppTheme.textSecondary)
                 }
                 
-                Text(provider.displayName)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.textPrimary)
+                Spacer()
                 
                 HStack(spacing: 4) {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 9))
-                    Text("Desbloquear")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: 10))
+                    Text("Configurar")
+                        .font(.system(size: 11, weight: .medium))
                 }
-                .foregroundStyle(AppTheme.textSecondary)
+                .foregroundStyle(provider.brandColor)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(provider.brandColorLight)
+                .clipShape(Capsule())
             }
-            .frame(maxWidth: .infinity)
-            .padding(16)
+            .padding(14)
             .background(AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: 14)
                     .stroke(AppTheme.border, lineWidth: 1)
             )
         }
@@ -345,6 +437,13 @@ struct ProviderSetupView: View {
     @State private var isValidating = false
     @State private var errorMessage: String?
     @State private var showKey = false
+    @State private var keyAppear = false
+    @State private var isSuccess = false
+    
+    // Check if we're editing an existing key
+    private var isEditing: Bool {
+        KeychainManager.shared.hasAPIKey(for: provider)
+    }
     
     var body: some View {
         ZStack {
@@ -363,7 +462,7 @@ struct ProviderSetupView: View {
                     
                     Spacer()
                     
-                    Text("Configurar \(provider.displayName)")
+                    Text(isEditing ? "Alterar \(provider.displayName)" : "Configurar \(provider.displayName)")
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
                     
@@ -380,128 +479,169 @@ struct ProviderSetupView: View {
                     .frame(height: 1)
                 
                 ScrollView {
-                    VStack(spacing: 32) {
+                    VStack(spacing: 28) {
                         Spacer(minLength: 30)
                         
-                        // Icon
+                        // Logo with brand-colored glow
                         ZStack {
                             Circle()
-                                .fill(AppTheme.accent)
-                                .frame(width: 80, height: 80)
+                                .fill(provider.brandColor.opacity(0.08))
+                                .frame(width: 120, height: 120)
+                                .blur(radius: 20)
                             
-                            Image(systemName: provider.icon)
-                                .font(.system(size: 32, weight: .medium))
-                                .foregroundStyle(AppTheme.surface)
+                            ProviderLogoView(provider: provider, size: 80, cornerRadius: 20)
+                                .shadow(color: provider.brandColor.opacity(0.35), radius: 16, y: 8)
                         }
+                        .scaleEffect(keyAppear ? 1 : 0.7)
+                        .opacity(keyAppear ? 1 : 0)
                         
                         VStack(spacing: 8) {
-                            Text("Desbloquear \(provider.displayName)")
-                                .font(.system(size: 24, weight: .semibold))
+                            Text(isEditing ? "Alterar API Key" : "Desbloquear \(provider.displayName)")
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundStyle(AppTheme.textPrimary)
                             
-                            Text("Digite sua API Key para acessar\nos modelos do \(provider.displayName).")
+                            Text(isEditing
+                                 ? "Insira sua nova API Key do \(provider.displayName)."
+                                 : "Digite sua API Key para acessar\nos modelos do \(provider.displayName)."
+                            )
                                 .font(.system(size: 14))
                                 .foregroundStyle(AppTheme.textSecondary)
                                 .multilineTextAlignment(.center)
                         }
+                        .opacity(keyAppear ? 1 : 0)
+                        .offset(y: keyAppear ? 0 : 10)
                         
-                        // Input
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("API KEY")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(AppTheme.textMuted)
-                            
-                            HStack {
-                                Group {
-                                    if showKey {
-                                        TextField(provider.keyPlaceholder, text: $apiKey)
-                                            .textInputAutocapitalization(.never)
-                                            .autocorrectionDisabled()
-                                    } else {
-                                        SecureField(provider.keyPlaceholder, text: $apiKey)
-                                            .textInputAutocapitalization(.never)
-                                            .autocorrectionDisabled()
-                                    }
+                        if isSuccess {
+                            // Success state
+                            VStack(spacing: 16) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.green.opacity(0.1))
+                                        .frame(width: 64, height: 64)
+                                    
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 36))
+                                        .foregroundStyle(Color.green)
                                 }
-                                .textFieldStyle(.plain)
-                                .font(.system(size: 14))
-                                .foregroundStyle(AppTheme.textPrimary)
                                 
-                                Button {
-                                    showKey.toggle()
-                                } label: {
-                                    Image(systemName: showKey ? "eye.slash" : "eye")
-                                        .font(.system(size: 14))
-                                        .foregroundStyle(AppTheme.textSecondary)
-                                }
-                                .buttonStyle(.plain)
+                                Text("API Key salva com sucesso!")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(Color.green)
                             }
-                            .padding(14)
-                            .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(
-                                        apiKey.isEmpty ? AppTheme.border : AppTheme.borderActive,
-                                        lineWidth: 1
-                                    )
-                            )
+                            .transition(.scale.combined(with: .opacity))
+                        } else {
+                            // Input
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("API KEY")
+                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(AppTheme.textMuted)
+                                
+                                HStack {
+                                    Group {
+                                        if showKey {
+                                            TextField(provider.keyPlaceholder, text: $apiKey)
+                                                .textInputAutocapitalization(.never)
+                                                .autocorrectionDisabled()
+                                        } else {
+                                            SecureField(provider.keyPlaceholder, text: $apiKey)
+                                                .textInputAutocapitalization(.never)
+                                                .autocorrectionDisabled()
+                                        }
+                                    }
+                                    .textFieldStyle(.plain)
+                                    .font(.system(size: 14, design: .monospaced))
+                                    .foregroundStyle(AppTheme.textPrimary)
+                                    
+                                    Button {
+                                        showKey.toggle()
+                                    } label: {
+                                        Image(systemName: showKey ? "eye.slash.fill" : "eye.fill")
+                                            .font(.system(size: 14))
+                                            .foregroundStyle(AppTheme.textSecondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .padding(14)
+                                .background(AppTheme.surfaceElevated)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(
+                                            errorMessage != nil
+                                            ? AppTheme.danger
+                                            : (apiKey.isEmpty ? AppTheme.border : provider.brandColor.opacity(0.6)),
+                                            lineWidth: errorMessage != nil || !apiKey.isEmpty ? 2 : 1
+                                        )
+                                )
+                                .animation(.easeInOut(duration: 0.2), value: apiKey.isEmpty)
+                                
+                                if let errorMessage {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "exclamationmark.triangle.fill")
+                                            .font(.system(size: 11))
+                                        Text(errorMessage)
+                                            .font(.system(size: 12))
+                                    }
+                                    .foregroundStyle(AppTheme.danger)
+                                    .transition(.move(edge: .top).combined(with: .opacity))
+                                }
+                            }
+                            .opacity(keyAppear ? 1 : 0)
                             
-                            if let errorMessage {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .font(.system(size: 11))
-                                    Text(errorMessage)
-                                        .font(.system(size: 12))
+                            // Save button
+                            Button {
+                                saveKey()
+                            } label: {
+                                HStack(spacing: 8) {
+                                    if isValidating {
+                                        ProgressView()
+                                            .tint(.white)
+                                            .scaleEffect(0.8)
+                                    } else {
+                                        Image(systemName: "key.fill")
+                                            .font(.system(size: 13, weight: .medium))
+                                    }
+                                    Text(isValidating ? "Validando..." : "Salvar API Key")
+                                        .font(.system(size: 15, weight: .semibold))
                                 }
-                                .foregroundStyle(AppTheme.danger)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(
+                                    apiKey.isEmpty
+                                    ? AppTheme.borderHover
+                                    : provider.brandColor
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .shadow(color: apiKey.isEmpty ? .clear : provider.brandColor.opacity(0.3), radius: 8, y: 4)
                             }
+                            .buttonStyle(.plain)
+                            .disabled(apiKey.isEmpty || isValidating)
+                            .animation(.easeInOut(duration: 0.2), value: apiKey.isEmpty)
+                            .opacity(keyAppear ? 1 : 0)
                         }
                         
-                        // Save button
-                        Button {
-                            saveKey()
-                        } label: {
-                            HStack(spacing: 8) {
-                                if isValidating {
-                                    ProgressView()
-                                        .tint(.white)
-                                        .scaleEffect(0.8)
-                                } else {
-                                    Image(systemName: "key.fill")
-                                        .font(.system(size: 13, weight: .medium))
-                                }
-                                Text(isValidating ? "Validando..." : "Salvar")
-                                    .font(.system(size: 15, weight: .semibold))
-                            }
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(
-                                apiKey.isEmpty
-                                ? AppTheme.borderHover
-                                : AppTheme.accent
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(apiKey.isEmpty || isValidating)
-                        .animation(.easeInOut(duration: 0.2), value: apiKey.isEmpty)
-                        
+                        // Help link
                         Link(destination: URL(string: provider.keyDocURL)!) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "link")
-                                    .font(.system(size: 11))
-                                Text("Obter API Key")
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.up.right.square")
+                                    .font(.system(size: 12))
+                                Text("Obter API Key no \(provider.displayName)")
                                     .font(.system(size: 12, weight: .medium))
                             }
-                            .foregroundStyle(AppTheme.link)
+                            .foregroundStyle(provider.brandColor)
                         }
+                        .opacity(keyAppear ? 1 : 0)
                         
                         Spacer(minLength: 40)
                     }
                     .padding(.horizontal, 32)
                 }
+            }
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.75).delay(0.1)) {
+                keyAppear = true
             }
         }
     }
@@ -530,9 +670,17 @@ struct ProviderSetupView: View {
                         aiConfig.setSelectedModel(provider.defaultModels.first!)
                     }
                     
-                    isPresented = false
+                    withAnimation(.spring(response: 0.4)) {
+                        isSuccess = true
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        isPresented = false
+                    }
                 } else {
-                    errorMessage = "API Key inválida. Verifique e tente novamente."
+                    withAnimation {
+                        errorMessage = "API Key inválida. Verifique e tente novamente."
+                    }
                 }
             }
         }

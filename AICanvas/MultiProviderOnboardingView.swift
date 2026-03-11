@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Onboarding screen — Game Edition.
+/// Onboarding screen — Premium Edition with real provider logos.
 struct MultiProviderOnboardingView: View {
     @Binding var isPresented: Bool
     @ObservedObject var aiConfig: AIConfiguration
@@ -12,12 +12,13 @@ struct MultiProviderOnboardingView: View {
             AppTheme.background
                 .ignoresSafeArea()
             
-            // Subtle glowing orb top-center
+            // Subtle brand-colored glow that changes with selected provider
             Circle()
-                .fill(AppTheme.accent.opacity(0.04))
+                .fill(currentProvider.brandColor.opacity(0.06))
                 .blur(radius: 80)
                 .frame(width: 400, height: 400)
                 .offset(y: -250)
+                .animation(.easeInOut(duration: 0.5), value: selectedTab)
             
             VStack(spacing: 0) {
                 // Header
@@ -44,27 +45,25 @@ struct MultiProviderOnboardingView: View {
         }
     }
     
+    private var currentProvider: AIProvider {
+        let allProviders = AIProvider.allCases
+        guard selectedTab >= 0 && selectedTab < allProviders.count else {
+            return allProviders[0]
+        }
+        return allProviders[selectedTab]
+    }
+    
     // MARK: - Header
     
     private var headerView: some View {
         VStack(spacing: 20) {
             // Logo icon
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            stops: [.init(color: AppTheme.accent.opacity(0.8), location: 0), .init(color: AppTheme.accent, location: 1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 80, height: 80)
-                    .shadow(color: AppTheme.accent.opacity(0.3), radius: 10, y: 5)
-                
-                Image(systemName: "paintbrush.pointed.fill")
-                    .font(.system(size: 32, weight: .semibold))
-                    .foregroundStyle(AppTheme.surface)
-            }
+            Image("AppImage")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .shadow(color: AppTheme.accent.opacity(0.3), radius: 10, y: 5)
             
             VStack(spacing: 8) {
                 // Title
@@ -77,21 +76,47 @@ struct MultiProviderOnboardingView: View {
                     .foregroundStyle(AppTheme.textSecondary)
             }
             
-            // Step indicators
-            HStack(spacing: 8) {
+            // Step indicators with logos
+            HStack(spacing: 12) {
                 ForEach(Array(AIProvider.allCases.enumerated()), id: \.element.id) { index, provider in
-                    Capsule()
-                        .fill(
+                    Button {
+                        withAnimation(.spring(response: 0.35)) {
+                            selectedTab = index
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            ProviderLogoView(provider: provider, size: 20, cornerRadius: 5)
+                            
+                            if selectedTab == index {
+                                Text(provider.displayName)
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(AppTheme.textPrimary)
+                                    .transition(.move(edge: .leading).combined(with: .opacity))
+                            }
+                        }
+                        .padding(.horizontal, selectedTab == index ? 10 : 6)
+                        .padding(.vertical, 6)
+                        .background(
                             selectedTab == index
-                            ? AnyShapeStyle(AppTheme.textPrimary)
-                            : AnyShapeStyle(
-                                KeychainManager.shared.hasAPIKey(for: provider)
-                                ? AppTheme.action
-                                : AppTheme.border
-                              )
+                            ? provider.brandColorLight
+                            : (KeychainManager.shared.hasAPIKey(for: provider)
+                               ? Color.green.opacity(0.1)
+                               : AppTheme.surfaceElevated)
                         )
-                        .frame(width: selectedTab == index ? 24 : 8, height: 8)
-                        .animation(.spring(response: 0.3), value: selectedTab)
+                        .clipShape(Capsule())
+                        .overlay(
+                            Capsule().stroke(
+                                selectedTab == index
+                                ? provider.brandColor.opacity(0.4)
+                                : (KeychainManager.shared.hasAPIKey(for: provider)
+                                   ? Color.green.opacity(0.3)
+                                   : AppTheme.border),
+                                lineWidth: 1
+                            )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .animation(.spring(response: 0.3), value: selectedTab)
                 }
             }
         }
@@ -141,8 +166,9 @@ struct MultiProviderOnboardingView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
-                    .background(AppTheme.accent)
+                    .background(currentProvider.brandColor)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .shadow(color: currentProvider.brandColor.opacity(0.3), radius: 6, y: 3)
                 }
                 .buttonStyle(.plain)
             } else if hasConfiguredAny || KeychainManager.shared.hasAnyAPIKey {
@@ -161,8 +187,15 @@ struct MultiProviderOnboardingView: View {
                     .foregroundStyle(.white)
                     .padding(.horizontal, 28)
                     .padding(.vertical, 14)
-                    .background(AppTheme.accent)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.green, Color.green.opacity(0.85)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .shadow(color: Color.green.opacity(0.3), radius: 6, y: 3)
                 }
                 .buttonStyle(.plain)
             }
@@ -171,8 +204,6 @@ struct MultiProviderOnboardingView: View {
         .padding(.bottom, 50)
     }
 }
-
-// MARK: - Star Particle Removed
 
 // MARK: - Provider Card
 
@@ -193,20 +224,15 @@ struct ProviderOnboardingCard: View {
             VStack(spacing: 28) {
                 Spacer(minLength: 20)
                 
-                // Provider badge
+                // Provider logo with branded glow
                 ZStack {
                     Circle()
-                        .fill(AppTheme.accent.opacity(0.08))
-                        .frame(width: 100, height: 100)
-                        
-                    Circle()
-                        .fill(AppTheme.accent)
-                        .frame(width: 72, height: 72)
-                        .shadow(color: AppTheme.accent.opacity(0.4), radius: 12, y: 6)
+                        .fill(provider.brandColor.opacity(0.08))
+                        .frame(width: 120, height: 120)
+                        .blur(radius: 20)
                     
-                    Image(systemName: provider.icon)
-                        .font(.system(size: 30, weight: .medium))
-                        .foregroundStyle(AppTheme.surface)
+                    ProviderLogoView(provider: provider, size: 80, cornerRadius: 20)
+                        .shadow(color: provider.brandColor.opacity(0.4), radius: 16, y: 8)
                 }
                 .scaleEffect(cardAppear ? 1 : 0.6)
                 .opacity(cardAppear ? 1 : 0)
@@ -217,11 +243,16 @@ struct ProviderOnboardingCard: View {
                         .font(.system(size: 26, weight: .bold, design: .rounded))
                         .foregroundStyle(AppTheme.textPrimary)
                     
+                    Text(provider.tagline)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(provider.brandColor)
+                    
                     Text("Configure sua API Key para\ndesbloquear os modelos do \(provider.displayName).")
                         .font(.system(size: 14))
                         .foregroundStyle(AppTheme.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
+                        .padding(.top, 4)
                 }
                 .opacity(cardAppear ? 1 : 0)
                 .offset(y: cardAppear ? 0 : 10)
@@ -237,15 +268,21 @@ struct ProviderOnboardingCard: View {
                 
                 // Doc link
                 Link(destination: URL(string: provider.keyDocURL)!) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "link")
-                            .font(.system(size: 11))
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.up.right.square")
+                            .font(.system(size: 12))
                         Text("Como obter API Key")
                             .font(.system(size: 12, weight: .medium))
                     }
-                    .foregroundStyle(AppTheme.link)
+                    .foregroundStyle(provider.brandColor)
                 }
                 .opacity(cardAppear ? 1 : 0)
+                
+                // Models preview
+                if !provider.defaultModels.isEmpty {
+                    modelsPreview
+                        .opacity(cardAppear ? 1 : 0)
+                }
                 
                 Spacer(minLength: 20)
             }
@@ -261,6 +298,38 @@ struct ProviderOnboardingCard: View {
         .onDisappear { cardAppear = false }
     }
     
+    // MARK: - Models Preview
+    
+    private var modelsPreview: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("MODELOS DISPONÍVEIS")
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppTheme.textMuted)
+            
+            VStack(spacing: 4) {
+                ForEach(provider.defaultModels) { model in
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(provider.brandColor.opacity(0.5))
+                            .frame(width: 5, height: 5)
+                        Text(model.name)
+                            .font(.system(size: 12))
+                            .foregroundStyle(AppTheme.textSecondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                }
+            }
+            .background(AppTheme.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(AppTheme.border.opacity(0.5), lineWidth: 1)
+            )
+        }
+    }
+    
     // MARK: - Configured
     
     private var configuredView: some View {
@@ -268,30 +337,33 @@ struct ProviderOnboardingCard: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(AppTheme.action.opacity(0.1))
-                        .frame(width: 40, height: 40)
-                        .overlay(Circle().stroke(AppTheme.action.opacity(0.3), lineWidth: 1))
+                        .fill(Color.green.opacity(0.1))
+                        .frame(width: 44, height: 44)
+                        .overlay(Circle().stroke(Color.green.opacity(0.3), lineWidth: 1))
                     
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.action)
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Color.green)
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Configurado!")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppTheme.action)
+                        .foregroundStyle(Color.green)
                     Text("API Key salva com sucesso")
                         .font(.system(size: 12))
                         .foregroundStyle(AppTheme.textSecondary)
                 }
                 
                 Spacer()
+                
+                ProviderLogoView(provider: provider, size: 28, cornerRadius: 7)
+                    .opacity(0.5)
             }
             .padding(16)
-            .background(AppTheme.action.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.action.opacity(0.2), lineWidth: 1))
+            .background(Color.green.opacity(0.05))
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.green.opacity(0.2), lineWidth: 1))
             
             Button(role: .destructive) {
                 KeychainManager.shared.deleteKey(for: provider)
@@ -299,9 +371,13 @@ struct ProviderOnboardingCard: View {
                 apiKey = ""
                 errorMessage = nil
             } label: {
-                Text("Reconfigurar")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(AppTheme.danger)
+                HStack(spacing: 4) {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 11))
+                    Text("Reconfigurar")
+                        .font(.system(size: 12, weight: .medium))
+                }
+                .foregroundStyle(AppTheme.textSecondary)
             }
             .buttonStyle(.plain)
         }
@@ -314,7 +390,7 @@ struct ProviderOnboardingCard: View {
             // Key input
             VStack(alignment: .leading, spacing: 8) {
                 Text("API KEY")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(AppTheme.textMuted)
                 
                 HStack {
@@ -330,7 +406,7 @@ struct ProviderOnboardingCard: View {
                         }
                     }
                     .textFieldStyle(.plain)
-                    .font(.system(size: 15))
+                    .font(.system(size: 15, design: .monospaced))
                     .foregroundStyle(AppTheme.textPrimary)
                     
                     Button {
@@ -349,10 +425,13 @@ struct ProviderOnboardingCard: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            apiKey.isEmpty ? AppTheme.border : AppTheme.accent.opacity(0.5),
-                            lineWidth: apiKey.isEmpty ? 1 : 2
+                            errorMessage != nil
+                            ? AppTheme.danger
+                            : (apiKey.isEmpty ? AppTheme.border : provider.brandColor.opacity(0.6)),
+                            lineWidth: errorMessage != nil || !apiKey.isEmpty ? 2 : 1
                         )
                 )
+                .animation(.easeInOut(duration: 0.2), value: apiKey.isEmpty)
                 
                 if let errorMessage {
                     HStack(spacing: 6) {
@@ -362,10 +441,11 @@ struct ProviderOnboardingCard: View {
                             .font(.system(size: 12))
                     }
                     .foregroundStyle(AppTheme.danger)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
             
-            // Save button
+            // Save button with provider brand color
             Button {
                 saveKey()
             } label: {
@@ -387,10 +467,10 @@ struct ProviderOnboardingCard: View {
                 .background(
                     apiKey.isEmpty
                     ? AppTheme.borderHover
-                    : AppTheme.accent
+                    : provider.brandColor
                 )
                 .clipShape(Capsule())
-                .shadow(color: apiKey.isEmpty ? .clear : AppTheme.accent.opacity(0.3), radius: 8, y: 4)
+                .shadow(color: apiKey.isEmpty ? .clear : provider.brandColor.opacity(0.3), radius: 8, y: 4)
             }
             .buttonStyle(.plain)
             .disabled(apiKey.isEmpty || isValidating)
@@ -426,7 +506,9 @@ struct ProviderOnboardingCard: View {
                 isValidating = false
                 if isValid {
                     KeychainManager.shared.saveKey(trimmed, for: provider)
-                    isConfigured = true
+                    withAnimation(.spring(response: 0.4)) {
+                        isConfigured = true
+                    }
                     onConfigured()
                     aiConfig.updateAvailableModels()
                     
@@ -436,7 +518,9 @@ struct ProviderOnboardingCard: View {
                         }
                     }
                 } else {
-                    errorMessage = "API Key inválida. Verifique e tente novamente."
+                    withAnimation {
+                        errorMessage = "API Key inválida. Verifique e tente novamente."
+                    }
                 }
             }
         }

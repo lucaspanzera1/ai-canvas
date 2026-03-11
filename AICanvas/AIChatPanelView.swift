@@ -233,14 +233,7 @@ struct AIChatPanelView: View {
             showModelSelection = true
         } label: {
             HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(AppTheme.background)
-                        .frame(width: 26, height: 26)
-                    Image(systemName: aiConfig.selectedModel.provider.icon)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(AppTheme.textPrimary)
-                }
+                ProviderLogoView(provider: aiConfig.selectedModel.provider, size: 26, cornerRadius: 7)
 
                 VStack(alignment: .leading, spacing: 1) {
                     Text(aiConfig.selectedModel.name)
@@ -256,7 +249,7 @@ struct AIChatPanelView: View {
                 HStack(spacing: 4) {
                     Text("Trocar")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(AppTheme.textSecondary)
+                        .foregroundStyle(aiConfig.selectedModel.provider.brandColor)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 9))
                         .foregroundStyle(AppTheme.textMuted)
