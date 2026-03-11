@@ -15,8 +15,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
 
       - name: Show available destinations
         run: xcodebuild -project AICanvas.xcodeproj -scheme AICanvas -showdestinations
@@ -29,7 +27,7 @@ jobs:
           xcodebuild clean build \
             -project AICanvas.xcodeproj \
             -scheme AICanvas \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO | xcpretty && exit ${PIPESTATUS[0]}
 
@@ -38,6 +36,6 @@ jobs:
           xcodebuild analyze \
             -project AICanvas.xcodeproj \
             -scheme AICanvas \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO | xcpretty && exit ${PIPESTATUS[0]}
