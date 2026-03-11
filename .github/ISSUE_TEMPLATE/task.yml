@@ -1,0 +1,39 @@
+name: "🔧 Task Técnica"
+description: "Atividades técnicas, refactors ou ajustes internos"
+title: "[Task]: "
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: "## 🧰 Descrição da Task\nDetalhe a tarefa técnica a ser executada."
+  - type: textarea
+    attributes:
+      label: "Descrição"
+      description: "O que precisa ser feito?"
+      placeholder: "Ex: Criar script de migração para ajustar tabela users."
+  - type: dropdown
+    attributes:
+      label: "Área"
+      options:
+        - Frontend
+        - Backend
+        - Banco de Dados
+        - Infraestrutura
+  - type: textarea
+    attributes:
+      label: "Tarefas"
+      description: "Liste as subtarefas ou etapas da atividade"
+      placeholder: |
+        - [ ] Criar endpoint de atualização
+        - [ ] Atualizar schema do banco
+        - [ ] Adicionar testes
+  - type: textarea
+    attributes:
+      label: "Notas técnicas"
+      description: "Adicione detalhes sobre dependências, versões ou riscos"
+  - type: checkboxes
+    attributes:
+      label: "Checklist"
+      options:
+        - label: "Verifiquei dependências e impacto"
+        - label: "A task está clara e objetiva"

@@ -1,0 +1,45 @@
+name: "🐛 Bug Report"
+description: "Relatar um erro ou comportamento inesperado no sistema"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "## 🐞 Descrição do problema\nExplique claramente o erro que ocorreu."
+  - type: textarea
+    attributes:
+      label: "Descrição"
+      description: "Explique o que aconteceu, e o que você esperava que acontecesse."
+      placeholder: "Ex: Ao clicar em 'Salvar', o sistema retorna erro 500."
+  - type: textarea
+    attributes:
+      label: "Passos para reproduzir"
+      description: "Como reproduzir o problema, passo a passo."
+      placeholder: |
+        1. Vá para '...'
+        2. Clique em '...'
+        3. Veja o erro
+  - type: input
+    attributes:
+      label: "Ambiente"
+      description: "Informe o ambiente afetado (dev, staging, prod)"
+      placeholder: "ex: staging"
+  - type: dropdown
+    attributes:
+      label: "Área afetada"
+      options:
+        - Frontend
+        - Backend
+        - Banco de Dados
+        - Infraestrutura
+  - type: textarea
+    attributes:
+      label: "Logs / Evidências"
+      description: "Cole logs, stack traces ou screenshots relevantes"
+  - type: checkboxes
+    attributes:
+      label: "Checklist"
+      options:
+        - label: "Verifiquei se a issue já existe"
+        - label: "Adicionei logs ou prints"
+        - label: "Descrevi os passos de reprodução"

@@ -1,0 +1,42 @@
+name: "🚀 Nova Feature"
+description: "Sugira ou documente uma nova funcionalidade para o sistema"
+title: "[Feature]: "
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: "## ✨ Descrição da funcionalidade\nExplique o que deve ser implementado e o porquê."
+  - type: textarea
+    attributes:
+      label: "Descrição"
+      description: "Descreva claramente a nova funcionalidade"
+      placeholder: "Ex: Adicionar login via Google"
+  - type: textarea
+    attributes:
+      label: "Motivação"
+      description: "Por que essa feature é importante?"
+      placeholder: "Ex: facilita o onboarding e reduz atrito no login."
+  - type: dropdown
+    attributes:
+      label: "Área principal"
+      options:
+        - Frontend
+        - Backend
+        - Banco de Dados
+        - Infraestrutura
+  - type: textarea
+    attributes:
+      label: "Impacto esperado"
+      description: "Quais benefícios ou resultados você espera?"
+  - type: textarea
+    attributes:
+      label: "Critérios de aceitação"
+      description: "Liste o que deve estar funcionando para considerar 'concluído'"
+      placeholder: |
+        - [ ] Usuário pode fazer login via Google
+        - [ ] Token é salvo com sucesso no banco
+  - type: input
+    attributes:
+      label: "Relacionado a"
+      description: "ID da issue ou PR relacionado (opcional)"
+      placeholder: "#42"
