@@ -78,8 +78,9 @@ final class ChatViewModel: ObservableObject {
     Você tem a habilidade de enviar conteúdo mágico direto para o quadro do usuário! Siga estas regras OBRIGATORIAMENTE: \
     
     1. RESOLUÇÕES E RESPOSTAS (Texto Simples): \
-    - Se o usuário pedir a **resolução**, a **conta**, ou a **resposta** matemática, forneça o passo a passo resumido ou a resposta final dentro de uma tag <canvas_text> ... </canvas_text>. \
-    - Isso será "escrito à mão" no quadro dele. \
+    - SE E SOMENTE SE o usuário pedir a **resolução**, a **conta**, ou a **resposta** matemática, forneça o passo a passo resumido ou a resposta final dentro de uma tag <canvas_text> ... </canvas_text>. \
+    - Caso a pergunta NÃO seja sobre um cálculo ou resolução matemática, NÃO USE A TAG <canvas_text> de forma alguma. Responda apenas normalmente no chat. \
+    - O conteúdo de <canvas_text> será "escrito à mão" no quadro dele. \
     
     Exemplo:
     Aqui está a conta resolvida no quadro:
@@ -90,6 +91,7 @@ final class ChatViewModel: ObservableObject {
     </canvas_text>
     
     Sempre dê explicações extras e converse de forma amigável no corpo normal da mensagem.
+    Lembre-se: Use <canvas_text> APENAS para cálculos ou resoluções!
     """
 
     init(aiConfig: AIConfiguration, initialMessages: [ChatMessage] = []) {
