@@ -25,7 +25,7 @@ struct DrawingToolConfig: Equatable {
 final class CanvasManager: ObservableObject {
     @Published var canUndo = false
     @Published var canRedo = false
-    @Published var imageToExport: UIImage? = nil  // SwiftUI observes this to show share sheet
+    @Published var urlToExport: URL? = nil  // SwiftUI observes this to show share sheet
 
     // Selection mode state
     @Published var isSelectionMode = false {
@@ -162,8 +162,13 @@ final class CanvasManager: ObservableObject {
         let canvasSize = bounds.size
         let scale = UIScreen.main.scale
 
-        // Render the PencilKit strokes within the drawing's bounds
-        let strokeImage = drawing.image(from: bounds, scale: scale)
+        // Render the PencilKit strokes within the drawing's bounds, forcing light mode 
+        // to avoid white strokes becoming invisible on the white background.
+        var strokeImage: UIImage!
+        let traitCollection = UITraitCollection(userInterfaceStyle: .light)
+        traitCollection.performAsCurrent {
+            strokeImage = drawing.image(from: bounds, scale: scale)
+        }
 
         // Composite onto an opaque white background.
         // IMPORTANT: use CGRect(origin: .zero) — the renderer coordinate space always
@@ -182,27 +187,75 @@ final class CanvasManager: ObservableObject {
         }
     }
 
-    /// Renders the canvas to a UIImage and publishes it so SwiftUI can present the share sheet.
+    /// Renders the canvas to a PDF and publishes it so SwiftUI can present the share sheet.
     func exportDrawing() {
         guard let canvasView else { return }
 
         let drawing = canvasView.drawing
-        let bounds = drawing.bounds.isEmpty
-            ? CGRect(x: 0, y: 0, width: 800, height: 600)
-            : drawing.bounds.insetBy(dx: -20, dy: -20)
-
-        let scale = UIScreen.main.scale
-        let rawImage = drawing.image(from: bounds, scale: scale)
-
-        // Composite onto white background
-        let renderer = UIGraphicsImageRenderer(size: bounds.size)
-        let finalImage = renderer.image { ctx in
-            UIColor.white.setFill()
-            ctx.fill(CGRect(origin: .zero, size: bounds.size))
-            rawImage.draw(in: CGRect(origin: .zero, size: bounds.size))
+        
+        let a4Width: CGFloat = 800
+        let a4Height: CGFloat = 1140
+        let xMargin: CGFloat = 20
+        let yMargin: CGFloat = 20
+        
+        let tileWidth = a4Width + (xMargin * 2)
+        let tileHeight = a4Height + (yMargin * 2)
+        
+        let totalPages = 20
+        var pagesToExport: [Int] = []
+        
+        for i in 0..<totalPages {
+            let pageRect = CGRect(x: 0, y: CGFloat(i) * tileHeight, width: tileWidth, height: tileHeight)
+            // Apenas as páginas que foram desenhadas
+            let hasStrokes = drawing.strokes.contains { $0.renderBounds.intersects(pageRect) }
+            if hasStrokes {
+                pagesToExport.append(i)
+            }
+        }
+        
+        // Se estiver vazio, exporta pelo menos a primeira página
+        if pagesToExport.isEmpty {
+            pagesToExport.append(0)
         }
 
-        imageToExport = finalImage
+        let pdfMetaData = [
+            kCGPDFContextCreator: "AI Canvas",
+            kCGPDFContextAuthor: "User"
+        ]
+        let format = UIGraphicsPDFRendererFormat()
+        format.documentInfo = pdfMetaData as [String: Any]
+        
+        // Vamos usar o tamanho original para o PDF
+        let pdfPageBounds = CGRect(x: 0, y: 0, width: tileWidth, height: tileHeight)
+        let renderer = UIGraphicsPDFRenderer(bounds: pdfPageBounds, format: format)
+        
+        let cachesURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let tempURL = cachesURL.appendingPathComponent("Anotacoes.pdf")
+        
+        do {
+            try renderer.writePDF(to: tempURL) { context in
+                for pageIndex in pagesToExport {
+                    context.beginPage()
+                    
+                    let bgRect = CGRect(x: 0, y: CGFloat(pageIndex) * tileHeight, width: tileWidth, height: tileHeight)
+                    
+                    // Fundo branco
+                    UIColor.white.setFill()
+                    context.cgContext.fill(pdfPageBounds)
+                    
+                    // Desenha o conteúdo da página, forçando light mode
+                    var pageImage: UIImage!
+                    let traitCollection = UITraitCollection(userInterfaceStyle: .light)
+                    traitCollection.performAsCurrent {
+                        pageImage = drawing.image(from: bgRect, scale: 2.0)
+                    }
+                    pageImage.draw(in: pdfPageBounds)
+                }
+            }
+            urlToExport = tempURL
+        } catch {
+            print("Failed to create PDF: \(error)")
+        }
     }
     
     // MARK: - AI Annotation Support

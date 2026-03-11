@@ -129,10 +129,10 @@ struct ContentView: View {
             )
         }
         .sheet(item: Binding(
-            get: { canvasManager.imageToExport.map { ExportableImage(image: $0) } },
-            set: { if $0 == nil { canvasManager.imageToExport = nil } }
+            get: { canvasManager.urlToExport.map { ExportableItem(item: $0) } },
+            set: { if $0 == nil { canvasManager.urlToExport = nil } }
         )) { exportable in
-            ShareSheet(image: exportable.image)
+            ShareSheet(activityItems: [exportable.item])
         }
         .onReceive(NotificationCenter.default.publisher(for: .apiKeyDidChange)) { _ in
             showOnboarding = true
