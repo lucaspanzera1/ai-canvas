@@ -19,19 +19,22 @@ struct Folder: Identifiable, Codable, Equatable {
     var createdAt: Date
     var lastModified: Date
     var bannerImageData: Data?
+    var parentFolderId: UUID?
     
     init(
         id: UUID = UUID(),
         name: String,
         emoji: String = "📁",
         colorIndex: Int = 0,
-        bannerImageData: Data? = nil
+        bannerImageData: Data? = nil,
+        parentFolderId: UUID? = nil
     ) {
         self.id = id
         self.name = name
         self.emoji = emoji
         self.colorIndex = colorIndex
         self.bannerImageData = bannerImageData
+        self.parentFolderId = parentFolderId
         self.createdAt = Date()
         self.lastModified = Date()
     }
@@ -98,7 +101,7 @@ final class NotebookStore: ObservableObject {
     @Published var folders: [Folder] = []
 
     private let metadataKey = "ai_canvas_notebooks_v2"
-    private let foldersMetadataKey = "ai_canvas_folders_v1"
+    private let foldersMetadataKey = "ai_canvas_folders_v2"
     private let drawingsDirectory: URL
 
     init() {
@@ -158,8 +161,8 @@ final class NotebookStore: ObservableObject {
     // MARK: - CRUD Folders
 
     @discardableResult
-    func createFolder(name: String, emoji: String, colorIndex: Int, bannerImageData: Data? = nil) -> Folder {
-        let folder = Folder(name: name, emoji: emoji, colorIndex: colorIndex, bannerImageData: bannerImageData)
+    func createFolder(name: String, emoji: String, colorIndex: Int, bannerImageData: Data? = nil, parentFolderId: UUID? = nil) -> Folder {
+        let folder = Folder(name: name, emoji: emoji, colorIndex: colorIndex, bannerImageData: bannerImageData, parentFolderId: parentFolderId)
         folders.append(folder)
         saveMetadata()
         return folder
@@ -167,10 +170,19 @@ final class NotebookStore: ObservableObject {
 
     func deleteFolder(_ folder: Folder) {
         folders.removeAll { $0.id == folder.id }
+        
+        // Delete all notebooks in this folder
         let notebooksToDelete = notebooks.filter { $0.folderId == folder.id }
         for nb in notebooksToDelete {
             deleteNotebook(nb)
         }
+        
+        // Delete all subfolders recursively
+        let subfoldersToDelete = folders.filter { $0.parentFolderId == folder.id }
+        for subfolder in subfoldersToDelete {
+            deleteFolder(subfolder)
+        }
+        
         saveMetadata()
     }
 

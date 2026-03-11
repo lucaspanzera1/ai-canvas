@@ -41,10 +41,7 @@ struct NotebookListView: View {
     ]
     
     private var visibleFolders: [Folder] {
-        if selectedFolder == nil {
-            return store.folders
-        }
-        return []
+        store.folders.filter { $0.parentFolderId == selectedFolder?.id }
     }
     
     private var visibleNotebooks: [Notebook] {
@@ -129,14 +126,12 @@ struct NotebookListView: View {
                             }
 
                             // CREATE NEW CARDS
-                            if selectedFolder == nil {
-                                NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") {
-                                    showCreateFolder = true
-                                }
-                                .scaleEffect(appeared ? 1 : 0.85)
-                                .opacity(appeared ? 1 : 0)
-                                .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count) * 0.05), value: appeared)
+                            NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") {
+                                showCreateFolder = true
                             }
+                            .scaleEffect(appeared ? 1 : 0.85)
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count) * 0.05), value: appeared)
                             
                             NewItemCard(title: "Novo Caderno", icon: "plus") {
                                 showCreateNotebook = true
@@ -159,7 +154,7 @@ struct NotebookListView: View {
             ItemEditorSheet(store: store, mode: .createNotebook(folderId: selectedFolder?.id), isPresented: $showCreateNotebook)
         }
         .sheet(isPresented: $showCreateFolder) {
-            ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
+            ItemEditorSheet(store: store, mode: .createFolder(parentFolderId: selectedFolder?.id), isPresented: $showCreateFolder)
         }
         .sheet(item: Binding(
             get: {
@@ -372,24 +367,22 @@ struct NotebookListView: View {
             }
 
             HStack(spacing: 12) {
-                if selectedFolder == nil {
-                    Button {
-                        showCreateFolder = true
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "folder.badge.plus")
-                            Text("Nova Pasta")
-                        }
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 14)
-                        .background(AppTheme.surfaceElevated)
-                        .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
-                        .clipShape(Capsule())
+                Button {
+                    showCreateFolder = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "folder.badge.plus")
+                        Text("Nova Pasta")
                     }
-                    .buttonStyle(.plain)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background(AppTheme.surfaceElevated)
+                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                    .clipShape(Capsule())
                 }
+                .buttonStyle(.plain)
                 
                 Button {
                     showCreateNotebook = true
@@ -599,7 +592,7 @@ struct NewItemCard: View {
 
 enum EditorMode {
     case createNotebook(folderId: UUID?)
-    case createFolder
+    case createFolder(parentFolderId: UUID?)
     case editNotebook(Notebook)
     case editFolder(Folder)
     
@@ -874,8 +867,8 @@ struct ItemEditorSheet: View {
         switch mode {
         case .createNotebook(let folderId):
             store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId, bannerImageData: bannerImageData)
-        case .createFolder:
-            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
+        case .createFolder(let parentFolderId):
+            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData, parentFolderId: parentFolderId)
         case .editNotebook(let nb):
             store.renameNotebook(nb, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
         case .editFolder(let f):
