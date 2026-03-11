@@ -188,7 +188,7 @@ final class CanvasManager: ObservableObject {
     }
 
     /// Renders the canvas to a PDF and publishes it so SwiftUI can present the share sheet.
-    func exportDrawing() {
+    func exportDrawing(pattern: BackgroundPattern = .none) {
         guard let canvasView else { return }
 
         let drawing = canvasView.drawing
@@ -239,9 +239,34 @@ final class CanvasManager: ObservableObject {
                     
                     let bgRect = CGRect(x: 0, y: CGFloat(pageIndex) * tileHeight, width: tileWidth, height: tileHeight)
                     
-                    // Fundo branco
+                    // Fundo total branco (representa a margem e o papel)
                     UIColor.white.setFill()
                     context.cgContext.fill(pdfPageBounds)
+                    
+                    if pattern != .none {
+                        // Reproduzir o padrão
+                        context.cgContext.setStrokeColor(UIColor.lightGray.withAlphaComponent(0.5).cgColor)
+                        context.cgContext.setLineWidth(1)
+                        
+                        let paperRect = CGRect(x: xMargin, y: yMargin, width: a4Width, height: a4Height)
+                        let step: CGFloat = 34
+                        let contentRect = paperRect.insetBy(dx: 40, dy: 40)
+                        
+                        // Linhas horizontais
+                        for y in stride(from: contentRect.minY, through: contentRect.maxY, by: step) {
+                            context.cgContext.move(to: CGPoint(x: contentRect.minX, y: y))
+                            context.cgContext.addLine(to: CGPoint(x: contentRect.maxX, y: y))
+                        }
+                        
+                        if pattern == .grid {
+                            // Linhas verticais
+                            for x in stride(from: contentRect.minX, through: contentRect.maxX, by: step) {
+                                context.cgContext.move(to: CGPoint(x: x, y: contentRect.minY))
+                                context.cgContext.addLine(to: CGPoint(x: x, y: contentRect.maxY))
+                            }
+                        }
+                        context.cgContext.strokePath()
+                    }
                     
                     // Desenha o conteúdo da página, forçando light mode
                     var pageImage: UIImage!

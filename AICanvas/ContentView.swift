@@ -268,7 +268,7 @@ struct CanvasToolbar: View {
                     isDisabled: false,
                     color: AppTheme.action
                 ) {
-                    canvasManager.exportDrawing()
+                    canvasManager.exportDrawing(pattern: backgroundPattern)
                 }
             }
 
