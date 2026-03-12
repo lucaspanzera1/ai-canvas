@@ -44,6 +44,9 @@ final class CanvasManager: ObservableObject {
 
     /// Called every time the drawing changes — used for auto-save.
     var onDrawingChange: ((PKDrawing) -> Void)?
+    
+    /// Called when an image needs to be resized with a dialog
+    var onImageShowResizeDialog: ((DraggableImageView, CGSize) -> Void)?
 
     private let initialDrawing: PKDrawing
 
@@ -366,6 +369,7 @@ final class CanvasManager: ObservableObject {
         imageView.canvasOrigin = CGPoint(x: canvasCX - canvasW / 2, y: canvasCY - canvasH / 2)
         imageView.canvasSize   = CGSize(width: canvasW, height: canvasH)
         imageView.applyZoom(zoom)
+        imageView.canvasManagerRef = self
 
         imageView.alpha = 0
         canvasView.addSubview(imageView)
@@ -448,6 +452,15 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
     private let selectionBorder = CAShapeLayer()
     private var isSelectedState  = false
     private var handleViews: [UIView] = []
+    
+    // MARK: - Callbacks
+    var onContextMenu: ((UIViewController) -> Void)?
+    var onDelete: (() -> Void)?
+    var onCopyToClipboard: (() -> Void)?
+    var onShowResizeDialog: ((CGSize) -> Void)?
+    var onBringToFront: (() -> Void)?
+    var onSendToBack: (() -> Void)?
+    var onDuplicate: (() -> Void)?
 
     // MARK: - Init
 
@@ -496,12 +509,16 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleSingleTap(_:)))
         singleTap.require(toFail: doubleTap)
         addGestureRecognizer(singleTap)
+        
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        longPress.minimumPressDuration = 0.5
+        addGestureRecognizer(longPress)
     }
 
     private func setupSelectionBorder() {
         selectionBorder.fillColor    = UIColor.clear.cgColor
         selectionBorder.strokeColor  = UIColor.systemBlue.cgColor
-        selectionBorder.lineWidth    = 1.5
+        selectionBorder.lineWidth    = 2.5
         selectionBorder.lineDashPattern = [6, 3]
         selectionBorder.isHidden     = true
         layer.addSublayer(selectionBorder)
@@ -510,11 +527,11 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
     private func setupHandles() {
         for _ in 0..<4 {
             let h = UIView()
-            h.backgroundColor      = .white
-            h.layer.borderColor    = UIColor.systemBlue.cgColor
-            h.layer.borderWidth    = 1.5
-            h.layer.cornerRadius   = 4
-            h.frame = CGRect(x: 0, y: 0, width: 10, height: 10)
+            h.backgroundColor      = .systemBlue
+            h.layer.borderColor    = UIColor.white.cgColor
+            h.layer.borderWidth    = 2.0
+            h.layer.cornerRadius   = 8
+            h.frame = CGRect(x: 0, y: 0, width: 16, height: 16)
             h.isHidden = true
             addSubview(h)
             handleViews.append(h)
@@ -532,14 +549,14 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
 
     private func positionHandles() {
         let corners: [CGPoint] = [
-            CGPoint(x: -5,             y: -5),
-            CGPoint(x: bounds.maxX-5,  y: -5),
-            CGPoint(x: -5,             y: bounds.maxY-5),
-            CGPoint(x: bounds.maxX-5,  y: bounds.maxY-5)
+            CGPoint(x: -8,             y: -8),
+            CGPoint(x: bounds.maxX-8,  y: -8),
+            CGPoint(x: -8,             y: bounds.maxY-8),
+            CGPoint(x: bounds.maxX-8,  y: bounds.maxY-8)
         ]
         for (i, h) in handleViews.enumerated() {
             h.center     = corners[i]
-            h.frame.size = CGSize(width: 10, height: 10)
+            h.frame.size = CGSize(width: 16, height: 16)
         }
     }
 
@@ -604,6 +621,95 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
             self.alpha     = 0
             self.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
         }) { _ in self.removeFromSuperview() }
+    }
+    
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+        setSelectedState(true)
+        
+        let menu = UIMenu(title: "Imagem", children: [
+            UIAction(title: "Copiar", image: UIImage(systemName: "doc.on.doc"), handler: { [weak self] _ in
+                self?.copyToClipboard()
+            }),
+            UIAction(title: "Redimensionar", image: UIImage(systemName: "arrow.up.left.and.arrow.down.right"), handler: { [weak self] _ in
+                self?.showResizeDialog()
+            }),
+            UIMenu(title: "Camadas", image: UIImage(systemName: "square.stack"), children: [
+                UIAction(title: "Trazer para frente", image: UIImage(systemName: "arrow.up"), handler: { [weak self] _ in
+                    self?.bringToFront()
+                }),
+                UIAction(title: "Enviar para trás", image: UIImage(systemName: "arrow.down"), handler: { [weak self] _ in
+                    self?.sendToBack()
+                })
+            ]),
+            UIAction(title: "Duplicar", image: UIImage(systemName: "doc.on.doc"), handler: { [weak self] _ in
+                self?.duplicate()
+            }),
+            UIAction(title: "Deletar", image: UIImage(systemName: "trash"), attributes: .destructive, handler: { [weak self] _ in
+                self?.delete()
+            })
+        ])
+        
+        self.menu = menu
+    }
+    
+    private func copyToClipboard() {
+        guard let image = image else { return }
+        UIPasteboard.general.image = image
+        onCopyToClipboard?()
+    }
+    
+    private func showResizeDialog() {
+        // Notifica o CanvasManager para mostrar o diálogo
+        // Ele pode então chamar um callback que atualizar o tamanho
+        guard let canvasManager = canvasManagerRef else { return }
+        canvasManager.onImageShowResizeDialog?(self, canvasSize)
+    }
+    
+    // Referência fraca ao CanvasManager para callbacks
+    weak var canvasManagerRef: CanvasManager?
+    
+    // Método para aplicar novo tamanho após redimensionamento
+    func applyNewSize(_ newSize: CGSize) {
+        canvasSize = newSize
+        applyZoom(currentZoom)
+    }
+    
+    private func bringToFront() {
+        superview?.bringSubviewToFront(self)
+        onBringToFront?()
+    }
+    
+    private func sendToBack() {
+        superview?.sendSubviewToBack(self)
+        onSendToBack?()
+    }
+    
+    private func duplicate() {
+        guard let image = image, let parentView = superview as? PKCanvasView else { return }
+        let newImageView = DraggableImageView(image: image)
+        newImageView.canvasOrigin = CGPoint(x: canvasOrigin.x + 30, y: canvasOrigin.y + 30)
+        newImageView.canvasSize = canvasSize
+        newImageView.applyZoom(currentZoom)
+        newImageView.canvasManagerRef = canvasManagerRef
+        newImageView.alpha = 0
+        parentView.addSubview(newImageView)
+        
+        UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.75,
+                       initialSpringVelocity: 0.5, options: .curveEaseOut) {
+            newImageView.alpha = 1
+        }
+        
+        onDuplicate?()
+    }
+    
+    private func delete() {
+        UIView.animate(withDuration: 0.2, animations: {
+            self.alpha     = 0
+            self.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        }) { _ in self.removeFromSuperview() }
+        
+        onDelete?()
     }
 
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,

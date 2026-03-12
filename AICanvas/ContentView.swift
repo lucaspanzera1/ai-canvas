@@ -41,6 +41,9 @@ struct ContentView: View {
     @State private var showImageSourceMenu = false
     @State private var showPhotoPicker = false
     @State private var showCamera = false
+    @State private var showResizeDialog = false
+    @State private var imageToResize: DraggableImageView?
+    @State private var imageResizeSize: CGSize = .zero
 
     init(notebook: Notebook, store: NotebookStore, selectedNotebook: Binding<Notebook?>, showSidebar: Binding<Bool>) {
         self.notebook = notebook
@@ -130,6 +133,12 @@ struct ContentView: View {
             }
             // Conecta o canvasManager ao viewModel para captura de visão
             chatViewModel.canvasManager = canvasManager
+            // Conecta o callback de redimensionamento de imagem
+            canvasManager.onImageShowResizeDialog = { [weak self] imageView, size in
+                self?.imageToResize = imageView
+                self?.imageResizeSize = size
+                self?.showResizeDialog = true
+            }
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             MultiProviderOnboardingView(
@@ -159,6 +168,17 @@ struct ContentView: View {
         .sheet(isPresented: $showCamera) {
             CanvasCameraView { image in
                 canvasManager.insertImage(image)
+            }
+        }
+        .sheet(isPresented: $showResizeDialog) {
+            if let imageView = imageToResize {
+                ImageResizeDialogView(
+                    initialSize: imageResizeSize,
+                    onResize: { newSize in
+                        imageView.applyNewSize(newSize)
+                    },
+                    onCancel: {}
+                )
             }
         }
         .statusBarHidden(false)
