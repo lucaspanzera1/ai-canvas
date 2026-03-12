@@ -25,9 +25,8 @@ private let drawingColors: [(Color, String)] = [
 
 // MARK: - Drawing Toolbar
 
-/// Toolbar de ferramentas de desenho com estética minimalista.
-/// Flutua sobre o canvas no canto inferior, substituindo o PKToolPicker nativo.
-struct DrawingToolbar: View {
+/// Toolbar legada — mantida para referência. Use DrawingToolkit para a UI atual.
+struct LegacyDrawingToolbar: View {
     @ObservedObject var canvasManager: CanvasManager
     @State private var showColorPicker = false
     @State private var showWidthPicker = false

@@ -26,6 +26,7 @@
 		AB000002 /* NotebookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* NotebookListView.swift */; };
 		AB000003 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* SidebarView.swift */; };
 		BB000002 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001 /* ShareSheet.swift */; };
+		CC000001 /* DrawingToolkit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000011 /* DrawingToolkit.swift */; };
 		D5D5254F2F623B2E000A4DB3 /* PresetSelectorView 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */; };
 		D5D525512F623B66000A4DB3 /* QuickPromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525502F623B66000A4DB3 /* QuickPromptManager.swift */; };
 		D5D525532F623C67000A4DB3 /* ModelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525522F623C67000A4DB3 /* ModelInfo.swift */; };
@@ -54,6 +55,7 @@
 		AB000012 /* NotebookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookListView.swift; sourceTree = "<group>"; };
 		AB000013 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		BB000001 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
+		CC000011 /* DrawingToolkit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingToolkit.swift; sourceTree = "<group>"; };
 		D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PresetSelectorView 2.swift"; sourceTree = "<group>"; };
 		D5D525502F623B66000A4DB3 /* QuickPromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPromptManager.swift; sourceTree = "<group>"; };
 		D5D525522F623C67000A4DB3 /* ModelInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfo.swift; sourceTree = "<group>"; };
@@ -97,6 +99,7 @@
 				AA00001E /* ModelSelectionView.swift */,
 				AA00001F /* MultiProviderOnboardingView.swift */,
 				AA000019 /* GameDrawingToolbar.swift */,
+				CC000011 /* DrawingToolkit.swift */,
 				AB000011 /* Notebook.swift */,
 				AB000012 /* NotebookListView.swift */,
 				AB000013 /* SidebarView.swift */,
@@ -216,6 +219,7 @@
 				D5D525532F623C67000A4DB3 /* ModelInfo.swift in Sources */,
 				D5D525552F623C73000A4DB3 /* ModelInfoDatabase 2.swift in Sources */,
 				AA000009 /* GameDrawingToolbar.swift in Sources */,
+				CC000001 /* DrawingToolkit.swift in Sources */,
 				AB000001 /* Notebook.swift in Sources */,
 				AB000002 /* NotebookListView.swift in Sources */,
 				AB000003 /* SidebarView.swift in Sources */,

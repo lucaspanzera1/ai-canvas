@@ -72,7 +72,10 @@ struct CanvasRepresentable: UIViewRepresentable {
             bgView.transform = CGAffineTransform(scaleX: canvasView.zoomScale, y: canvasView.zoomScale)
         }
         
-        if canvasManager.isSelectionMode {
+        let isLassoMode = canvasManager.isSelectionMode && canvasView.tool is PKLassoTool
+        let isManualSelection = canvasManager.isSelectionMode && !isLassoMode
+
+        if isManualSelection {
             canvasView.drawingGestureRecognizer.isEnabled = false
             context.coordinator.selectionRecognizer?.isEnabled = true
         } else {

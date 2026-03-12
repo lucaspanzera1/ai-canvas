@@ -91,8 +91,8 @@ struct ContentView: View {
                         )
                         .ignoresSafeArea(edges: .bottom)
 
-                        // Minimalist drawing toolbar
-                        DrawingToolbar(canvasManager: canvasManager)
+                        // Full-featured drawing toolkit (ruler, lasso, opacity, all PencilKit tools)
+                        DrawingToolkit(canvasManager: canvasManager)
                             .padding(.bottom, 24)
                             .padding(.leading, 24)
                             .frame(maxWidth: .infinity, alignment: .leading)
