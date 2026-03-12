@@ -38,6 +38,9 @@ struct ContentView: View {
     @State private var showAIPanel = false
     @State private var showOnboarding: Bool
     @State private var backgroundPattern: BackgroundPattern
+    @State private var showImageSourceMenu = false
+    @State private var showPhotoPicker = false
+    @State private var showCamera = false
 
     init(notebook: Notebook, store: NotebookStore, selectedNotebook: Binding<Notebook?>, showSidebar: Binding<Bool>) {
         self.notebook = notebook
@@ -93,10 +96,15 @@ struct ContentView: View {
                         .ignoresSafeArea(edges: .bottom)
 
                         // Full-featured drawing toolkit (ruler, lasso, opacity, all PencilKit tools)
-                        DrawingToolkit(canvasManager: canvasManager)
-                            .padding(.bottom, 24)
-                            .padding(.leading, 24)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                        DrawingToolkit(
+                            canvasManager: canvasManager,
+                            onInsertImageFromLibrary: { showPhotoPicker = true },
+                            onInsertImageFromCamera: { showCamera = true },
+                            onPasteImage: { canvasManager.pasteImageFromClipboard() }
+                        )
+                        .padding(.bottom, 24)
+                        .padding(.leading, 24)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
 
@@ -142,6 +150,16 @@ struct ContentView: View {
         }
         .onChange(of: chatViewModel.messages) { _, newMessages in
             store.saveChatHistory(newMessages, for: notebook)
+        }
+        .sheet(isPresented: $showPhotoPicker) {
+            CanvasPhotoPickerView { image in
+                canvasManager.insertImage(image)
+            }
+        }
+        .sheet(isPresented: $showCamera) {
+            CanvasCameraView { image in
+                canvasManager.insertImage(image)
+            }
         }
         .statusBarHidden(false)
         .persistentSystemOverlays(.hidden)

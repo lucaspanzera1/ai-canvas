@@ -198,8 +198,18 @@ struct CanvasRepresentable: UIViewRepresentable {
         }
 
         func scrollViewDidZoom(_ scrollView: UIScrollView) {
+            let zoom = scrollView.zoomScale
+
+            // Atualiza o fundo (padrão de linhas/grade)
             if let bgView = scrollView.viewWithTag(999) {
-                bgView.transform = CGAffineTransform(scaleX: scrollView.zoomScale, y: scrollView.zoomScale)
+                bgView.transform = CGAffineTransform(scaleX: zoom, y: zoom)
+            }
+
+            // Atualiza cada imagem colada para que acompanhe o zoom como os desenhos
+            for sub in scrollView.subviews {
+                if let img = sub as? DraggableImageView {
+                    img.applyZoom(zoom)
+                }
             }
         }
 

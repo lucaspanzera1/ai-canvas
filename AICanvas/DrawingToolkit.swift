@@ -134,6 +134,11 @@ extension CanvasManager {
 struct DrawingToolkit: View {
     @ObservedObject var canvasManager: CanvasManager
 
+    // Callbacks for image insertion (wired from ContentView)
+    var onInsertImageFromLibrary: (() -> Void)? = nil
+    var onInsertImageFromCamera: (() -> Void)? = nil
+    var onPasteImage: (() -> Void)? = nil
+
     // Internal panel state
     @State private var expanded = true
     @State private var activePanel: ActivePanel? = nil
@@ -221,7 +226,42 @@ struct DrawingToolkit: View {
 
             tkDivider
 
-            // Active Tool Chip (opens tools panel)
+            // Image Insert Button
+            Menu {
+                Button {
+                    onPasteImage?()
+                } label: {
+                    Label("Colar Imagem", systemImage: "doc.on.clipboard")
+                }
+
+                Button {
+                    onInsertImageFromLibrary?()
+                } label: {
+                    Label("Fotos", systemImage: "photo.on.rectangle")
+                }
+
+                Button {
+                    onInsertImageFromCamera?()
+                } label: {
+                    Label("Câmera", systemImage: "camera")
+                }
+            } label: {
+                VStack(spacing: 2) {
+                    Image(systemName: "photo.badge.plus")
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(height: 18)
+                    Text("Imagem")
+                        .font(.system(size: 8, weight: .regular, design: .rounded))
+                        .foregroundStyle(AppTheme.textMuted)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+            }
+            .buttonStyle(.plain)
+
+            tkDivider
+
             Button {
                 togglePanel(.tools)
             } label: {

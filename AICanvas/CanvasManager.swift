@@ -334,8 +334,48 @@ final class CanvasManager: ObservableObject {
             textView.alpha = 1
         }, completion: nil)
     }
+
+    // MARK: - Image Paste / Insert
+
+    /// Lê uma imagem da área de transferência e a insere no canvas.
+    /// Retorna `true` se havia imagem disponível.
+    @discardableResult
+    func pasteImageFromClipboard() -> Bool {
+        guard let image = UIPasteboard.general.image else { return false }
+        insertImage(image)
+        return true
     }
 
+    /// Insere uma UIImage no canvas como uma view arrastável, redimensionável e que acompanha o zoom.
+    func insertImage(_ image: UIImage) {
+        guard let canvasView = canvasView else { return }
+
+        let zoom = canvasView.zoomScale
+
+        // Tamanho em coordenadas de canvas (zoom = 1)
+        let maxW: CGFloat = 300
+        let aspect = image.size.height / max(image.size.width, 1)
+        let canvasW = min(maxW, image.size.width)
+        let canvasH = canvasW * aspect
+
+        // Centro do viewport convertido para coordenadas de canvas
+        let canvasCX = (canvasView.contentOffset.x + canvasView.bounds.width  / 2) / zoom
+        let canvasCY = (canvasView.contentOffset.y + canvasView.bounds.height / 2) / zoom
+
+        let imageView = DraggableImageView(image: image)
+        imageView.canvasOrigin = CGPoint(x: canvasCX - canvasW / 2, y: canvasCY - canvasH / 2)
+        imageView.canvasSize   = CGSize(width: canvasW, height: canvasH)
+        imageView.applyZoom(zoom)
+
+        imageView.alpha = 0
+        canvasView.addSubview(imageView)
+
+        UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.75,
+                       initialSpringVelocity: 0.5, options: .curveEaseOut) {
+            imageView.alpha = 1
+        }
+    }
+}
 
 // MARK: - Components
 
@@ -344,24 +384,23 @@ class DraggableTextView: UITextView, UIGestureRecognizerDelegate {
         super.init(frame: frame, textContainer: textContainer)
         setup()
     }
-    
+
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setup()
     }
-    
+
     private func setup() {
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         pan.delegate = self
         self.addGestureRecognizer(pan)
         self.isUserInteractionEnabled = true
-        
-        // Um duplo clique pode remover o texto ou editá-arlo
+
         let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         doubleTap.numberOfTapsRequired = 2
         self.addGestureRecognizer(doubleTap)
     }
-    
+
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let superview = self.superview else { return }
         let translation = gesture.translation(in: superview)
@@ -370,9 +409,8 @@ class DraggableTextView: UITextView, UIGestureRecognizerDelegate {
             gesture.setTranslation(.zero, in: superview)
         }
     }
-    
+
     @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
-        // Tocar duas vezes no texto da IA remove-o da tela
         UIView.animate(withDuration: 0.2, animations: {
             self.alpha = 0
             self.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
@@ -380,8 +418,198 @@ class DraggableTextView: UITextView, UIGestureRecognizerDelegate {
             self.removeFromSuperview()
         }
     }
-    
+
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return false // Prevents canvas from panning while moving the text
+        return false
+    }
+}
+
+// MARK: - DraggableImageView
+
+/// UIImageView que vive no espaço de coordenadas do canvas (zoom = 1).
+/// A posição e o tamanho são mantidos em `canvasOrigin` / `canvasSize` e
+/// o frame é sempre recalculado como `origin * zoom, size * zoom`, de modo
+/// que a imagem acompanha o zoom exatamente como os traços do PencilKit.
+class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
+
+    // MARK: - Canvas-space state (independente do zoom atual)
+    /// Origem da imagem em coordenadas de canvas (zoom = 1).
+    var canvasOrigin: CGPoint = .zero
+    /// Tamanho da imagem em coordenadas de canvas (zoom = 1).
+    var canvasSize: CGSize   = .zero
+    /// Zoom atual do canvas — atualizado pelo scrollViewDidZoom via applyZoom().
+    private(set) var currentZoom: CGFloat = 1.0
+
+    // MARK: - Pinch state (em coordenadas de canvas)
+    private var canvasSizeBeforePinch:   CGSize  = .zero
+    private var canvasCenterBeforePinch: CGPoint = .zero
+
+    // MARK: - UI
+    private let selectionBorder = CAShapeLayer()
+    private var isSelectedState  = false
+    private var handleViews: [UIView] = []
+
+    // MARK: - Init
+
+    init(image: UIImage) {
+        super.init(image: image)
+        contentMode          = .scaleAspectFit
+        isUserInteractionEnabled = true
+        clipsToBounds        = false
+        setupGestures()
+        setupSelectionBorder()
+        setupHandles()
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    // MARK: - Zoom
+
+    /// Recalcula o frame a partir das coordenadas de canvas e do zoom atual.
+    /// Deve ser chamado sempre que o zoom do canvas mudar (scrollViewDidZoom).
+    func applyZoom(_ zoom: CGFloat) {
+        currentZoom = zoom
+        frame = CGRect(
+            x: canvasOrigin.x * zoom,
+            y: canvasOrigin.y * zoom,
+            width:  canvasSize.width  * zoom,
+            height: canvasSize.height * zoom
+        )
+        setNeedsLayout()
+    }
+
+    // MARK: - Setup
+
+    private func setupGestures() {
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        pan.delegate = self
+        addGestureRecognizer(pan)
+
+        let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+        pinch.delegate = self
+        addGestureRecognizer(pinch)
+
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(handleDoubleTap(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        addGestureRecognizer(doubleTap)
+
+        let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleSingleTap(_:)))
+        singleTap.require(toFail: doubleTap)
+        addGestureRecognizer(singleTap)
+    }
+
+    private func setupSelectionBorder() {
+        selectionBorder.fillColor    = UIColor.clear.cgColor
+        selectionBorder.strokeColor  = UIColor.systemBlue.cgColor
+        selectionBorder.lineWidth    = 1.5
+        selectionBorder.lineDashPattern = [6, 3]
+        selectionBorder.isHidden     = true
+        layer.addSublayer(selectionBorder)
+    }
+
+    private func setupHandles() {
+        for _ in 0..<4 {
+            let h = UIView()
+            h.backgroundColor      = .white
+            h.layer.borderColor    = UIColor.systemBlue.cgColor
+            h.layer.borderWidth    = 1.5
+            h.layer.cornerRadius   = 4
+            h.frame = CGRect(x: 0, y: 0, width: 10, height: 10)
+            h.isHidden = true
+            addSubview(h)
+            handleViews.append(h)
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        selectionBorder.frame = bounds
+        selectionBorder.path  = UIBezierPath(
+            roundedRect: bounds.insetBy(dx: 1, dy: 1), cornerRadius: 4
+        ).cgPath
+        positionHandles()
+    }
+
+    private func positionHandles() {
+        let corners: [CGPoint] = [
+            CGPoint(x: -5,             y: -5),
+            CGPoint(x: bounds.maxX-5,  y: -5),
+            CGPoint(x: -5,             y: bounds.maxY-5),
+            CGPoint(x: bounds.maxX-5,  y: bounds.maxY-5)
+        ]
+        for (i, h) in handleViews.enumerated() {
+            h.center     = corners[i]
+            h.frame.size = CGSize(width: 10, height: 10)
+        }
+    }
+
+    // MARK: - Selection UI
+
+    private func setSelectedState(_ selected: Bool) {
+        isSelectedState = selected
+        selectionBorder.isHidden = !selected
+        handleViews.forEach { $0.isHidden = !selected }
+    }
+
+    // MARK: - Gesture Handlers
+
+    @objc private func handleSingleTap(_ gesture: UITapGestureRecognizer) {
+        setSelectedState(!isSelectedState)
+    }
+
+    /// Pan em coordenadas de canvas: divide a translação pelo zoom atual para
+    /// que arrastar 50 pt na tela = 50 pt de canvas (qualquer zoom).
+    @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
+        guard let sv = superview else { return }
+        let t = gesture.translation(in: sv)
+        if gesture.state == .began { setSelectedState(true) }
+        if gesture.state == .changed {
+            // t está no espaço da scroll view; converte para canvas dividindo pelo zoom
+            canvasOrigin.x += t.x / currentZoom
+            canvasOrigin.y += t.y / currentZoom
+            applyZoom(currentZoom)
+            gesture.setTranslation(.zero, in: sv)
+        }
+    }
+
+    /// Pinch: redimensiona em coordenadas de canvas, mantendo o centro fixo.
+    @objc private func handlePinch(_ gesture: UIPinchGestureRecognizer) {
+        switch gesture.state {
+        case .began:
+            canvasSizeBeforePinch = canvasSize
+            canvasCenterBeforePinch = CGPoint(
+                x: canvasOrigin.x + canvasSize.width  / 2,
+                y: canvasOrigin.y + canvasSize.height / 2
+            )
+            setSelectedState(true)
+        case .changed:
+            let s = gesture.scale
+            // Tamanho mínimo de 40 pt na tela, independente do zoom
+            let minCanvas = 40.0 / currentZoom
+            let newW = max(minCanvas, canvasSizeBeforePinch.width  * s)
+            let newH = max(minCanvas, canvasSizeBeforePinch.height * s)
+            canvasSize   = CGSize(width: newW, height: newH)
+            canvasOrigin = CGPoint(
+                x: canvasCenterBeforePinch.x - newW / 2,
+                y: canvasCenterBeforePinch.y - newH / 2
+            )
+            applyZoom(currentZoom)
+        default:
+            break
+        }
+    }
+
+    @objc private func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
+        UIView.animate(withDuration: 0.2, animations: {
+            self.alpha     = 0
+            self.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        }) { _ in self.removeFromSuperview() }
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+        // pan + pinch simultâneo OK; canvas pan bloqueado
+        return gestureRecognizer is UIPinchGestureRecognizer
+            || other             is UIPinchGestureRecognizer
     }
 }

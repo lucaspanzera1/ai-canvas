@@ -27,6 +27,7 @@
 		AB000003 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* SidebarView.swift */; };
 		BB000002 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001 /* ShareSheet.swift */; };
 		CC000001 /* DrawingToolkit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000011 /* DrawingToolkit.swift */; };
+		CC000002 /* CanvasImagePickers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000012 /* CanvasImagePickers.swift */; };
 		D5D5254F2F623B2E000A4DB3 /* PresetSelectorView 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */; };
 		D5D525512F623B66000A4DB3 /* QuickPromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525502F623B66000A4DB3 /* QuickPromptManager.swift */; };
 		D5D525532F623C67000A4DB3 /* ModelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525522F623C67000A4DB3 /* ModelInfo.swift */; };
@@ -56,6 +57,7 @@
 		AB000013 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		BB000001 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		CC000011 /* DrawingToolkit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingToolkit.swift; sourceTree = "<group>"; };
+		CC000012 /* CanvasImagePickers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasImagePickers.swift; sourceTree = "<group>"; };
 		D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PresetSelectorView 2.swift"; sourceTree = "<group>"; };
 		D5D525502F623B66000A4DB3 /* QuickPromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPromptManager.swift; sourceTree = "<group>"; };
 		D5D525522F623C67000A4DB3 /* ModelInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfo.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				AA00001F /* MultiProviderOnboardingView.swift */,
 				AA000019 /* GameDrawingToolbar.swift */,
 				CC000011 /* DrawingToolkit.swift */,
+				CC000012 /* CanvasImagePickers.swift */,
 				AB000011 /* Notebook.swift */,
 				AB000012 /* NotebookListView.swift */,
 				AB000013 /* SidebarView.swift */,
@@ -220,6 +223,7 @@
 				D5D525552F623C73000A4DB3 /* ModelInfoDatabase 2.swift in Sources */,
 				AA000009 /* GameDrawingToolbar.swift in Sources */,
 				CC000001 /* DrawingToolkit.swift in Sources */,
+				CC000002 /* CanvasImagePickers.swift in Sources */,
 				AB000001 /* Notebook.swift in Sources */,
 				AB000002 /* NotebookListView.swift in Sources */,
 				AB000003 /* SidebarView.swift in Sources */,
@@ -366,6 +370,8 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = NO;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AI Canvas usa suas fotos para inserir imagens nos cadernos e quadros.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "AI Canvas usa a camera para capturar imagens e inseri-las nos cadernos e quadros.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -399,6 +405,8 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportsDocumentBrowser = NO;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AI Canvas usa suas fotos para inserir imagens nos cadernos e quadros.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "AI Canvas usa a camera para capturar imagens e inseri-las nos cadernos e quadros.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
