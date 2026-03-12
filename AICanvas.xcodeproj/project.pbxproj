@@ -26,6 +26,11 @@
 		AB000002 /* NotebookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* NotebookListView.swift */; };
 		AB000003 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* SidebarView.swift */; };
 		BB000002 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001 /* ShareSheet.swift */; };
+		D5D5254F2F623B2E000A4DB3 /* PresetSelectorView 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */; };
+		D5D525512F623B66000A4DB3 /* QuickPromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525502F623B66000A4DB3 /* QuickPromptManager.swift */; };
+		D5D525532F623C67000A4DB3 /* ModelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525522F623C67000A4DB3 /* ModelInfo.swift */; };
+		D5D525552F623C73000A4DB3 /* ModelInfoDatabase 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525542F623C73000A4DB3 /* ModelInfoDatabase 2.swift */; };
+		D5D525572F623C7A000A4DB3 /* ModelComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525562F623C7A000A4DB3 /* ModelComparisonView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +54,11 @@
 		AB000012 /* NotebookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookListView.swift; sourceTree = "<group>"; };
 		AB000013 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		BB000001 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
+		D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PresetSelectorView 2.swift"; sourceTree = "<group>"; };
+		D5D525502F623B66000A4DB3 /* QuickPromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPromptManager.swift; sourceTree = "<group>"; };
+		D5D525522F623C67000A4DB3 /* ModelInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfo.swift; sourceTree = "<group>"; };
+		D5D525542F623C73000A4DB3 /* ModelInfoDatabase 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelInfoDatabase 2.swift"; sourceTree = "<group>"; };
+		D5D525562F623C7A000A4DB3 /* ModelComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelComparisonView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +102,11 @@
 				AB000013 /* SidebarView.swift */,
 				AA000015 /* Assets.xcassets */,
 				AA000033 /* Preview Content */,
+				D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */,
+				D5D525502F623B66000A4DB3 /* QuickPromptManager.swift */,
+				D5D525522F623C67000A4DB3 /* ModelInfo.swift */,
+				D5D525542F623C73000A4DB3 /* ModelInfoDatabase 2.swift */,
+				D5D525562F623C7A000A4DB3 /* ModelComparisonView.swift */,
 			);
 			path = AICanvas;
 			sourceTree = "<group>";
@@ -185,7 +200,10 @@
 				AA000001 /* AICanvasApp.swift in Sources */,
 				AA000002 /* ContentView.swift in Sources */,
 				AA000003 /* CanvasManager.swift in Sources */,
+				D5D525572F623C7A000A4DB3 /* ModelComparisonView.swift in Sources */,
 				AA000004 /* CanvasRepresentable.swift in Sources */,
+				D5D5254F2F623B2E000A4DB3 /* PresetSelectorView 2.swift in Sources */,
+				D5D525512F623B66000A4DB3 /* QuickPromptManager.swift in Sources */,
 				BB000002 /* ShareSheet.swift in Sources */,
 				AA000007 /* KeychainManager.swift in Sources */,
 				AA000008 /* APIKeyOnboardingView.swift in Sources */,
@@ -195,6 +213,8 @@
 				AA00000D /* AIService.swift in Sources */,
 				AA00000E /* ModelSelectionView.swift in Sources */,
 				AA00000F /* MultiProviderOnboardingView.swift in Sources */,
+				D5D525532F623C67000A4DB3 /* ModelInfo.swift in Sources */,
+				D5D525552F623C73000A4DB3 /* ModelInfoDatabase 2.swift in Sources */,
 				AA000009 /* GameDrawingToolbar.swift in Sources */,
 				AB000001 /* Notebook.swift in Sources */,
 				AB000002 /* NotebookListView.swift in Sources */,

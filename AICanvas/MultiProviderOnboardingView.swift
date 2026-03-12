@@ -247,6 +247,31 @@ struct ProviderOnboardingCard: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(provider.brandColor)
                     
+                    // Use case recommendations
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Ideal para:")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .textCase(.uppercase)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(provider.useCases, id: \.self) { useCase in
+                                HStack(spacing: 8) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(provider.brandColor)
+                                    Text(useCase)
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(AppTheme.textSecondary)
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(provider.brandColorLight)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    
                     Text("Configure sua API Key para\ndesbloquear os modelos do \(provider.displayName).")
                         .font(.system(size: 14))
                         .foregroundStyle(AppTheme.textSecondary)

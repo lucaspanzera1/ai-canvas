@@ -23,6 +23,7 @@ struct ModelSelectionView: View {
     @State private var selectedProvider: AIProvider?
     @State private var showDeleteConfirm = false
     @State private var providerToDelete: AIProvider?
+    @State private var showModelComparison = false
 
     var body: some View {
         ZStack {
@@ -39,6 +40,11 @@ struct ModelSelectionView: View {
                         // Current model banner
                         if !aiConfig.availableModels.isEmpty {
                             currentModelBanner
+                        }
+                        
+                        // Model comparison button
+                        if !aiConfig.availableModels.isEmpty && aiConfig.availableModels.count > 1 {
+                            modelComparisonButton
                         }
                         
                         // Configured providers
@@ -63,6 +69,15 @@ struct ModelSelectionView: View {
                     provider: provider,
                     isPresented: $showProviderSetup,
                     aiConfig: aiConfig
+                )
+            }
+        }
+        .sheet(isPresented: $showModelComparison) {
+            let modelInfos = aiConfig.availableModels.compactMap { ModelInfoDatabase.shared.getModelInfo($0) }
+            if !modelInfos.isEmpty {
+                ModelComparisonView(
+                    models: modelInfos,
+                    isPresented: $showModelComparison
                 )
             }
         }
@@ -163,6 +178,40 @@ struct ModelSelectionView: View {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(aiConfig.selectedModel.provider.brandColor.opacity(0.4), lineWidth: 1.5)
         )
+    }
+    
+    // MARK: - Model Comparison Button
+    
+    private var modelComparisonButton: some View {
+        Button {
+            showModelComparison = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "rectangle.split.3.vertical")
+                    .font(.system(size: 13, weight: .medium))
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Comparar Modelos")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text("Veja velocidade, qualidade e custo")
+                        .font(.system(size: 11))
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .background(AppTheme.surfaceElevated)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
     
     // MARK: - Configured Providers

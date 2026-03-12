@@ -64,39 +64,14 @@ final class ChatViewModel: ObservableObject {
 
     private let aiConfig: AIConfiguration
 
-    private let systemPrompt = """
-    Você é um tutor de matemática excepcional e um assistente criativo integrado a um app de desenho (AI Canvas). \
-    Sua especialidade é ajudar pessoas a entenderem e resolverem cálculos matemáticos, além de dar ótimas dicas e ideias. \
-    Quando receber uma imagem do canvas, analise-a com atenção: identifique as equações, contas ou problemas manuscritos. \
-    
-    IMPORTANTE SOBRE A FORMATAÇÃO (MATEMÁTICA E TEXTO): \
-    - Formate sua resposta para ser visualmente agradável, bem espaçada e fácil de ler na interface do chat. \
-    - Use caracteres Unicode elegantes para operações matemáticas (ex: potências como x², y³, raízes como √16, frações como ½, ¾). \
-    - Escreva equações matemáticas de forma clara, utilizando itálico (*x + y = z*) ou negrito para destacar expressões importantes. \
-    
-    🔥 NOVO PODER: INTERAÇÃO DIRETO NO CANVAS 🔥 \
-    Você tem a habilidade de enviar conteúdo mágico direto para o quadro do usuário! Siga estas regras OBRIGATORIAMENTE: \
-    
-    1. RESOLUÇÕES E RESPOSTAS (Texto Simples): \
-    - SE E SOMENTE SE o usuário pedir a **resolução**, a **conta**, ou a **resposta** matemática, forneça o passo a passo resumido ou a resposta final dentro de uma tag <canvas_text> ... </canvas_text>. \
-    - Caso a pergunta NÃO seja sobre um cálculo ou resolução matemática, NÃO USE A TAG <canvas_text> de forma alguma. Responda apenas normalmente no chat. \
-    - O conteúdo de <canvas_text> será "escrito à mão" no quadro dele. \
-    
-    Exemplo:
-    Aqui está a conta resolvida no quadro:
-    <canvas_text>
-    2x + 4 = 10
-    2x = 6
-    ▶ x = 3
-    </canvas_text>
-    
-    Sempre dê explicações extras e converse de forma amigável no corpo normal da mensagem.
-    Lembre-se: Use <canvas_text> APENAS para cálculos ou resoluções!
-    """
-
     init(aiConfig: AIConfiguration, initialMessages: [ChatMessage] = []) {
         self.aiConfig = aiConfig
         self.messages = initialMessages
+    }
+    
+    /// Gets the current system prompt based on active preset or custom configuration
+    private func getCurrentSystemPrompt() -> String {
+        aiConfig.getCurrentSystemPrompt()
     }
 
     // MARK: - Send plain text message
@@ -116,7 +91,7 @@ final class ChatViewModel: ObservableObject {
                 let reply = try await AIService.shared.sendMessage(
                     messages: messages,
                     model: aiConfig.selectedModel,
-                    systemPrompt: systemPrompt
+                    systemPrompt: getCurrentSystemPrompt()
                 )
                 messages.append(ChatMessage(role: .assistant, content: reply))
             } catch {
@@ -148,14 +123,14 @@ final class ChatViewModel: ObservableObject {
                         messages: messages,
                         image: image,
                         model: aiConfig.selectedModel,
-                        systemPrompt: systemPrompt
+                        systemPrompt: getCurrentSystemPrompt()
                     )
                 } else {
                     // No drawing yet — fall back to text
                     reply = try await AIService.shared.sendMessage(
                         messages: messages,
                         model: aiConfig.selectedModel,
-                        systemPrompt: systemPrompt
+                        systemPrompt: getCurrentSystemPrompt()
                     )
                 }
                 var finalReply = reply

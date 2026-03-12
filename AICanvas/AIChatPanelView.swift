@@ -7,6 +7,7 @@ struct AIChatPanelView: View {
     @Binding var isVisible: Bool
     @FocusState private var isInputFocused: Bool
     @State private var showModelSelection = false
+    @State private var showPresetSelection = false
     @State private var pulseGlow = false
     @State private var attachCanvas = false // toggle: send with canvas snapshot
 
@@ -36,6 +37,12 @@ struct AIChatPanelView: View {
             ModelSelectionView(
                 aiConfig: aiConfig,
                 isPresented: $showModelSelection
+            )
+        }
+        .sheet(isPresented: $showPresetSelection) {
+            PresetSelectorView(
+                aiConfig: aiConfig,
+                isPresented: $showPresetSelection
             )
         }
     }
@@ -74,6 +81,12 @@ struct AIChatPanelView: View {
 
                 HStack(spacing: 4) {
                     Menu {
+                        Button {
+                            showPresetSelection = true
+                        } label: {
+                            Label("Escolher preset", systemImage: "sparkles")
+                        }
+                        
                         Button {
                             showModelSelection = true
                         } label: {
@@ -213,10 +226,18 @@ struct AIChatPanelView: View {
             .buttonStyle(.plain)
             
             // Quick prompts
-            VStack(spacing: 8) {
-                QuickPromptChip(text: "💡 Me dê ideias de desenho", viewModel: viewModel, withCanvas: false)
-                QuickPromptChip(text: "🧮 Resolva os cálculos do canvas", viewModel: viewModel, withCanvas: true)
-                QuickPromptChip(text: "✨ Sugira melhorias para este canvas", viewModel: viewModel, withCanvas: true)
+            let quickPrompts = QuickPromptManager.shared.getPromptsForPreset(aiConfig.selectedPreset)
+            
+            if !quickPrompts.isEmpty {
+                VStack(spacing: 8) {
+                    ForEach(quickPrompts.prefix(3)) { prompt in
+                        QuickPromptChip(
+                            text: prompt.text,
+                            viewModel: viewModel,
+                            withCanvas: prompt.withCanvas
+                        )
+                    }
+                }
             }
             
             Spacer()
