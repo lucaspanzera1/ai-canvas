@@ -1,6 +1,13 @@
 import Foundation
 import PencilKit
 
+// MARK: - Notebook Type
+
+enum NotebookType: String, Codable {
+    case notebook  = "notebook"
+    case whiteboard = "whiteboard"
+}
+
 // MARK: - Background Pattern
 
 enum BackgroundPattern: String, Codable, CaseIterable {
@@ -53,6 +60,7 @@ struct Notebook: Identifiable, Codable, Equatable {
     var backgroundPattern: BackgroundPattern?
     var folderId: UUID?
     var bannerImageData: Data?
+    var type: NotebookType
 
     init(
         id: UUID = UUID(),
@@ -62,7 +70,8 @@ struct Notebook: Identifiable, Codable, Equatable {
         pageCount: Int = 1,
         backgroundPattern: BackgroundPattern = .none,
         folderId: UUID? = nil,
-        bannerImageData: Data? = nil
+        bannerImageData: Data? = nil,
+        type: NotebookType = .notebook
     ) {
         self.id = id
         self.name = name
@@ -74,10 +83,33 @@ struct Notebook: Identifiable, Codable, Equatable {
         self.backgroundPattern = backgroundPattern
         self.folderId = folderId
         self.bannerImageData = bannerImageData
+        self.type = type
     }
 
     static func == (lhs: Notebook, rhs: Notebook) -> Bool {
         lhs.id == rhs.id
+    }
+
+    // MARK: - Custom Codable for backward compatibility
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, emoji, colorIndex, createdAt, lastModified, pageCount, backgroundPattern, folderId, bannerImageData, type
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id               = try c.decode(UUID.self,      forKey: .id)
+        name             = try c.decode(String.self,    forKey: .name)
+        emoji            = try c.decode(String.self,    forKey: .emoji)
+        colorIndex       = try c.decode(Int.self,       forKey: .colorIndex)
+        createdAt        = try c.decode(Date.self,      forKey: .createdAt)
+        lastModified     = try c.decode(Date.self,      forKey: .lastModified)
+        pageCount        = try c.decode(Int.self,       forKey: .pageCount)
+        backgroundPattern = try c.decodeIfPresent(BackgroundPattern.self, forKey: .backgroundPattern)
+        folderId         = try c.decodeIfPresent(UUID.self,   forKey: .folderId)
+        bannerImageData  = try c.decodeIfPresent(Data.self,   forKey: .bannerImageData)
+        // Falls back to .notebook for older saved data that didn't have 'type'
+        type             = try c.decodeIfPresent(NotebookType.self, forKey: .type) ?? .notebook
     }
 }
 
@@ -130,8 +162,8 @@ final class NotebookStore: ObservableObject {
     // MARK: - CRUD Notebooks
 
     @discardableResult
-    func createNotebook(name: String, emoji: String, colorIndex: Int, folderId: UUID? = nil, bannerImageData: Data? = nil) -> Notebook {
-        let notebook = Notebook(name: name, emoji: emoji, colorIndex: colorIndex, folderId: folderId, bannerImageData: bannerImageData)
+    func createNotebook(name: String, emoji: String, colorIndex: Int, folderId: UUID? = nil, bannerImageData: Data? = nil, type: NotebookType = .notebook) -> Notebook {
+        let notebook = Notebook(name: name, emoji: emoji, colorIndex: colorIndex, folderId: folderId, bannerImageData: bannerImageData, type: type)
         notebooks.append(notebook)
         saveMetadata()
         return notebook

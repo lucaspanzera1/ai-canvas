@@ -87,7 +87,8 @@ struct ContentView: View {
                         CanvasRepresentable(
                             canvasManager: canvasManager,
                             showToolPicker: .constant(false),
-                            pattern: $backgroundPattern
+                            pattern: $backgroundPattern,
+                            notebookType: notebook.type
                         )
                         .ignoresSafeArea(edges: .bottom)
 
@@ -159,6 +160,7 @@ struct CanvasToolbar: View {
     let onBack: () -> Void
 
     private var accentColor: Color { notebookSwiftColor(at: notebook.colorIndex) }
+    private var isWhiteboard: Bool { notebook.type == .whiteboard }
 
     var body: some View {
         HStack(spacing: 6) {
@@ -185,7 +187,7 @@ struct CanvasToolbar: View {
                 HStack(spacing: 6) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 12, weight: .bold))
-                    Text("Cadernos")
+                    Text(isWhiteboard ? "Quadros" : "Cadernos")
                         .font(.system(size: 13, weight: .semibold))
                 }
                 .foregroundStyle(AppTheme.textSecondary)
@@ -236,31 +238,33 @@ struct CanvasToolbar: View {
                     canvasManager.clearCanvas()
                 }
 
-                // Linhas e grades Menu
-                Menu {
-                    ForEach(BackgroundPattern.allCases, id: \.self) { pattern in
-                        Button {
-                            onPatternChange(pattern)
-                        } label: {
-                            HStack {
-                                Text(pattern.rawValue)
-                                if backgroundPattern == pattern {
-                                    Image(systemName: "checkmark")
+                // Linhas e grades Menu (apenas para cadernos)
+                if !isWhiteboard {
+                    Menu {
+                        ForEach(BackgroundPattern.allCases, id: \.self) { pattern in
+                            Button {
+                                onPatternChange(pattern)
+                            } label: {
+                                HStack {
+                                    Text(pattern.rawValue)
+                                    if backgroundPattern == pattern {
+                                        Image(systemName: "checkmark")
+                                    }
                                 }
                             }
                         }
+                    } label: {
+                        Image(systemName: "square.grid.3x3")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .frame(width: 32, height: 32)
+                            .background(AppTheme.surfaceElevated)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(AppTheme.border, lineWidth: 1)
+                            )
                     }
-                } label: {
-                    Image(systemName: "square.grid.3x3")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .frame(width: 32, height: 32)
-                        .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(AppTheme.border, lineWidth: 1)
-                        )
                 }
 
                 ToolButtonSimple(

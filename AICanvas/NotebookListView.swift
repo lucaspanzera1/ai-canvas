@@ -30,6 +30,7 @@ struct NotebookListView: View {
     
     @State private var showCreateNotebook = false
     @State private var showCreateFolder = false
+    @State private var showCreateWhiteboard = false
     @State private var activeAction: ItemSelection?
     
     @State private var appeared = false
@@ -45,7 +46,11 @@ struct NotebookListView: View {
     }
     
     private var visibleNotebooks: [Notebook] {
-        store.notebooks.filter { $0.folderId == selectedFolder?.id }
+        store.notebooks.filter { $0.folderId == selectedFolder?.id && $0.type == .notebook }
+    }
+
+    private var visibleWhiteboards: [Notebook] {
+        store.notebooks.filter { $0.folderId == selectedFolder?.id && $0.type == .whiteboard }
     }
 
     var body: some View {
@@ -125,20 +130,52 @@ struct NotebookListView: View {
                                     .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + (store.notebooks.firstIndex(of: notebook) ?? 0)) * 0.05), value: appeared)
                             }
 
+                            // WHITEBOARDS
+                            ForEach(visibleWhiteboards) { notebook in
+                                WhiteboardCard(notebook: notebook)
+                                    .onTapGesture {
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                            selectedNotebook = notebook
+                                        }
+                                    }
+                                    .contextMenu {
+                                        Button {
+                                            activeAction = .notebook(notebook, .edit)
+                                        } label: {
+                                            Label("Editar Quadro", systemImage: "pencil")
+                                        }
+                                        Button(role: .destructive) {
+                                            activeAction = .notebook(notebook, .delete)
+                                        } label: {
+                                            Label("Apagar Quadro", systemImage: "trash")
+                                        }
+                                    }
+                                    .scaleEffect(appeared ? 1 : 0.85)
+                                    .opacity(appeared ? 1 : 0)
+                                    .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + (store.notebooks.firstIndex(of: notebook) ?? 0)) * 0.05), value: appeared)
+                            }
+
                             // CREATE NEW CARDS
                             NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") {
                                 showCreateFolder = true
                             }
                             .scaleEffect(appeared ? 1 : 0.85)
                             .opacity(appeared ? 1 : 0)
-                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count) * 0.05), value: appeared)
+                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + visibleWhiteboards.count) * 0.05), value: appeared)
                             
-                            NewItemCard(title: "Novo Caderno", icon: "plus") {
+                            NewItemCard(title: "Novo Caderno", icon: "book") {
                                 showCreateNotebook = true
                             }
                             .scaleEffect(appeared ? 1 : 0.85)
                             .opacity(appeared ? 1 : 0)
-                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + 1) * 0.05), value: appeared)
+                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + visibleWhiteboards.count + 1) * 0.05), value: appeared)
+
+                            NewItemCard(title: "Novo Quadro", icon: "rectangle.inset.filled") {
+                                showCreateWhiteboard = true
+                            }
+                            .scaleEffect(appeared ? 1 : 0.85)
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + visibleWhiteboards.count + 2) * 0.05), value: appeared)
                         }
                         .padding(20)
                         .padding(.bottom, 40)
@@ -152,6 +189,9 @@ struct NotebookListView: View {
         .onDisappear { appeared = false }
         .sheet(isPresented: $showCreateNotebook) {
             ItemEditorSheet(store: store, mode: .createNotebook(folderId: selectedFolder?.id), isPresented: $showCreateNotebook)
+        }
+        .sheet(isPresented: $showCreateWhiteboard) {
+            ItemEditorSheet(store: store, mode: .createWhiteboard(folderId: selectedFolder?.id), isPresented: $showCreateWhiteboard)
         }
         .sheet(isPresented: $showCreateFolder) {
             ItemEditorSheet(store: store, mode: .createFolder(parentFolderId: selectedFolder?.id), isPresented: $showCreateFolder)
@@ -388,8 +428,8 @@ struct NotebookListView: View {
                     showCreateNotebook = true
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Criar Caderno")
+                        Image(systemName: "book")
+                        Text("Caderno")
                     }
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.white)
@@ -398,6 +438,23 @@ struct NotebookListView: View {
                     .background(AppTheme.accent)
                     .clipShape(Capsule())
                     .shadow(color: AppTheme.accent.opacity(0.3), radius: 8, y: 4)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    showCreateWhiteboard = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "rectangle.inset.filled")
+                        Text("Quadro Branco")
+                    }
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background(AppTheme.surfaceElevated)
+                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                    .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
             }
@@ -542,6 +599,86 @@ struct NotebookCard: View {
     }
 }
 
+// MARK: - Whiteboard Card
+
+struct WhiteboardCard: View {
+    let notebook: Notebook
+    @State private var hovered = false
+
+    private var accentColor: Color {
+        notebookSwiftColor(at: notebook.colorIndex)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .topLeading) {
+                // Infinite canvas visual hint: white with dot grid
+                ZStack {
+                    Color(uiColor: .systemBackground)
+                    Canvas { context, size in
+                        let step: CGFloat = 14
+                        var path = Path()
+                        var x: CGFloat = step
+                        while x < size.width {
+                            var y: CGFloat = step
+                            while y < size.height {
+                                path.addEllipse(in: CGRect(x: x - 1, y: y - 1, width: 2, height: 2))
+                                y += step
+                            }
+                            x += step
+                        }
+                        context.fill(path, with: .color(Color(uiColor: .separator).opacity(0.4)))
+                    }
+                }
+                .frame(height: 70)
+
+                HStack {
+                    Text(notebook.emoji)
+                        .font(.system(size: 34))
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                        .shadow(color: .black.opacity(0.05), radius: 2, y: 1)
+                    Spacer()
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(accentColor.opacity(0.6))
+                        .padding(.trailing, 14)
+                        .padding(.top, 14)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(notebook.name)
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .lineLimit(1)
+
+                HStack(spacing: 6) {
+                    Image(systemName: "square.dashed")
+                        .font(.system(size: 11))
+                        .foregroundStyle(accentColor)
+                    Text("Quadro Branco")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(accentColor)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(AppTheme.surfaceElevated)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(hovered ? accentColor.opacity(0.7) : accentColor.opacity(0.3), lineWidth: hovered ? 2 : 1.5)
+        )
+        .shadow(color: hovered ? accentColor.opacity(0.2) : AppTheme.shadowColor, radius: hovered ? 12 : 6, y: hovered ? 6 : 2)
+        .scaleEffect(hovered ? 1.02 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
+        .onHover { h in hovered = h }
+    }
+}
+
 // MARK: - New Item Card
 
 struct NewItemCard: View {
@@ -592,6 +729,7 @@ struct NewItemCard: View {
 
 enum EditorMode {
     case createNotebook(folderId: UUID?)
+    case createWhiteboard(folderId: UUID?)
     case createFolder(parentFolderId: UUID?)
     case editNotebook(Notebook)
     case editFolder(Folder)
@@ -599,15 +737,16 @@ enum EditorMode {
     var title: String {
         switch self {
         case .createNotebook: return "Novo Caderno"
+        case .createWhiteboard: return "Novo Quadro Branco"
         case .createFolder: return "Nova Pasta"
-        case .editNotebook: return "Editar Caderno"
+        case .editNotebook(let nb): return nb.type == .whiteboard ? "Editar Quadro" : "Editar Caderno"
         case .editFolder: return "Editar Pasta"
         }
     }
     
     var buttonTitle: String {
         switch self {
-        case .createNotebook, .createFolder: return "Criar"
+        case .createNotebook, .createWhiteboard, .createFolder: return "Criar"
         case .editNotebook, .editFolder: return "Salvar"
         }
     }
@@ -615,6 +754,7 @@ enum EditorMode {
     var defaultEmoji: String {
         switch self {
         case .createNotebook, .editNotebook: return "📓"
+        case .createWhiteboard: return "🖨️"
         case .createFolder, .editFolder: return "📁"
         }
     }
@@ -844,7 +984,7 @@ struct ItemEditorSheet: View {
         }
         .onAppear {
             switch mode {
-            case .createNotebook, .createFolder:
+            case .createNotebook, .createWhiteboard, .createFolder:
                 selectedEmoji = mode.defaultEmoji
             case .editNotebook(let nb):
                 name = nb.name
@@ -866,7 +1006,9 @@ struct ItemEditorSheet: View {
         
         switch mode {
         case .createNotebook(let folderId):
-            store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId, bannerImageData: bannerImageData)
+            store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId, bannerImageData: bannerImageData, type: .notebook)
+        case .createWhiteboard(let folderId):
+            store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId, bannerImageData: bannerImageData, type: .whiteboard)
         case .createFolder(let parentFolderId):
             store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData, parentFolderId: parentFolderId)
         case .editNotebook(let nb):

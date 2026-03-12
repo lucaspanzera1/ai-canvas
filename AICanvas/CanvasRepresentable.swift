@@ -6,6 +6,7 @@ struct CanvasRepresentable: UIViewRepresentable {
     @ObservedObject var canvasManager: CanvasManager
     @Binding var showToolPicker: Bool
     @Binding var pattern: BackgroundPattern
+    var notebookType: NotebookType = .notebook
     @Environment(\.colorScheme) var colorScheme
 
     func makeUIView(context: Context) -> PKCanvasView {
@@ -17,22 +18,38 @@ struct CanvasRepresentable: UIViewRepresentable {
         canvasView.allowsFingerDrawing = true
         canvasView.isScrollEnabled = true
         
-        // Define canvas grande para simular infinidade
-        let canvasWidth: CGFloat = 840  // 1 página por linha
-        let canvasHeight: CGFloat = 1180 * 20 // 20 páginas para baixo
-        canvasView.contentSize = CGSize(width: canvasWidth, height: canvasHeight)
+        if notebookType == .whiteboard {
+            // Quadro branco: canvas enorme simulando infinidade real
+            let size: CGFloat = 10_000
+            canvasView.contentSize = CGSize(width: size, height: size)
+            // Fundo branco sólido sem tile de páginas
+            let bgView = UIView(frame: CGRect(x: 0, y: 0, width: size, height: size))
+            bgView.backgroundColor = .systemBackground
+            bgView.tag = 999
+            bgView.isUserInteractionEnabled = false
+            canvasView.insertSubview(bgView, at: 0)
+            // Iniciar zoom reduzido para o usuário ver uma boa área
+            canvasView.minimumZoomScale = 0.05
+            canvasView.maximumZoomScale = 5.0
+            canvasView.bouncesZoom = true
+        } else {
+            // Caderno: canvas com páginas A4 empilhadas
+            let canvasWidth: CGFloat = 840  // 1 página por linha
+            let canvasHeight: CGFloat = 1180 * 20 // 20 páginas para baixo
+            canvasView.contentSize = CGSize(width: canvasWidth, height: canvasHeight)
+            
+            // Background view que contém a textura repetida das páginas
+            let bgView = UIView(frame: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight))
+            bgView.layer.anchorPoint = CGPoint(x: 0, y: 0)
+            bgView.layer.position = CGPoint(x: 0, y: 0)
+            bgView.tag = 999
+            bgView.isUserInteractionEnabled = false
+            canvasView.insertSubview(bgView, at: 0)
+            canvasView.minimumZoomScale = 0.5
+            canvasView.maximumZoomScale = 5.0
+            canvasView.bouncesZoom = true
+        }
         
-        // Background view que contém a textura repetida das páginas
-        let bgView = UIView(frame: CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight))
-        bgView.layer.anchorPoint = CGPoint(x: 0, y: 0)
-        bgView.layer.position = CGPoint(x: 0, y: 0)
-        bgView.tag = 999
-        bgView.isUserInteractionEnabled = false
-        canvasView.insertSubview(bgView, at: 0)
-        
-        canvasView.minimumZoomScale = 0.5
-        canvasView.maximumZoomScale = 5.0
-        canvasView.bouncesZoom = true
         canvasView.delegate = context.coordinator
 
         // Registrar canvas no manager e aplicar desenho inicial + ferramenta
@@ -68,8 +85,14 @@ struct CanvasRepresentable: UIViewRepresentable {
 
     func updateUIView(_ canvasView: PKCanvasView, context: Context) {
         if let bgView = canvasView.viewWithTag(999) {
-            updateBackgroundPattern(for: bgView, pattern: pattern)
-            bgView.transform = CGAffineTransform(scaleX: canvasView.zoomScale, y: canvasView.zoomScale)
+            if notebookType == .whiteboard {
+                // Whiteboard: keep solid background, just scale with zoom
+                bgView.backgroundColor = .systemBackground
+                bgView.transform = CGAffineTransform(scaleX: canvasView.zoomScale, y: canvasView.zoomScale)
+            } else {
+                updateBackgroundPattern(for: bgView, pattern: pattern)
+                bgView.transform = CGAffineTransform(scaleX: canvasView.zoomScale, y: canvasView.zoomScale)
+            }
         }
         
         let isLassoMode = canvasManager.isSelectionMode && canvasView.tool is PKLassoTool
