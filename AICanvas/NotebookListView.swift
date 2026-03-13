@@ -41,7 +41,10 @@ struct NotebookListView: View {
     ]
     
     private var visibleFolders: [Folder] {
-        store.folders.filter { $0.parentFolderId == selectedFolder?.id }
+        if selectedFolder == nil {
+            return store.folders
+        }
+        return []
     }
     
     private var visibleNotebooks: [Notebook] {
@@ -126,12 +129,14 @@ struct NotebookListView: View {
                             }
 
                             // CREATE NEW CARDS
-                            NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") {
-                                showCreateFolder = true
+                            if selectedFolder == nil {
+                                NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") {
+                                    showCreateFolder = true
+                                }
+                                .scaleEffect(appeared ? 1 : 0.85)
+                                .opacity(appeared ? 1 : 0)
+                                .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count) * 0.05), value: appeared)
                             }
-                            .scaleEffect(appeared ? 1 : 0.85)
-                            .opacity(appeared ? 1 : 0)
-                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count) * 0.05), value: appeared)
                             
                             NewItemCard(title: "Novo Caderno", icon: "plus") {
                                 showCreateNotebook = true
@@ -154,7 +159,7 @@ struct NotebookListView: View {
             ItemEditorSheet(store: store, mode: .createNotebook(folderId: selectedFolder?.id), isPresented: $showCreateNotebook)
         }
         .sheet(isPresented: $showCreateFolder) {
-            ItemEditorSheet(store: store, mode: .createFolder(parentFolderId: selectedFolder?.id), isPresented: $showCreateFolder)
+            ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
         }
         .sheet(item: Binding(
             get: {
@@ -367,22 +372,24 @@ struct NotebookListView: View {
             }
 
             HStack(spacing: 12) {
-                Button {
-                    showCreateFolder = true
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "folder.badge.plus")
-                        Text("Nova Pasta")
+                if selectedFolder == nil {
+                    Button {
+                        showCreateFolder = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "folder.badge.plus")
+                            Text("Nova Pasta")
+                        }
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 14)
+                        .background(AppTheme.surfaceElevated)
+                        .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Capsule())
                     }
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 14)
-                    .background(AppTheme.surfaceElevated)
-                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
-                    .clipShape(Capsule())
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
                 
                 Button {
                     showCreateNotebook = true
@@ -592,7 +599,7 @@ struct NewItemCard: View {
 
 enum EditorMode {
     case createNotebook(folderId: UUID?)
-    case createFolder(parentFolderId: UUID?)
+    case createFolder
     case editNotebook(Notebook)
     case editFolder(Folder)
     
@@ -630,19 +637,7 @@ struct ItemEditorSheet: View {
     @State private var selectedColorIndex = 0
     @State private var bannerImageData: Data? = nil
     @State private var selectedBannerItem: PhotosPickerItem? = nil
-    @State private var showBannerSelector = false
     @FocusState private var nameFocused: Bool
-
-    var itemId: String {
-        switch mode {
-        case .createNotebook, .createFolder:
-            return UUID().uuidString
-        case .editNotebook(let nb):
-            return nb.id.uuidString
-        case .editFolder(let f):
-            return f.id.uuidString
-        }
-    }
 
     var body: some View {
         ZStack {
@@ -771,45 +766,28 @@ struct ItemEditorSheet: View {
                                 }
                             }
 
-                            HStack(spacing: 12) {
-                                PhotosPicker(selection: $selectedBannerItem, matching: .images) {
-                                    if let data = bannerImageData, let uiImage = UIImage(data: data) {
-                                        Image(uiImage: uiImage)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(height: 80)
-                                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
-                                    } else {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "photo.badge.plus")
-                                            Text("Sua Imagem")
-                                        }
-                                        .font(.system(size: 14, weight: .medium))
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 16)
-                                        .background(AppTheme.surfaceElevated)
+                            PhotosPicker(selection: $selectedBannerItem, matching: .images) {
+                                if let data = bannerImageData, let uiImage = UIImage(data: data) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(height: 80)
                                         .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, style: StrokeStyle(lineWidth: 1, dash: [4])))
+                                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                                } else {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "photo.badge.plus")
+                                        Text("Selecionar Imagem")
                                     }
-                                }
-                                .buttonStyle(.plain)
-
-                                Button(action: { showBannerSelector = true }) {
-                                    VStack(spacing: 8) {
-                                        Image(systemName: "sparkles")
-                                        Text("Pré-definidos")
-                                    }
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 14, weight: .medium))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 16)
                                     .background(AppTheme.surfaceElevated)
                                     .clipShape(RoundedRectangle(cornerRadius: 10))
                                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, style: StrokeStyle(lineWidth: 1, dash: [4])))
-                                    .foregroundStyle(AppTheme.accent)
                                 }
-                                .buttonStyle(.plain)
                             }
+                            .buttonStyle(.plain)
                             .onChange(of: selectedBannerItem) { newItem in
                                 Task {
                                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
@@ -871,9 +849,6 @@ struct ItemEditorSheet: View {
                 }
             }
         }
-        .sheet(isPresented: $showBannerSelector) {
-            BannerSelectorView(store: store, itemId: itemId, selectedBannerData: $bannerImageData)
-        }
         .onAppear {
             switch mode {
             case .createNotebook, .createFolder:
@@ -899,8 +874,8 @@ struct ItemEditorSheet: View {
         switch mode {
         case .createNotebook(let folderId):
             store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId, bannerImageData: bannerImageData)
-        case .createFolder(let parentFolderId):
-            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData, parentFolderId: parentFolderId)
+        case .createFolder:
+            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
         case .editNotebook(let nb):
             store.renameNotebook(nb, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
         case .editFolder(let f):

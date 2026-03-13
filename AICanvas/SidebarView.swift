@@ -170,7 +170,7 @@ struct SidebarView: View {
         }
         .background(AppTheme.background.ignoresSafeArea()) // Lighter sidebar background like Notion
         .sheet(isPresented: $showCreateFolder) {
-            ItemEditorSheet(store: store, mode: .createFolder(parentFolderId: nil), isPresented: $showCreateFolder)
+            ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
         }
         .sheet(isPresented: $showCreateNotebook) {
             ItemEditorSheet(store: store, mode: .createNotebook(folderId: creatingInFolderId), isPresented: $showCreateNotebook)

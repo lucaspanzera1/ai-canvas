@@ -44,6 +44,7 @@ struct ContentView: View {
     @State private var showResizeDialog = false
     @State private var imageToResize: DraggableImageView?
     @State private var imageResizeSize: CGSize = .zero
+    @State private var showClearCanvasAlert = false
 
     init(notebook: Notebook, store: NotebookStore, selectedNotebook: Binding<Notebook?>, showSidebar: Binding<Bool>) {
         self.notebook = notebook
@@ -86,7 +87,8 @@ struct ContentView: View {
                             withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                                 selectedNotebook = nil
                             }
-                        }
+                        },
+                        showClearCanvasAlert: $showClearCanvasAlert
                     )
 
                     ZStack(alignment: .bottom) {
@@ -181,6 +183,14 @@ struct ContentView: View {
                 )
             }
         }
+        .alert("Limpar Canvas", isPresented: $showClearCanvasAlert) {
+            Button("Cancelar", role: .cancel) { }
+            Button("Apagar Tudo", role: .destructive) {
+                canvasManager.clearCanvas()
+            }
+        } message: {
+            Text("Tem certeza que deseja apagar todo o conteúdo do canvas? Esta ação não pode ser desfeita.")
+        }
         .statusBarHidden(false)
         .persistentSystemOverlays(.hidden)
     }
@@ -196,6 +206,7 @@ struct CanvasToolbar: View {
     @Binding var backgroundPattern: BackgroundPattern
     let onPatternChange: (BackgroundPattern) -> Void
     let onBack: () -> Void
+    @Binding var showClearCanvasAlert: Bool
 
     private var accentColor: Color { notebookSwiftColor(at: notebook.colorIndex) }
     private var isWhiteboard: Bool { notebook.type == .whiteboard }
@@ -273,7 +284,7 @@ struct CanvasToolbar: View {
                     isDisabled: false,
                     color: AppTheme.danger
                 ) {
-                    canvasManager.clearCanvas()
+                    showClearCanvasAlert = true
                 }
 
                 // Linhas e grades Menu (apenas para cadernos)
