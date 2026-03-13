@@ -208,7 +208,10 @@ struct CanvasRepresentable: UIViewRepresentable {
             // Atualiza cada imagem colada para que acompanhe o zoom como os desenhos
             for sub in scrollView.subviews {
                 if let img = sub as? DraggableImageView {
+                    // Aplica zoom suavemente
                     img.applyZoom(zoom)
+                    // Garante que a imagem está visível ao zoom
+                    img.layer.removeAllAnimations()
                 }
             }
         }

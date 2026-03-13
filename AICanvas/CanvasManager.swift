@@ -370,6 +370,28 @@ final class CanvasManager: ObservableObject {
         imageView.canvasSize   = CGSize(width: canvasW, height: canvasH)
         imageView.applyZoom(zoom)
         imageView.canvasManagerRef = self
+        
+        // Configurar todos os callbacks
+        imageView.onDelete = { [weak self] in
+            self?.updateUndoState()
+        }
+        imageView.onCopyToClipboard = {
+            // Feedback visual que foi copiado
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+        }
+        imageView.onShowResizeDialog = { [weak self] size in
+            self?.onImageShowResizeDialog?(imageView, size)
+        }
+        imageView.onBringToFront = { [weak self] in
+            self?.updateUndoState()
+        }
+        imageView.onSendToBack = { [weak self] in
+            self?.updateUndoState()
+        }
+        imageView.onDuplicate = { [weak self] in
+            self?.updateUndoState()
+        }
 
         imageView.alpha = 0
         canvasView.addSubview(imageView)
@@ -496,6 +518,7 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
     private func setupGestures() {
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         pan.delegate = self
+        pan.maximumNumberOfTouches = 1  // Solo un dedo para arrastar
         addGestureRecognizer(pan)
 
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
@@ -508,10 +531,11 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
 
         let singleTap = UITapGestureRecognizer(target: self, action: #selector(handleSingleTap(_:)))
         singleTap.require(toFail: doubleTap)
+        // Também exigir falha do long press
         addGestureRecognizer(singleTap)
         
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-        longPress.minimumPressDuration = 0.5
+        longPress.minimumPressDuration = 0.4  // Mais rápido
         addGestureRecognizer(longPress)
         
         // Adiciona UIContextMenuInteraction para suporte de menu em iOS 13+
@@ -527,6 +551,10 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
         selectionBorder.lineWidth    = 2.5
         selectionBorder.lineDashPattern = [6, 3]
         selectionBorder.isHidden     = true
+        selectionBorder.shadowColor  = UIColor.systemBlue.withAlphaComponent(0.3).cgColor
+        selectionBorder.shadowOpacity = 1.0
+        selectionBorder.shadowRadius = 4
+        selectionBorder.shadowOffset = CGSize(width: 0, height: 0)
         layer.addSublayer(selectionBorder)
     }
 
@@ -554,15 +582,24 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
     }
 
     private func positionHandles() {
+        let handleSize: CGFloat = 16
+        let handleRadius = handleSize / 2
+        
         let corners: [CGPoint] = [
-            CGPoint(x: -8,             y: -8),
-            CGPoint(x: bounds.maxX-8,  y: -8),
-            CGPoint(x: -8,             y: bounds.maxY-8),
-            CGPoint(x: bounds.maxX-8,  y: bounds.maxY-8)
+            CGPoint(x: -handleRadius,             y: -handleRadius),
+            CGPoint(x: bounds.maxX-handleRadius,  y: -handleRadius),
+            CGPoint(x: -handleRadius,             y: bounds.maxX-handleRadius),
+            CGPoint(x: bounds.maxX-handleRadius,  y: bounds.maxY-handleRadius)
         ]
+        
         for (i, h) in handleViews.enumerated() {
             h.center     = corners[i]
-            h.frame.size = CGSize(width: 16, height: 16)
+            h.frame.size = CGSize(width: handleSize, height: handleSize)
+            // Adiciona efeito de sombra aos handles
+            h.layer.shadowColor = UIColor.black.withAlphaComponent(0.3).cgColor
+            h.layer.shadowOpacity = 1.0
+            h.layer.shadowRadius = 2
+            h.layer.shadowOffset = CGSize(width: 0, height: 1)
         }
     }
 
@@ -572,12 +609,32 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
         isSelectedState = selected
         selectionBorder.isHidden = !selected
         handleViews.forEach { $0.isHidden = !selected }
+        
+        // Animação suave da borda quando selecionada
+        if selected {
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(0.2)
+            selectionBorder.opacity = 1.0
+            CATransaction.commit()
+        } else {
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(0.1)
+            selectionBorder.opacity = 0.0
+            CATransaction.commit()
+        }
     }
 
     // MARK: - Gesture Handlers
 
     @objc private func handleSingleTap(_ gesture: UITapGestureRecognizer) {
-        setSelectedState(!isSelectedState)
+        // Toggle seleção com feedback
+        let newSelected = !isSelectedState
+        setSelectedState(newSelected)
+        
+        if newSelected {
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
+        }
     }
 
     /// Pan em coordenadas de canvas: divide a translação pelo zoom atual para
@@ -585,13 +642,30 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let sv = superview else { return }
         let t = gesture.translation(in: sv)
-        if gesture.state == .began { setSelectedState(true) }
-        if gesture.state == .changed {
+        
+        switch gesture.state {
+        case .began:
+            setSelectedState(true)
+            // Feedback haptico ao começar a arrastar
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
+            // Aumenta um pouco a opacidade para indicar que está sendo manipulada
+            UIView.animate(withDuration: 0.1) {
+                self.alpha = 0.95
+            }
+        case .changed:
             // t está no espaço da scroll view; converte para canvas dividindo pelo zoom
             canvasOrigin.x += t.x / currentZoom
             canvasOrigin.y += t.y / currentZoom
             applyZoom(currentZoom)
             gesture.setTranslation(.zero, in: sv)
+        case .ended, .cancelled:
+            // Restaura opacidade
+            UIView.animate(withDuration: 0.1) {
+                self.alpha = 1.0
+            }
+        default:
+            break
         }
     }
 
@@ -605,6 +679,9 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
                 y: canvasOrigin.y + canvasSize.height / 2
             )
             setSelectedState(true)
+            // Feedback haptico
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
         case .changed:
             let s = gesture.scale
             // Tamanho mínimo de 40 pt na tela, independente do zoom
@@ -617,39 +694,46 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
                 y: canvasCenterBeforePinch.y - newH / 2
             )
             applyZoom(currentZoom)
+        case .ended, .cancelled:
+            // Feedback final quando o pinch termina
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
         default:
             break
         }
     }
 
     @objc private func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
-        UIView.animate(withDuration: 0.2, animations: {
+        // Duplo toque deleta a imagem com animação
+        let generator = UIImpactFeedbackGenerator(style: .heavy)
+        generator.impactOccurred()
+        
+        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseIn, animations: {
             self.alpha     = 0
-            self.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            self.transform = CGAffineTransform(scaleX: 0.7, y: 0.7)
         }) { _ in
             self.removeFromSuperview()
         }
+        
+        onDelete?()
     }
     
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         if gesture.state == .began {
-            // Select on long press and present context menu if available
+            // Seleciona a imagem e fornece feedback haptico
             setSelectedState(true)
-            if #available(iOS 13.0, *) {
-                // Trigger context menu programmatically if possible
-                self.becomeFirstResponder()
-                // UIContextMenuInteraction shows automatically on long-press,
-                // but for safety we can do nothing here; selection feedback:
-                let generator = UIImpactFeedbackGenerator(style: .medium)
-                generator.impactOccurred()
-            }
+            
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            // No need to manually set a location on UIContextMenuInteraction; the system
+            // will present the context menu automatically for this view.
         }
     }
     
     // MARK: - UIContextMenuInteractionDelegate
     @available(iOS 13.0, *)
     func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
-        let actionProvider: UIContextMenuActionProvider = { [weak self] _ in
+        let actionProvider: UIContextMenuActionProvider = { [weak self] suggestedActions in
             return UIMenu(title: "Imagem", children: [
                 UIAction(title: "Copiar", image: UIImage(systemName: "doc.on.doc"), handler: { [weak self] _ in
                     self?.copyToClipboard()
@@ -716,6 +800,10 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
     
     private func duplicate() {
         guard let image = image, let parentView = superview as? PKCanvasView else { return }
+        
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        
         let newImageView = DraggableImageView(image: image)
         newImageView.canvasOrigin = CGPoint(x: canvasOrigin.x + 30, y: canvasOrigin.y + 30)
         newImageView.canvasSize = canvasSize
@@ -733,18 +821,39 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
     }
     
     private func delete() {
-        UIView.animate(withDuration: 0.2, animations: {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+        
+        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseIn, animations: {
             self.alpha     = 0
-            self.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        }) { _ in self.removeFromSuperview() }
+            self.transform = CGAffineTransform(scaleX: 0.6, y: 0.6).translatedBy(x: -20, y: -20)
+        }) { _ in 
+            self.removeFromSuperview()
+        }
         
         onDelete?()
     }
 
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
                            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
-        // pan + pinch simultâneo OK; canvas pan bloqueado
-        return gestureRecognizer is UIPinchGestureRecognizer
-            || other             is UIPinchGestureRecognizer
+        // Permitir pinch + pan simultâneo nas imagens
+        let isPinch = gestureRecognizer is UIPinchGestureRecognizer || other is UIPinchGestureRecognizer
+        let isPan = gestureRecognizer is UIPanGestureRecognizer || other is UIPanGestureRecognizer
+        
+        // Se ambos são pan, não permitir simultâneo (evita conflito)
+        if gestureRecognizer is UIPanGestureRecognizer && other is UIPanGestureRecognizer {
+            return false
+        }
+        
+        return isPinch && isPan
+    }
+    
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        // Priorizar gestos de tap/long press sobre pan do canvas
+        if gestureRecognizer is UITapGestureRecognizer || gestureRecognizer is UILongPressGestureRecognizer {
+            return true
+        }
+        return false
     }
 }
