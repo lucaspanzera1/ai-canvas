@@ -50,8 +50,18 @@ final class CanvasManager: ObservableObject {
 
     private let initialDrawing: PKDrawing
 
+    private enum Preferences {
+        static let toolTypeIndexKey = "ai_canvas_toolkit_tool_type_index"
+        static let toolWidthKey = "ai_canvas_toolkit_tool_width"
+        static let toolColorRedKey = "ai_canvas_toolkit_tool_color_red"
+        static let toolColorGreenKey = "ai_canvas_toolkit_tool_color_green"
+        static let toolColorBlueKey = "ai_canvas_toolkit_tool_color_blue"
+        static let toolColorAlphaKey = "ai_canvas_toolkit_tool_color_alpha"
+    }
+
     init(initialDrawing: PKDrawing = PKDrawing()) {
         self.initialDrawing = initialDrawing
+        loadPersistedToolConfig()
     }
 
     // MARK: - Setup
@@ -108,17 +118,67 @@ final class CanvasManager: ObservableObject {
     func selectTool(_ type: DrawingToolType) {
         toolConfig.type = type
         isSelectionMode = false // desativa modo de selecao ao escolher ferramenta
+        persistToolConfig()
         applyCurrentTool()
     }
 
     func setColor(_ color: Color) {
         toolConfig.color = color
+        persistToolConfig()
         applyCurrentTool()
     }
 
     func setWidth(_ width: CGFloat) {
         toolConfig.width = width
+        persistToolConfig()
         applyCurrentTool()
+    }
+
+    private func persistToolConfig() {
+        let defaults = UserDefaults.standard
+
+        if let typeIndex = DrawingToolType.allCases.firstIndex(of: toolConfig.type) {
+            defaults.set(typeIndex, forKey: Preferences.toolTypeIndexKey)
+        }
+
+        defaults.set(Double(toolConfig.width), forKey: Preferences.toolWidthKey)
+
+        let rgba = UIColor(toolConfig.color).rgbaComponents
+        defaults.set(rgba.red, forKey: Preferences.toolColorRedKey)
+        defaults.set(rgba.green, forKey: Preferences.toolColorGreenKey)
+        defaults.set(rgba.blue, forKey: Preferences.toolColorBlueKey)
+        defaults.set(rgba.alpha, forKey: Preferences.toolColorAlphaKey)
+    }
+
+    private func loadPersistedToolConfig() {
+        let defaults = UserDefaults.standard
+
+        let typeIndex = defaults.integer(forKey: Preferences.toolTypeIndexKey)
+        if DrawingToolType.allCases.indices.contains(typeIndex) {
+            toolConfig.type = DrawingToolType.allCases[typeIndex]
+        }
+
+        let storedWidth = defaults.double(forKey: Preferences.toolWidthKey)
+        if storedWidth > 0 {
+            toolConfig.width = CGFloat(storedWidth)
+        }
+
+        if defaults.object(forKey: Preferences.toolColorRedKey) != nil,
+           defaults.object(forKey: Preferences.toolColorGreenKey) != nil,
+           defaults.object(forKey: Preferences.toolColorBlueKey) != nil,
+           defaults.object(forKey: Preferences.toolColorAlphaKey) != nil {
+            let red = defaults.double(forKey: Preferences.toolColorRedKey)
+            let green = defaults.double(forKey: Preferences.toolColorGreenKey)
+            let blue = defaults.double(forKey: Preferences.toolColorBlueKey)
+            let alpha = defaults.double(forKey: Preferences.toolColorAlphaKey)
+
+            toolConfig.color = Color(
+                red: red,
+                green: green,
+                blue: blue,
+                opacity: alpha
+            )
+        }
     }
 
     // MARK: - Actions
@@ -400,6 +460,21 @@ final class CanvasManager: ObservableObject {
                        initialSpringVelocity: 0.5, options: .curveEaseOut) {
             imageView.alpha = 1
         }
+    }
+}
+
+private extension UIColor {
+    var rgbaComponents: (red: Double, green: Double, blue: Double, alpha: Double) {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 1
+
+        guard getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return (0, 0, 0, 1)
+        }
+
+        return (Double(red), Double(green), Double(blue), Double(alpha))
     }
 }
 

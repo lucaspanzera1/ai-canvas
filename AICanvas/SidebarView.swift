@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SidebarView: View {
     @ObservedObject var store: NotebookStore
@@ -10,6 +11,7 @@ struct SidebarView: View {
     
     @State private var showCreateNotebook = false
     @State private var showCreateFolder = false
+    @State private var showPDFImporter = false
     @State private var creatingInFolderId: UUID? = nil
     
     var body: some View {
@@ -166,6 +168,23 @@ struct SidebarView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+
+                Button {
+                    showPDFImporter = true
+                } label: {
+                    HStack {
+                        Image(systemName: "doc.badge.plus")
+                            .frame(width: 20)
+                        Text("Importar PDF")
+                        Spacer()
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 16)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
         }
         .background(AppTheme.background.ignoresSafeArea()) // Lighter sidebar background like Notion
@@ -174,6 +193,22 @@ struct SidebarView: View {
         }
         .sheet(isPresented: $showCreateNotebook) {
             ItemEditorSheet(store: store, mode: .createNotebook(folderId: creatingInFolderId), isPresented: $showCreateNotebook)
+        }
+        .fileImporter(isPresented: $showPDFImporter, allowedContentTypes: [.pdf], allowsMultipleSelection: false) { result in
+            handlePDFImport(result)
+        }
+    }
+
+    private func handlePDFImport(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first,
+                  let notebook = store.createNotebookFromPDF(sourceURL: url, folderId: selectedFolder?.id) else { return }
+            withAnimation {
+                selectedNotebook = notebook
+            }
+        case .failure(let error):
+            print("PDF import canceled/failed: \(error)")
         }
     }
 }

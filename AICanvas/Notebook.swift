@@ -14,6 +14,7 @@ enum BackgroundPattern: String, Codable, CaseIterable {
 enum NotebookType: String, Codable, CaseIterable, Equatable {
     case notebook
     case whiteboard
+    case pdf
 }
 
 // MARK: - Folder Model
@@ -58,6 +59,7 @@ struct Notebook: Identifiable, Codable, Equatable {
     var folderId: UUID?
     var bannerImageData: Data?
     var type: NotebookType  // notebook vs whiteboard
+    var pdfFileName: String?
 
     init(
         id: UUID = UUID(),
@@ -68,7 +70,8 @@ struct Notebook: Identifiable, Codable, Equatable {
         backgroundPattern: BackgroundPattern = .none,
         folderId: UUID? = nil,
         bannerImageData: Data? = nil,
-        type: NotebookType = .notebook
+        type: NotebookType = .notebook,
+        pdfFileName: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -81,6 +84,7 @@ struct Notebook: Identifiable, Codable, Equatable {
         self.folderId = folderId
         self.bannerImageData = bannerImageData
         self.type = type
+        self.pdfFileName = pdfFileName
     }
 
     static func == (lhs: Notebook, rhs: Notebook) -> Bool {
@@ -110,11 +114,14 @@ final class NotebookStore: ObservableObject {
     private let metadataKey = "ai_canvas_notebooks_v2"
     private let foldersMetadataKey = "ai_canvas_folders_v1"
     private let drawingsDirectory: URL
+    private let pdfsDirectory: URL
 
     init() {
         let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         drawingsDirectory = docs.appendingPathComponent("AICanvas_Drawings", isDirectory: true)
+        pdfsDirectory = docs.appendingPathComponent("AICanvas_PDFs", isDirectory: true)
         try? FileManager.default.createDirectory(at: drawingsDirectory, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: pdfsDirectory, withIntermediateDirectories: true)
         
         // Migrate old data if v2 doesn't exist
         if UserDefaults.standard.data(forKey: metadataKey) == nil,
@@ -137,16 +144,75 @@ final class NotebookStore: ObservableObject {
     // MARK: - CRUD Notebooks
 
     @discardableResult
-    func createNotebook(name: String, emoji: String, colorIndex: Int, folderId: UUID? = nil, bannerImageData: Data? = nil) -> Notebook {
-        let notebook = Notebook(name: name, emoji: emoji, colorIndex: colorIndex, folderId: folderId, bannerImageData: bannerImageData)
+    func createNotebook(
+        name: String,
+        emoji: String,
+        colorIndex: Int,
+        folderId: UUID? = nil,
+        bannerImageData: Data? = nil,
+        type: NotebookType = .notebook,
+        pdfFileName: String? = nil
+    ) -> Notebook {
+        let notebook = Notebook(
+            name: name,
+            emoji: emoji,
+            colorIndex: colorIndex,
+            folderId: folderId,
+            bannerImageData: bannerImageData,
+            type: type,
+            pdfFileName: pdfFileName
+        )
         notebooks.append(notebook)
         saveMetadata()
         return notebook
     }
 
+    @discardableResult
+    func createNotebookFromPDF(sourceURL: URL, folderId: UUID? = nil) -> Notebook? {
+        let didAccess = sourceURL.startAccessingSecurityScopedResource()
+        defer {
+            if didAccess {
+                sourceURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let baseName = sourceURL.deletingPathExtension().lastPathComponent.trimmingCharacters(in: .whitespacesAndNewlines)
+        let notebookName = baseName.isEmpty ? "PDF" : baseName
+        let notebookId = UUID()
+        let pdfFileName = "\(notebookId.uuidString).pdf"
+        let destinationURL = pdfsDirectory.appendingPathComponent(pdfFileName)
+
+        do {
+            if FileManager.default.fileExists(atPath: destinationURL.path) {
+                try FileManager.default.removeItem(at: destinationURL)
+            }
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+
+            let notebook = Notebook(
+                id: notebookId,
+                name: notebookName,
+                emoji: "📄",
+                colorIndex: 0,
+                pageCount: 1,
+                backgroundPattern: .none,
+                folderId: folderId,
+                bannerImageData: nil,
+                type: .pdf,
+                pdfFileName: pdfFileName
+            )
+            notebooks.append(notebook)
+            saveMetadata()
+            return notebook
+        } catch {
+            print("Failed to import PDF: \(error)")
+            return nil
+        }
+    }
+
     func deleteNotebook(_ notebook: Notebook) {
         notebooks.removeAll { $0.id == notebook.id }
         try? FileManager.default.removeItem(at: drawingURL(for: notebook))
+        try? FileManager.default.removeItem(at: pdfURL(for: notebook))
         saveMetadata()
     }
 
@@ -234,6 +300,26 @@ final class NotebookStore: ObservableObject {
         saveMetadata()
     }
 
+    func pdfDocumentURL(for notebook: Notebook) -> URL? {
+        guard notebook.type == .pdf else { return nil }
+        let url = pdfURL(for: notebook)
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return url
+    }
+
+    func savePDFDocument(_ data: Data, for notebook: Notebook) {
+        guard notebook.type == .pdf else { return }
+        do {
+            try data.write(to: pdfURL(for: notebook), options: .atomic)
+            if let idx = notebooks.firstIndex(where: { $0.id == notebook.id }) {
+                notebooks[idx].lastModified = Date()
+            }
+            saveMetadata()
+        } catch {
+            print("Failed to save PDF annotations: \(error)")
+        }
+    }
+
     // MARK: - Thumbnail
 
     func thumbnail(for notebook: Notebook, size: CGSize) -> UIImage? {
@@ -278,6 +364,11 @@ final class NotebookStore: ObservableObject {
 
     private func chatURL(for notebook: Notebook) -> URL {
         drawingsDirectory.appendingPathComponent("\(notebook.id.uuidString).chat")
+    }
+
+    private func pdfURL(for notebook: Notebook) -> URL {
+        let fileName = notebook.pdfFileName ?? "\(notebook.id.uuidString).pdf"
+        return pdfsDirectory.appendingPathComponent(fileName)
     }
 
     private func saveMetadata() {

@@ -25,6 +25,7 @@
 		AB000001 /* Notebook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000011 /* Notebook.swift */; };
 		AB000002 /* NotebookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* NotebookListView.swift */; };
 		AB000003 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* SidebarView.swift */; };
+		AB000004 /* PDFNotebookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000014 /* PDFNotebookView.swift */; };
 		BB000002 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001 /* ShareSheet.swift */; };
 		CC000001 /* DrawingToolkit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000011 /* DrawingToolkit.swift */; };
 		CC000002 /* CanvasImagePickers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000012 /* CanvasImagePickers.swift */; };
@@ -57,6 +58,7 @@
 		AB000011 /* Notebook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notebook.swift; sourceTree = "<group>"; };
 		AB000012 /* NotebookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookListView.swift; sourceTree = "<group>"; };
 		AB000013 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		AB000014 /* PDFNotebookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFNotebookView.swift; sourceTree = "<group>"; };
 		BB000001 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		CC000011 /* DrawingToolkit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingToolkit.swift; sourceTree = "<group>"; };
 		CC000012 /* CanvasImagePickers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasImagePickers.swift; sourceTree = "<group>"; };
@@ -110,6 +112,7 @@
 				AB000011 /* Notebook.swift */,
 				AB000012 /* NotebookListView.swift */,
 				AB000013 /* SidebarView.swift */,
+				AB000014 /* PDFNotebookView.swift */,
 				AA000015 /* Assets.xcassets */,
 				AA000033 /* Preview Content */,
 				D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */,
@@ -234,6 +237,7 @@
 				AB000001 /* Notebook.swift in Sources */,
 				AB000002 /* NotebookListView.swift in Sources */,
 				AB000003 /* SidebarView.swift in Sources */,
+				AB000004 /* PDFNotebookView.swift in Sources */,
 				D5D525592F623D7B000A4DB3 /* ImageResizeDialog.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -67,68 +67,77 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             AppTheme.background.ignoresSafeArea()
-
-            HStack(spacing: 0) {
-                // Canvas area
-                VStack(spacing: 0) {
-                    CanvasToolbar(
-                        notebook: notebook,
-                        canvasManager: canvasManager,
-                        showAIPanel: $showAIPanel,
-                        showSidebar: $showSidebar,
-                        backgroundPattern: $backgroundPattern,
-                        onPatternChange: { pattern in
-                            backgroundPattern = pattern
-                            store.updateNotebookPattern(notebook, to: pattern)
-                        },
-                        onBack: {
-                            // Salva metadados ao sair
-                            store.persistMetadata()
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                                selectedNotebook = nil
-                            }
-                        },
-                        showClearCanvasAlert: $showClearCanvasAlert
-                    )
-
-                    ZStack(alignment: .bottom) {
-                        CanvasRepresentable(
+            if notebook.type == .pdf {
+                PDFNotebookView(
+                    notebook: notebook,
+                    store: store,
+                    selectedNotebook: $selectedNotebook,
+                    showSidebar: $showSidebar
+                )
+            } else {
+                HStack(spacing: 0) {
+                    // Canvas area
+                    VStack(spacing: 0) {
+                        CanvasToolbar(
+                            notebook: notebook,
                             canvasManager: canvasManager,
-                            showToolPicker: .constant(false),
-                            pattern: $backgroundPattern,
-                            notebookType: notebook.type
+                            showAIPanel: $showAIPanel,
+                            showSidebar: $showSidebar,
+                            backgroundPattern: $backgroundPattern,
+                            onPatternChange: { pattern in
+                                backgroundPattern = pattern
+                                store.updateNotebookPattern(notebook, to: pattern)
+                            },
+                            onBack: {
+                                // Salva metadados ao sair
+                                store.persistMetadata()
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                    selectedNotebook = nil
+                                }
+                            },
+                            showClearCanvasAlert: $showClearCanvasAlert
                         )
-                        .ignoresSafeArea(edges: .bottom)
 
-                        // Full-featured drawing toolkit (ruler, lasso, opacity, all PencilKit tools)
-                        DrawingToolkit(
-                            canvasManager: canvasManager,
-                            onInsertImageFromLibrary: { showPhotoPicker = true },
-                            onInsertImageFromCamera: { showCamera = true },
-                            onPasteImage: { canvasManager.pasteImageFromClipboard() }
+                        ZStack(alignment: .bottom) {
+                            CanvasRepresentable(
+                                canvasManager: canvasManager,
+                                showToolPicker: .constant(false),
+                                pattern: $backgroundPattern,
+                                notebookType: notebook.type
+                            )
+                            .ignoresSafeArea(edges: .bottom)
+
+                            // Full-featured drawing toolkit (ruler, lasso, opacity, all PencilKit tools)
+                            DrawingToolkit(
+                                canvasManager: canvasManager,
+                                onInsertImageFromLibrary: { showPhotoPicker = true },
+                                onInsertImageFromCamera: { showCamera = true },
+                                onPasteImage: { canvasManager.pasteImageFromClipboard() }
+                            )
+                            .padding(.bottom, 24)
+                            .padding(.leading, 24)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+
+                    // AI Chat panel
+                    if showAIPanel {
+                        AIChatPanelView(
+                            viewModel: chatViewModel,
+                            aiConfig: aiConfig,
+                            isVisible: $showAIPanel
                         )
-                        .padding(.bottom, 24)
-                        .padding(.leading, 24)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .trailing).combined(with: .opacity),
+                            removal: .move(edge: .trailing).combined(with: .opacity)
+                        ))
                     }
                 }
-
-                // AI Chat panel
-                if showAIPanel {
-                    AIChatPanelView(
-                        viewModel: chatViewModel,
-                        aiConfig: aiConfig,
-                        isVisible: $showAIPanel
-                    )
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
-                }
+                .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showAIPanel)
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showAIPanel)
         }
         .onAppear {
+            guard notebook.type != .pdf else { return }
             // Conecta o auto-save ao store
             canvasManager.onDrawingChange = { [weak store] drawing in
                 store?.saveDrawing(drawing, for: notebook)

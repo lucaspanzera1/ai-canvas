@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import UniformTypeIdentifiers
 
 // MARK: - Enums & State
 
@@ -30,6 +31,7 @@ struct NotebookListView: View {
     
     @State private var showCreateNotebook = false
     @State private var showCreateFolder = false
+    @State private var showPDFImporter = false
     @State private var activeAction: ItemSelection?
     
     @State private var appeared = false
@@ -144,6 +146,13 @@ struct NotebookListView: View {
                             .scaleEffect(appeared ? 1 : 0.85)
                             .opacity(appeared ? 1 : 0)
                             .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + 1) * 0.05), value: appeared)
+
+                            NewItemCard(title: "Importar PDF", icon: "doc.badge.plus") {
+                                showPDFImporter = true
+                            }
+                            .scaleEffect(appeared ? 1 : 0.85)
+                            .opacity(appeared ? 1 : 0)
+                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + 2) * 0.05), value: appeared)
                         }
                         .padding(20)
                         .padding(.bottom, 40)
@@ -160,6 +169,9 @@ struct NotebookListView: View {
         }
         .sheet(isPresented: $showCreateFolder) {
             ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
+        }
+        .fileImporter(isPresented: $showPDFImporter, allowedContentTypes: [.pdf], allowsMultipleSelection: false) { result in
+            handlePDFImport(result)
         }
         .sheet(item: Binding(
             get: {
@@ -407,9 +419,39 @@ struct NotebookListView: View {
                     .shadow(color: AppTheme.accent.opacity(0.3), radius: 8, y: 4)
                 }
                 .buttonStyle(.plain)
+
+                Button {
+                    showPDFImporter = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "doc.badge.plus")
+                        Text("Importar PDF")
+                    }
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background(AppTheme.surfaceElevated)
+                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
             }
 
             Spacer()
+        }
+    }
+
+    private func handlePDFImport(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first,
+                  let notebook = store.createNotebookFromPDF(sourceURL: url, folderId: selectedFolder?.id) else { return }
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                selectedNotebook = notebook
+            }
+        case .failure(let error):
+            print("PDF import canceled/failed: \(error)")
         }
     }
 }
