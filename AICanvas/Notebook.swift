@@ -1,11 +1,12 @@
 import Foundation
 import PencilKit
+import UIKit
 
 // MARK: - Notebook Type
 
-enum NotebookType: String, Codable {
-    case notebook  = "notebook"
-    case whiteboard = "whiteboard"
+enum NotebookType: String, Codable, CaseIterable {
+    case notebook = "Caderno"
+    case whiteboard = "Quadro Branco"
 }
 
 // MARK: - Background Pattern
@@ -89,28 +90,6 @@ struct Notebook: Identifiable, Codable, Equatable {
     static func == (lhs: Notebook, rhs: Notebook) -> Bool {
         lhs.id == rhs.id
     }
-
-    // MARK: - Custom Codable for backward compatibility
-
-    enum CodingKeys: String, CodingKey {
-        case id, name, emoji, colorIndex, createdAt, lastModified, pageCount, backgroundPattern, folderId, bannerImageData, type
-    }
-
-    init(from decoder: Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        id               = try c.decode(UUID.self,      forKey: .id)
-        name             = try c.decode(String.self,    forKey: .name)
-        emoji            = try c.decode(String.self,    forKey: .emoji)
-        colorIndex       = try c.decode(Int.self,       forKey: .colorIndex)
-        createdAt        = try c.decode(Date.self,      forKey: .createdAt)
-        lastModified     = try c.decode(Date.self,      forKey: .lastModified)
-        pageCount        = try c.decode(Int.self,       forKey: .pageCount)
-        backgroundPattern = try c.decodeIfPresent(BackgroundPattern.self, forKey: .backgroundPattern)
-        folderId         = try c.decodeIfPresent(UUID.self,   forKey: .folderId)
-        bannerImageData  = try c.decodeIfPresent(Data.self,   forKey: .bannerImageData)
-        // Falls back to .notebook for older saved data that didn't have 'type'
-        type             = try c.decodeIfPresent(NotebookType.self, forKey: .type) ?? .notebook
-    }
 }
 
 // MARK: - Notebook Colors (neon palette)
@@ -165,6 +144,10 @@ final class NotebookStore: ObservableObject {
     func createNotebook(name: String, emoji: String, colorIndex: Int, folderId: UUID? = nil, bannerImageData: Data? = nil, type: NotebookType = .notebook) -> Notebook {
         let notebook = Notebook(name: name, emoji: emoji, colorIndex: colorIndex, folderId: folderId, bannerImageData: bannerImageData, type: type)
         notebooks.append(notebook)
+        
+        // Create banners folder with preset images
+        createBannersFolder(for: notebook)
+        
         saveMetadata()
         return notebook
     }
@@ -196,6 +179,10 @@ final class NotebookStore: ObservableObject {
     func createFolder(name: String, emoji: String, colorIndex: Int, bannerImageData: Data? = nil, parentFolderId: UUID? = nil) -> Folder {
         let folder = Folder(name: name, emoji: emoji, colorIndex: colorIndex, bannerImageData: bannerImageData, parentFolderId: parentFolderId)
         folders.append(folder)
+        
+        // Create banners folder with preset images
+        createBannersFolder(for: folder)
+        
         saveMetadata()
         return folder
     }
@@ -266,6 +253,160 @@ final class NotebookStore: ObservableObject {
 
     func persistMetadata() {
         saveMetadata()
+    }
+
+    // MARK: - Banners
+
+    func getBannersFolder(for identifier: String) -> URL {
+        drawingsDirectory.appendingPathComponent("\(identifier)_banners", isDirectory: true)
+    }
+
+    func getAvailableBanners(for identifier: String) -> [URL] {
+        let bannersFolder = getBannersFolder(for: identifier)
+        guard let files = try? FileManager.default.contentsOfDirectory(
+            at: bannersFolder,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else {
+            return []
+        }
+        return files.filter { $0.pathExtension == "png" }.sorted { $0.lastPathComponent < $1.lastPathComponent }
+    }
+
+    private func createBannersFolder(for notebook: Notebook) {
+        let bannersPath = getBannersFolder(for: notebook.id.uuidString)
+        try? FileManager.default.createDirectory(at: bannersPath, withIntermediateDirectories: true)
+        guard (try? FileManager.default.contentsOfDirectory(atPath: bannersPath.path))?.isEmpty != false else {
+            return // Banners already exist
+        }
+        saveBannerPresets(to: bannersPath)
+    }
+
+    private func createBannersFolder(for folder: Folder) {
+        let bannersPath = getBannersFolder(for: folder.id.uuidString)
+        try? FileManager.default.createDirectory(at: bannersPath, withIntermediateDirectories: true)
+        guard (try? FileManager.default.contentsOfDirectory(atPath: bannersPath.path))?.isEmpty != false else {
+            return // Banners already exist
+        }
+        saveBannerPresets(to: bannersPath)
+    }
+
+    private func saveBannerPresets(to directory: URL) {
+        let presets = generateBannerPresets()
+        for (index, image) in presets.enumerated() {
+            if let pngData = image.pngData() {
+                let fileName = String(format: "%02d_banner.png", index + 1)
+                let fileURL = directory.appendingPathComponent(fileName)
+                try? pngData.write(to: fileURL)
+            }
+        }
+    }
+
+    private func generateBannerPresets() -> [UIImage] {
+        let size = CGSize(width: 1200, height: 400)
+        var banners: [UIImage] = []
+
+        // Preset 1: Gradient Azul-Roxo
+        banners.append(createGradientBanner(
+            size: size,
+            colors: [
+                UIColor(red: 0.2, green: 0.4, blue: 1.0, alpha: 1.0),
+                UIColor(red: 0.6, green: 0.3, blue: 1.0, alpha: 1.0)
+            ]
+        ))
+
+        // Preset 2: Gradient Roxo-Rosa
+        banners.append(createGradientBanner(
+            size: size,
+            colors: [
+                UIColor(red: 0.6, green: 0.2, blue: 1.0, alpha: 1.0),
+                UIColor(red: 1.0, green: 0.2, blue: 0.6, alpha: 1.0)
+            ]
+        ))
+
+        // Preset 3: Gradient Laranja-Amarelo
+        banners.append(createGradientBanner(
+            size: size,
+            colors: [
+                UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1.0),
+                UIColor(red: 1.0, green: 1.0, blue: 0.2, alpha: 1.0)
+            ]
+        ))
+
+        // Preset 4: Gradient Verde-Cyan
+        banners.append(createGradientBanner(
+            size: size,
+            colors: [
+                UIColor(red: 0.2, green: 1.0, blue: 0.6, alpha: 1.0),
+                UIColor(red: 0.2, green: 1.0, blue: 1.0, alpha: 1.0)
+            ]
+        ))
+
+        // Preset 5: Gradient Vermelho-Laranja
+        banners.append(createGradientBanner(
+            size: size,
+            colors: [
+                UIColor(red: 1.0, green: 0.2, blue: 0.2, alpha: 1.0),
+                UIColor(red: 1.0, green: 0.6, blue: 0.2, alpha: 1.0)
+            ]
+        ))
+
+        // Preset 6: Gradient Cinza Moderno
+        banners.append(createGradientBanner(
+            size: size,
+            colors: [
+                UIColor(red: 0.2, green: 0.2, blue: 0.3, alpha: 1.0),
+                UIColor(red: 0.3, green: 0.4, blue: 0.6, alpha: 1.0)
+            ]
+        ))
+
+        return banners
+    }
+
+    private func createGradientBanner(size: CGSize, colors: [UIColor]) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let image = renderer.image { context in
+            let cgContext = context.cgContext
+
+            // Create gradient
+            let gradientLayer = CAGradientLayer()
+            gradientLayer.frame = CGRect(origin: .zero, size: size)
+            gradientLayer.colors = colors.map { $0.cgColor }
+            gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+            gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+
+            // Draw gradient using Core Graphics
+            let gradient = CGGradient(
+                colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                colors: colors.map { $0.cgColor } as CFArray,
+                locations: nil
+            )!
+
+            cgContext.drawLinearGradient(
+                gradient,
+                start: CGPoint(x: 0, y: 0),
+                end: CGPoint(x: size.width, y: size.height),
+                options: []
+            )
+
+            // Add subtle pattern overlay
+            let pattern = createPatternTexture(size: size)
+            pattern.withAlphaComponent(0.1).setFill()
+            UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+        }
+
+        return image
+    }
+
+    private func createPatternTexture(size: CGSize) -> UIColor {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 20, height: 20))
+        let patternImage = renderer.image { context in
+            UIColor.white.setFill()
+            context.cgContext.fillEllipse(in: CGRect(x: 0, y: 0, width: 10, height: 10))
+            context.cgContext.fillEllipse(in: CGRect(x: 10, y: 10, width: 10, height: 10))
+        }
+
+        return UIColor(patternImage: patternImage)
     }
 
     // MARK: - Thumbnail

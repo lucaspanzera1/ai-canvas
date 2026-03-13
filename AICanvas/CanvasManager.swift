@@ -434,7 +434,7 @@ class DraggableTextView: UITextView, UIGestureRecognizerDelegate {
 /// A posição e o tamanho são mantidos em `canvasOrigin` / `canvasSize` e
 /// o frame é sempre recalculado como `origin * zoom, size * zoom`, de modo
 /// que a imagem acompanha o zoom exatamente como os traços do PencilKit.
-class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
+class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMenuInteractionDelegate {
 
     // MARK: - Canvas-space state (independente do zoom atual)
     /// Origem da imagem em coordenadas de canvas (zoom = 1).
@@ -513,6 +513,12 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         longPress.minimumPressDuration = 0.5
         addGestureRecognizer(longPress)
+        
+        // Adiciona UIContextMenuInteraction para suporte de menu em iOS 13+
+        if #available(iOS 13.0, *) {
+            let contextMenu = UIContextMenuInteraction(delegate: self)
+            addInteraction(contextMenu)
+        }
     }
 
     private func setupSelectionBorder() {
@@ -620,37 +626,60 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate {
         UIView.animate(withDuration: 0.2, animations: {
             self.alpha     = 0
             self.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        }) { _ in self.removeFromSuperview() }
+        }) { _ in
+            self.removeFromSuperview()
+        }
     }
     
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
-        guard gesture.state == .began else { return }
-        setSelectedState(true)
-        
-        let menu = UIMenu(title: "Imagem", children: [
-            UIAction(title: "Copiar", image: UIImage(systemName: "doc.on.doc"), handler: { [weak self] _ in
-                self?.copyToClipboard()
-            }),
-            UIAction(title: "Redimensionar", image: UIImage(systemName: "arrow.up.left.and.arrow.down.right"), handler: { [weak self] _ in
-                self?.showResizeDialog()
-            }),
-            UIMenu(title: "Camadas", image: UIImage(systemName: "square.stack"), children: [
-                UIAction(title: "Trazer para frente", image: UIImage(systemName: "arrow.up"), handler: { [weak self] _ in
-                    self?.bringToFront()
+        if gesture.state == .began {
+            // Select on long press and present context menu if available
+            setSelectedState(true)
+            if #available(iOS 13.0, *) {
+                // Trigger context menu programmatically if possible
+                self.becomeFirstResponder()
+                // UIContextMenuInteraction shows automatically on long-press,
+                // but for safety we can do nothing here; selection feedback:
+                let generator = UIImpactFeedbackGenerator(style: .medium)
+                generator.impactOccurred()
+            }
+        }
+    }
+    
+    // MARK: - UIContextMenuInteractionDelegate
+    @available(iOS 13.0, *)
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint) -> UIContextMenuConfiguration? {
+        let actionProvider: UIContextMenuActionProvider = { [weak self] _ in
+            return UIMenu(title: "Imagem", children: [
+                UIAction(title: "Copiar", image: UIImage(systemName: "doc.on.doc"), handler: { [weak self] _ in
+                    self?.copyToClipboard()
                 }),
-                UIAction(title: "Enviar para trás", image: UIImage(systemName: "arrow.down"), handler: { [weak self] _ in
-                    self?.sendToBack()
+                UIAction(title: "Redimensionar", image: UIImage(systemName: "arrow.up.left.and.arrow.down.right"), handler: { [weak self] _ in
+                    self?.showResizeDialog()
+                }),
+                UIMenu(title: "Camadas", image: UIImage(systemName: "square.stack"), children: [
+                    UIAction(title: "Trazer para frente", image: UIImage(systemName: "arrow.up"), handler: { [weak self] _ in
+                        self?.bringToFront()
+                    }),
+                    UIAction(title: "Enviar para trás", image: UIImage(systemName: "arrow.down"), handler: { [weak self] _ in
+                        self?.sendToBack()
+                    })
+                ]),
+                UIAction(title: "Duplicar", image: UIImage(systemName: "doc.on.doc"), handler: { [weak self] _ in
+                    self?.duplicate()
+                }),
+                UIAction(title: "Deletar", image: UIImage(systemName: "trash"), attributes: .destructive, handler: { [weak self] _ in
+                    self?.delete()
                 })
-            ]),
-            UIAction(title: "Duplicar", image: UIImage(systemName: "doc.on.doc"), handler: { [weak self] _ in
-                self?.duplicate()
-            }),
-            UIAction(title: "Deletar", image: UIImage(systemName: "trash"), attributes: .destructive, handler: { [weak self] _ in
-                self?.delete()
-            })
-        ])
+            ])
+        }
         
-        self.menu = menu
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil, actionProvider: actionProvider)
+    }
+    
+    @available(iOS 13.0, *)
+    private func updateConfiguration() {
+        // Método mantido para compatibilidade futura
     }
     
     private func copyToClipboard() {

@@ -190,7 +190,9 @@ class ImageResizeViewController: UIViewController {
     }
     
     @objc private func widthChanged() {
-        guard let text = widthTextField.text, let value = CGFloat(text) else { return }
+        guard let text = widthTextField.text,
+              let dbl = Double(text) else { return }
+        let value = CGFloat(dbl)
         currentWidth = max(40, value)
         if aspectRatioSwitch.isOn {
             currentHeight = currentWidth * aspectRatio
@@ -200,7 +202,9 @@ class ImageResizeViewController: UIViewController {
     }
     
     @objc private func heightChanged() {
-        guard let text = heightTextField.text, let value = CGFloat(text) else { return }
+        guard let text = heightTextField.text,
+              let dbl = Double(text) else { return }
+        let value = CGFloat(dbl)
         currentHeight = max(40, value)
         if aspectRatioSwitch.isOn {
             currentWidth = currentHeight / aspectRatio
@@ -222,4 +226,3 @@ class ImageResizeViewController: UIViewController {
         onCancel()
     }
 }
-

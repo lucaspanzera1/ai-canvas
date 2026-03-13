@@ -134,10 +134,10 @@ struct ContentView: View {
             // Conecta o canvasManager ao viewModel para captura de visão
             chatViewModel.canvasManager = canvasManager
             // Conecta o callback de redimensionamento de imagem
-            canvasManager.onImageShowResizeDialog = { [weak self] imageView, size in
-                self?.imageToResize = imageView
-                self?.imageResizeSize = size
-                self?.showResizeDialog = true
+            canvasManager.onImageShowResizeDialog = { imageView, size in
+                self.imageToResize = imageView
+                self.imageResizeSize = size
+                self.showResizeDialog = true
             }
         }
         .fullScreenCover(isPresented: $showOnboarding) {
