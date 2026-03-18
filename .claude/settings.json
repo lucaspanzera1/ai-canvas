@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sudo xcode-select:*)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -scheme AICanvas -destination 'platform=iOS Simulator,name=iPad Pro 13-inch \\(M4\\)' build)",
+      "Bash(DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -scheme AICanvas -destination 'generic/platform=iOS Simulator' build)"
+    ]
+  }
+}
