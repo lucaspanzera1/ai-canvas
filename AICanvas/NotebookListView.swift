@@ -21,13 +21,37 @@ enum ItemSelection: Identifiable {
     }
 }
 
+enum DraggableItem: Codable, Transferable {
+    case notebook(UUID)
+    case folder(UUID)
+    
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .data)
+    }
+    
+    var jsonData: Data {
+        (try? JSONEncoder().encode(self)) ?? Data()
+    }
+    
+    init?(jsonData: Data) {
+        do {
+            let decoded = try JSONDecoder().decode(DraggableItem.self, from: jsonData)
+            self = decoded
+        } catch {
+            return nil
+        }
+    }
+}
+
 // MARK: - Notebook List View
 
 struct NotebookListView: View {
     @ObservedObject var store: NotebookStore
     @Binding var selectedNotebook: Notebook?
-    @Binding var selectedFolder: Folder?
+    @Binding var folderPath: [Folder]
     @Binding var showSidebar: Bool
+
+    private var selectedFolder: Folder? { folderPath.last }
     
     @State private var showCreateNotebook = false
     @State private var showCreateFolder = false
@@ -43,28 +67,95 @@ struct NotebookListView: View {
     ]
     
     private var visibleFolders: [Folder] {
-        if selectedFolder == nil {
-            return store.folders
-        }
-        return []
+        store.folders.filter { $0.parentFolderId == selectedFolder?.id }
     }
     
     private var visibleNotebooks: [Notebook] {
         store.notebooks.filter { $0.folderId == selectedFolder?.id }
     }
+    
+    // Extract booleans for dialogs/sheets to simplify type inference
+    private var isDeletingSomething: Bool {
+        if case .notebook(_, .delete) = activeAction { return true }
+        if case .folder(_, .delete) = activeAction { return true }
+        return false
+    }
+    
+    private var isEditingNotebook: Bool {
+        if case .notebook(_, .edit) = activeAction { return true }
+        return false
+    }
+    
+    private var isEditingFolder: Bool {
+        if case .folder(_, .edit) = activeAction { return true }
+        return false
+    }
 
     var body: some View {
+        mainContent
+            .onAppear { withAnimation { appeared = true } }
+            .onDisappear { appeared = false }
+            .sheet(isPresented: $showCreateNotebook) {
+                ItemEditorSheet(store: store, mode: .createNotebook(folderId: selectedFolder?.id), isPresented: $showCreateNotebook)
+            }
+            .sheet(isPresented: $showCreateFolder) {
+                ItemEditorSheet(store: store, mode: .createFolder(parentFolderId: selectedFolder?.id), isPresented: $showCreateFolder)
+            }
+            .fileImporter(isPresented: $showPDFImporter, allowedContentTypes: [.pdf], allowsMultipleSelection: false) { result in
+                handlePDFImport(result)
+            }
+            .sheet(isPresented: Binding(get: { isEditingNotebook }, set: { if !$0 { activeAction = nil } })) {
+                if case .notebook(let nb, .edit) = activeAction {
+                    ItemEditorSheet(store: store, mode: .editNotebook(nb), isPresented: Binding(
+                        get: { activeAction != nil },
+                        set: { if !$0 { activeAction = nil } }
+                    ))
+                }
+            }
+            .sheet(isPresented: Binding(get: { isEditingFolder }, set: { if !$0 { activeAction = nil } })) {
+                if case .folder(let f, .edit) = activeAction {
+                    ItemEditorSheet(store: store, mode: .editFolder(f), isPresented: Binding(
+                        get: { activeAction != nil },
+                        set: { if !$0 { activeAction = nil } }
+                    ))
+                }
+            }
+            .fullScreenCover(isPresented: $showOnboarding) {
+                MultiProviderOnboardingView(isPresented: $showOnboarding, aiConfig: aiConfig)
+            }
+            .confirmationDialog(
+                "Tem certeza?",
+                isPresented: Binding(get: { isDeletingSomething }, set: { if !$0 { activeAction = nil } }),
+                titleVisibility: .visible
+            ) {
+                Button("Apagar", role: .destructive) {
+                    if case .notebook(let nb, .delete) = activeAction {
+                        withAnimation { store.deleteNotebook(nb) }
+                    } else if case .folder(let f, .delete) = activeAction {
+                        withAnimation { store.deleteFolder(f) }
+                    }
+                    activeAction = nil
+                }
+                Button("Cancelar", role: .cancel) { activeAction = nil }
+            } message: {
+                if case .folder = activeAction {
+                    Text("A pasta e todos os cadernos nela serão apagados permanentemente.")
+                } else {
+                    Text("Este caderno será apagado permanentemente.")
+                }
+            }
+    }
+
+    private var mainContent: some View {
         ZStack {
-            // Background
             AppTheme.background.ignoresSafeArea()
-            
-            // Decorative background blobs
+
             Circle()
                 .fill(AppTheme.textSecondary.opacity(0.04))
                 .blur(radius: 60)
                 .frame(width: 400, height: 400)
                 .offset(x: -200, y: -200)
-            
+
             Circle()
                 .fill(AppTheme.textSecondary.opacity(0.03))
                 .blur(radius: 80)
@@ -79,154 +170,109 @@ struct NotebookListView: View {
                     emptyState
                 } else {
                     ScrollView {
-                        LazyVGrid(columns: columns, spacing: 16) {
-                            // FOLDERS
-                            ForEach(visibleFolders) { folder in
-                                FolderCard(folder: folder)
-                                    .onTapGesture {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                                            selectedFolder = folder
-                                        }
-                                    }
-                                    .contextMenu {
-                                        Button {
-                                            activeAction = .folder(folder, .edit)
-                                        } label: {
-                                            Label("Editar Pasta", systemImage: "pencil")
-                                        }
-                                        Button(role: .destructive) {
-                                            activeAction = .folder(folder, .delete)
-                                        } label: {
-                                            Label("Apagar Pasta", systemImage: "trash")
-                                        }
-                                    }
-                                    .scaleEffect(appeared ? 1 : 0.85)
-                                    .opacity(appeared ? 1 : 0)
-                                    .animation(.spring(response: 0.45).delay(Double(store.folders.firstIndex(of: folder) ?? 0) * 0.05), value: appeared)
-                            }
-                            
-                            // NOTEBOOKS
-                            ForEach(visibleNotebooks) { notebook in
-                                NotebookCard(notebook: notebook)
-                                    .onTapGesture {
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                                            selectedNotebook = notebook
-                                        }
-                                    }
-                                    .contextMenu {
-                                        Button {
-                                            activeAction = .notebook(notebook, .edit)
-                                        } label: {
-                                            Label("Editar Caderno", systemImage: "pencil")
-                                        }
-                                        Button(role: .destructive) {
-                                            activeAction = .notebook(notebook, .delete)
-                                        } label: {
-                                            Label("Apagar Caderno", systemImage: "trash")
-                                        }
-                                    }
-                                    .scaleEffect(appeared ? 1 : 0.85)
-                                    .opacity(appeared ? 1 : 0)
-                                    .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + (store.notebooks.firstIndex(of: notebook) ?? 0)) * 0.05), value: appeared)
-                            }
-
-                            // CREATE NEW CARDS
-                            if selectedFolder == nil {
-                                NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") {
-                                    showCreateFolder = true
-                                }
-                                .scaleEffect(appeared ? 1 : 0.85)
-                                .opacity(appeared ? 1 : 0)
-                                .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count) * 0.05), value: appeared)
-                            }
-                            
-                            NewItemCard(title: "Novo Caderno", icon: "plus") {
-                                showCreateNotebook = true
-                            }
-                            .scaleEffect(appeared ? 1 : 0.85)
-                            .opacity(appeared ? 1 : 0)
-                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + 1) * 0.05), value: appeared)
-
-                            NewItemCard(title: "Importar PDF", icon: "doc.badge.plus") {
-                                showPDFImporter = true
-                            }
-                            .scaleEffect(appeared ? 1 : 0.85)
-                            .opacity(appeared ? 1 : 0)
-                            .animation(.spring(response: 0.45).delay(Double(visibleFolders.count + visibleNotebooks.count + 2) * 0.05), value: appeared)
-                        }
-                        .padding(20)
-                        .padding(.bottom, 40)
+                        gridContent
+                            .padding(20)
+                            .padding(.bottom, 40)
                     }
+                    .onDrop(of: [.data], delegate: RootDropDelegate(store: store))
                 }
             }
         }
-        .onAppear {
-            withAnimation { appeared = true }
-        }
-        .onDisappear { appeared = false }
-        .sheet(isPresented: $showCreateNotebook) {
-            ItemEditorSheet(store: store, mode: .createNotebook(folderId: selectedFolder?.id), isPresented: $showCreateNotebook)
-        }
-        .sheet(isPresented: $showCreateFolder) {
-            ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
-        }
-        .fileImporter(isPresented: $showPDFImporter, allowedContentTypes: [.pdf], allowsMultipleSelection: false) { result in
-            handlePDFImport(result)
-        }
-        .sheet(item: Binding(
-            get: {
-                if case .notebook(let nb, .edit) = activeAction { return ItemSelection.notebook(nb, .edit) }
-                if case .folder(let f, .edit) = activeAction { return ItemSelection.folder(f, .edit) }
-                return nil
-            },
-            set: { if $0 == nil { activeAction = nil } }
-        )) { _ in
-            if case .notebook(let nb, .edit) = activeAction {
-                ItemEditorSheet(store: store, mode: .editNotebook(nb), isPresented: Binding(
-                    get: { activeAction != nil },
-                    set: { if !$0 { activeAction = nil } }
-                ))
-            } else if case .folder(let f, .edit) = activeAction {
-                ItemEditorSheet(store: store, mode: .editFolder(f), isPresented: Binding(
-                    get: { activeAction != nil },
-                    set: { if !$0 { activeAction = nil } }
-                ))
+    }
+
+    private var gridContent: some View {
+        LazyVGrid(columns: columns, spacing: 16) {
+            ForEach(visibleFolders) { folder in
+                let folderIndex = store.folders.firstIndex(of: folder) ?? 0
+                let folderDelay = Double(folderIndex) * 0.05
+
+                FolderCard(folder: folder)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            folderPath.append(folder)
+                        }
+                    }
+                    .onDrag {
+                        let provider = NSItemProvider()
+                        let data = DraggableItem.folder(folder.id).jsonData
+                        provider.registerDataRepresentation(forTypeIdentifier: UTType.data.identifier, visibility: .all) { completion in
+                            completion(data, nil)
+                            return nil
+                        }
+                        return provider
+                    }
+                    .onDrop(of: [.data], delegate: FolderDropDelegate(folder: folder, store: store))
+                    .contextMenu {
+                        Button { activeAction = .folder(folder, .edit) } label: {
+                            Label("Editar Pasta", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) { activeAction = .folder(folder, .delete) } label: {
+                            Label("Apagar Pasta", systemImage: "trash")
+                        }
+                    }
+                    .scaleEffect(appeared ? 1 : 0.85)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.spring(response: 0.45).delay(folderDelay), value: appeared)
             }
-        }
-        .fullScreenCover(isPresented: $showOnboarding) {
-            MultiProviderOnboardingView(
-                isPresented: $showOnboarding,
-                aiConfig: aiConfig
-            )
-        }
-        .confirmationDialog(
-            "Tem certeza?",
-            isPresented: Binding(
-                get: {
-                    if case .notebook(_, .delete) = activeAction { return true }
-                    if case .folder(_, .delete) = activeAction { return true }
-                    return false
-                },
-                set: { if !$0 { activeAction = nil } }
-            ),
-            titleVisibility: .visible
-        ) {
-            Button("Apagar", role: .destructive) {
-                if case .notebook(let nb, .delete) = activeAction {
-                    withAnimation { store.deleteNotebook(nb) }
-                } else if case .folder(let f, .delete) = activeAction {
-                    withAnimation { store.deleteFolder(f) }
-                }
-                activeAction = nil
+
+            ForEach(visibleNotebooks) { notebook in
+                let nbIndex = store.notebooks.firstIndex(of: notebook) ?? 0
+                let combinedIndex = visibleFolders.count + nbIndex
+                let nbDelay = Double(combinedIndex) * 0.05
+
+                NotebookCard(notebook: notebook)
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            selectedNotebook = notebook
+                        }
+                    }
+                    .onDrag {
+                        let provider = NSItemProvider()
+                        let data = DraggableItem.notebook(notebook.id).jsonData
+                        provider.registerDataRepresentation(forTypeIdentifier: UTType.data.identifier, visibility: .all) { completion in
+                            completion(data, nil)
+                            return nil
+                        }
+                        return provider
+                    }
+                    .contextMenu {
+                        Button { activeAction = .notebook(notebook, .edit) } label: {
+                            Label("Editar Caderno", systemImage: "pencil")
+                        }
+                        Button(role: .destructive) { activeAction = .notebook(notebook, .delete) } label: {
+                            Label("Apagar Caderno", systemImage: "trash")
+                        }
+                    }
+                    .scaleEffect(appeared ? 1 : 0.85)
+                    .opacity(appeared ? 1 : 0)
+                    .animation(.spring(response: 0.45).delay(nbDelay), value: appeared)
             }
-            Button("Cancelar", role: .cancel) { activeAction = nil }
-        } message: {
-            if case .folder = activeAction {
-                Text("A pasta e todos os cadernos nela serão apagados permanentemente.")
-            } else {
-                Text("Este caderno será apagado permanentemente.")
-            }
+
+            newItemCards
         }
+    }
+
+    @ViewBuilder
+    private var newItemCards: some View {
+        let baseCount = visibleFolders.count + visibleNotebooks.count
+
+        let newFolderDelay = Double(baseCount) * 0.05
+        NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") { showCreateFolder = true }
+            .scaleEffect(appeared ? 1 : 0.85)
+            .opacity(appeared ? 1 : 0)
+            .animation(.spring(response: 0.45).delay(newFolderDelay), value: appeared)
+
+        let newNotebookDelay = Double(baseCount + 1) * 0.05
+        NewItemCard(title: "Novo Caderno", icon: "plus") { showCreateNotebook = true }
+            .scaleEffect(appeared ? 1 : 0.85)
+            .opacity(appeared ? 1 : 0)
+            .animation(.spring(response: 0.45).delay(newNotebookDelay), value: appeared)
+
+        let importPDFDelay = Double(baseCount + 2) * 0.05
+        NewItemCard(title: "Importar PDF", icon: "doc.badge.plus") { showPDFImporter = true }
+            .scaleEffect(appeared ? 1 : 0.85)
+            .opacity(appeared ? 1 : 0)
+            .animation(.spring(response: 0.45).delay(importPDFDelay), value: appeared)
     }
 
     // MARK: - Header
@@ -253,46 +299,50 @@ struct NotebookListView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     if let folder = selectedFolder {
-                        Button(action: {
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                                selectedFolder = nil
+                        Group {
+                            Button(action: {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                    _ = folderPath.removeLast()
+                                }
+                            }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "chevron.left")
+                                    Text(folderPath.count > 1 ? folderPath[folderPath.count - 2].name : "Início")
+                                }
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(AppTheme.textSecondary.opacity(0.1))
+                                .clipShape(Capsule())
                             }
-                        }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "chevron.left")
-                                Text("Voltar")
-                            }
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(AppTheme.textSecondary.opacity(0.1))
-                            .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.bottom, 4)
+                            .buttonStyle(.plain)
+                            .padding(.bottom, 4)
 
-                        Text("\(folder.emoji) \(folder.name)")
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .foregroundStyle(AppTheme.textPrimary)
+                            Text("\(folder.emoji) \(folder.name)")
+                                .font(.system(size: 34, weight: .bold, design: .rounded))
+                                .foregroundStyle(AppTheme.textPrimary)
+                        }
                     } else {
-                        HStack(spacing: 6) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(AppTheme.textSecondary)
-                            Text("ESPAÇO CRIATIVO")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(AppTheme.textSecondary)
-                                .tracking(1.5)
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(AppTheme.textSecondary.opacity(0.08))
-                        .clipShape(Capsule())
+                        Group {
+                            HStack(spacing: 6) {
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(AppTheme.textSecondary)
+                                Text("ESPAÇO CRIATIVO")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(AppTheme.textSecondary)
+                                    .tracking(1.5)
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(AppTheme.textSecondary.opacity(0.08))
+                            .clipShape(Capsule())
 
-                        Text("Meus Cadernos")
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
-                            .foregroundStyle(AppTheme.textPrimary)
+                            Text("Meus Cadernos")
+                                .font(.system(size: 34, weight: .bold, design: .rounded))
+                                .foregroundStyle(AppTheme.textPrimary)
+                        }
                     }
                 }
             }
@@ -326,7 +376,7 @@ struct NotebookListView: View {
                     Image(systemName: selectedFolder == nil ? "books.vertical.fill" : "folder.fill")
                         .font(.system(size: 16))
                         .foregroundStyle(AppTheme.textSecondary)
-                    let count = selectedFolder == nil ? store.notebooks.count + store.folders.count : visibleNotebooks.count
+                    let count = selectedFolder == nil ? store.notebooks.count + store.folders.filter { $0.parentFolderId == nil }.count : visibleNotebooks.count + visibleFolders.count
                     Text("\(count) \(count == 1 ? "item" : "itens")")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(AppTheme.textSecondary)
@@ -384,25 +434,23 @@ struct NotebookListView: View {
             }
 
             HStack(spacing: 12) {
-                if selectedFolder == nil {
-                    Button {
-                        showCreateFolder = true
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "folder.badge.plus")
-                            Text("Nova Pasta")
-                        }
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 14)
-                        .background(AppTheme.surfaceElevated)
-                        .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
-                        .clipShape(Capsule())
+                Button {
+                    showCreateFolder = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "folder.badge.plus")
+                        Text("Nova Pasta")
                     }
-                    .buttonStyle(.plain)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background(AppTheme.surfaceElevated)
+                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                    .clipShape(Capsule())
                 }
-                
+                .buttonStyle(.plain)
+
                 Button {
                     showCreateNotebook = true
                 } label: {
@@ -641,7 +689,7 @@ struct NewItemCard: View {
 
 enum EditorMode {
     case createNotebook(folderId: UUID?)
-    case createFolder
+    case createFolder(parentFolderId: UUID?)
     case editNotebook(Notebook)
     case editFolder(Folder)
     
@@ -741,7 +789,7 @@ struct ItemEditorSheet: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(name.isEmpty ? "Nome" : name)
                                         .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(name.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary)
+                                        .foregroundStyle(AppTheme.textPrimary.opacity(name.isEmpty ? 0.6 : 1.0))
                                     Text("Agora mesmo")
                                         .font(.system(size: 11))
                                         .foregroundStyle(AppTheme.textMuted)
@@ -916,8 +964,8 @@ struct ItemEditorSheet: View {
         switch mode {
         case .createNotebook(let folderId):
             store.createNotebook(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, folderId: folderId, bannerImageData: bannerImageData)
-        case .createFolder:
-            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
+        case .createFolder(let parentFolderId):
+            store.createFolder(name: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, parentFolderId: parentFolderId, bannerImageData: bannerImageData)
         case .editNotebook(let nb):
             store.renameNotebook(nb, to: name, emoji: selectedEmoji, colorIndex: selectedColorIndex, bannerImageData: bannerImageData)
         case .editFolder(let f):
@@ -942,6 +990,59 @@ func notebookSwiftColor(at index: Int) -> Color {
         Color(red: 0.20, green: 0.25, blue: 0.35),   // Slate
     ]
     return colors[index % colors.count]
+}
+
+// MARK: - Drop Delegates
+
+struct FolderDropDelegate: DropDelegate {
+    let folder: Folder
+    let store: NotebookStore
+    
+    func performDrop(info: DropInfo) -> Bool {
+        for itemProvider in info.itemProviders(for: [.data]) {
+            itemProvider.loadDataRepresentation(forTypeIdentifier: UTType.data.identifier) { data, error in
+                guard let data = data, let draggableItem = DraggableItem(jsonData: data) else { return }
+                DispatchQueue.main.async {
+                    switch draggableItem {
+                    case .notebook(let id):
+                        if let notebook = store.notebooks.first(where: { $0.id == id }) {
+                            store.moveNotebook(notebook, to: folder.id)
+                        }
+                    case .folder(let id):
+                        if let movingFolder = store.folders.first(where: { $0.id == id }), movingFolder.id != folder.id {
+                            store.moveFolder(movingFolder, to: folder.id)
+                        }
+                    }
+                }
+            }
+        }
+        return true
+    }
+}
+
+struct RootDropDelegate: DropDelegate {
+    let store: NotebookStore
+    
+    func performDrop(info: DropInfo) -> Bool {
+        for itemProvider in info.itemProviders(for: [.data]) {
+            itemProvider.loadDataRepresentation(forTypeIdentifier: UTType.data.identifier) { data, error in
+                guard let data = data, let draggableItem = DraggableItem(jsonData: data) else { return }
+                DispatchQueue.main.async {
+                    switch draggableItem {
+                    case .notebook(let id):
+                        if let notebook = store.notebooks.first(where: { $0.id == id }) {
+                            store.moveNotebook(notebook, to: nil)
+                        }
+                    case .folder(let id):
+                        if let folder = store.folders.first(where: { $0.id == id }) {
+                            store.moveFolder(folder, to: nil)
+                        }
+                    }
+                }
+            }
+        }
+        return true
+    }
 }
 
 extension Date {

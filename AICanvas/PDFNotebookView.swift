@@ -255,7 +255,10 @@ struct PDFEditorRepresentable: UIViewRepresentable {
         private let tapRecognizer = UITapGestureRecognizer()
 
         private var activePath: UIBezierPath?
+        private var activeViewPath: UIBezierPath?
         private weak var activePage: PDFPage?
+        private var liveStrokeLayer: CAShapeLayer?
+        private var lastViewPoint: CGPoint?
 
         init(controller: PDFEditorController) {
             self.controller = controller
@@ -277,11 +280,33 @@ struct PDFEditorRepresentable: UIViewRepresentable {
             currentTool = tool
             drawPanRecognizer.isEnabled = (tool == .draw)
             tapRecognizer.isEnabled = (tool == .note || tool == .erase)
+            setNavigationEnabled(tool != .draw)
+            if tool != .draw {
+                clearLiveStrokeLayer()
+            }
         }
 
         func updateInk(color: UIColor, width: CGFloat) {
             inkColor = color
             lineWidth = width
+        }
+
+        private func setNavigationEnabled(_ isEnabled: Bool) {
+            guard let pdfView else { return }
+
+            // Keep the PDF as a static background while drawing.
+            allScrollViews(in: pdfView).forEach { $0.isScrollEnabled = isEnabled }
+        }
+
+        private func allScrollViews(in root: UIView) -> [UIScrollView] {
+            var result: [UIScrollView] = []
+            for child in root.subviews {
+                if let scroll = child as? UIScrollView {
+                    result.append(scroll)
+                }
+                result.append(contentsOf: allScrollViews(in: child))
+            }
+            return result
         }
 
         @objc private func handleDrawPan(_ gesture: UIPanGestureRecognizer) {
@@ -301,17 +326,42 @@ struct PDFEditorRepresentable: UIViewRepresentable {
                 path.move(to: pagePoint)
                 activePath = path
 
+                let viewPath = UIBezierPath()
+                viewPath.lineCapStyle = .round
+                viewPath.lineJoinStyle = .round
+                viewPath.move(to: viewPoint)
+                activeViewPath = viewPath
+                lastViewPoint = viewPoint
+                startLiveStrokeLayer(in: pdfView)
+                updateLiveStrokeLayerPath()
+
             case .changed:
                 guard let page = activePage,
-                      let path = activePath else { return }
+                      let path = activePath,
+                      let viewPath = activeViewPath else { return }
+
+                if let lastPoint = lastViewPoint {
+                    let dx = viewPoint.x - lastPoint.x
+                    let dy = viewPoint.y - lastPoint.y
+                    if (dx * dx + dy * dy) < 0.25 {
+                        return
+                    }
+                }
+
                 let pagePoint = pdfView.convert(viewPoint, to: page)
                 path.addLine(to: pagePoint)
+                viewPath.addLine(to: viewPoint)
+                lastViewPoint = viewPoint
+                updateLiveStrokeLayerPath()
 
             case .ended, .cancelled:
                 guard let page = activePage,
                       let path = activePath else {
                     activePath = nil
+                    activeViewPath = nil
                     activePage = nil
+                    lastViewPoint = nil
+                    clearLiveStrokeLayer()
                     return
                 }
 
@@ -320,16 +370,52 @@ struct PDFEditorRepresentable: UIViewRepresentable {
                 inkAnnotation.color = inkColor
                 inkAnnotation.border = PDFBorder()
                 inkAnnotation.border?.lineWidth = lineWidth
-                inkAnnotation.add(path)
+
+                // PDFAnnotation ink paths are local to annotation bounds.
+                // Convert from page coordinates to annotation-local coordinates.
+                let localPath = path.copy() as? UIBezierPath ?? path
+                localPath.apply(CGAffineTransform(translationX: -bounds.minX, y: -bounds.minY))
+                inkAnnotation.add(localPath)
                 page.addAnnotation(inkAnnotation)
 
                 controller.scheduleSave()
                 activePath = nil
+                activeViewPath = nil
                 activePage = nil
+                lastViewPoint = nil
+                clearLiveStrokeLayer()
 
             default:
                 break
             }
+        }
+
+        private func startLiveStrokeLayer(in pdfView: PDFView) {
+            if let existing = liveStrokeLayer {
+                existing.removeFromSuperlayer()
+            }
+
+            let layer = CAShapeLayer()
+            layer.frame = pdfView.bounds
+            layer.fillColor = UIColor.clear.cgColor
+            layer.strokeColor = inkColor.cgColor
+            layer.lineWidth = lineWidth
+            layer.lineCap = .round
+            layer.lineJoin = .round
+            layer.zPosition = 999
+            pdfView.layer.addSublayer(layer)
+            liveStrokeLayer = layer
+        }
+
+        private func updateLiveStrokeLayerPath() {
+            liveStrokeLayer?.strokeColor = inkColor.cgColor
+            liveStrokeLayer?.lineWidth = lineWidth
+            liveStrokeLayer?.path = activeViewPath?.cgPath
+        }
+
+        private func clearLiveStrokeLayer() {
+            liveStrokeLayer?.removeFromSuperlayer()
+            liveStrokeLayer = nil
         }
 
         @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
@@ -365,6 +451,9 @@ struct PDFEditorRepresentable: UIViewRepresentable {
 
 extension PDFEditorRepresentable.Coordinator: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        true
+        if gestureRecognizer == drawPanRecognizer || otherGestureRecognizer == drawPanRecognizer {
+            return false
+        }
+        return true
     }
 }

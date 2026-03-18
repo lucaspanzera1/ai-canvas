@@ -4,8 +4,10 @@ import UniformTypeIdentifiers
 struct SidebarView: View {
     @ObservedObject var store: NotebookStore
     @Binding var selectedNotebook: Notebook?
-    @Binding var selectedFolder: Folder?
+    @Binding var folderPath: [Folder]
     @Binding var showSidebar: Bool
+
+    private var selectedFolder: Folder? { folderPath.last }
     
     @State private var expandedFolders: Set<UUID> = []
     
@@ -55,31 +57,32 @@ struct SidebarView: View {
                     SidebarItemButton(
                         icon: "square.grid.2x2",
                         title: "Início",
-                        isSelected: selectedNotebook == nil && selectedFolder == nil
+                        isSelected: selectedNotebook == nil && folderPath.isEmpty
                     ) {
                         withAnimation {
                             selectedNotebook = nil
-                            selectedFolder = nil
+                            folderPath.removeAll()
                         }
                     }
                     
-                    if !store.folders.isEmpty {
+                    let rootFolders = store.folders.filter { $0.parentFolderId == nil }
+                    if !rootFolders.isEmpty {
                         Text("PASTAS")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(AppTheme.textMuted)
                             .padding(.top, 16)
                             .padding(.bottom, 4)
                             .padding(.horizontal, 16)
-                        
+
                         // Folders
-                        ForEach(store.folders) { folder in
+                        ForEach(rootFolders) { folder in
                             FolderSidebarRow(
                                 folder: folder,
                                 notebooks: store.notebooks.filter { $0.folderId == folder.id },
                                 isExpanded: expandedFolders.contains(folder.id),
                                 isSelected: selectedFolder?.id == folder.id && selectedNotebook == nil,
                                 selectedNotebook: $selectedNotebook,
-                                selectedFolder: $selectedFolder,
+                                folderPath: $folderPath,
                                 onToggle: {
                                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                         if expandedFolders.contains(folder.id) {
@@ -91,7 +94,7 @@ struct SidebarView: View {
                                 },
                                 onSelect: {
                                     withAnimation {
-                                        selectedFolder = folder
+                                        folderPath = [folder]
                                         selectedNotebook = nil
                                     }
                                 },
@@ -120,7 +123,7 @@ struct SidebarView: View {
                             ) {
                                 withAnimation {
                                     selectedNotebook = notebook
-                                    selectedFolder = nil
+                                    folderPath.removeAll()
                                 }
                             }
                         }
@@ -189,7 +192,7 @@ struct SidebarView: View {
         }
         .background(AppTheme.background.ignoresSafeArea()) // Lighter sidebar background like Notion
         .sheet(isPresented: $showCreateFolder) {
-            ItemEditorSheet(store: store, mode: .createFolder, isPresented: $showCreateFolder)
+            ItemEditorSheet(store: store, mode: .createFolder(parentFolderId: selectedFolder?.id), isPresented: $showCreateFolder)
         }
         .sheet(isPresented: $showCreateNotebook) {
             ItemEditorSheet(store: store, mode: .createNotebook(folderId: creatingInFolderId), isPresented: $showCreateNotebook)
@@ -252,7 +255,7 @@ struct FolderSidebarRow: View {
     let isExpanded: Bool
     let isSelected: Bool
     @Binding var selectedNotebook: Notebook?
-    @Binding var selectedFolder: Folder?
+    @Binding var folderPath: [Folder]
     let onToggle: () -> Void
     let onSelect: () -> Void
     let onAddNotebook: () -> Void
@@ -321,7 +324,7 @@ struct FolderSidebarRow: View {
                             ) {
                                 withAnimation {
                                     selectedNotebook = notebook
-                                    selectedFolder = folder
+                                    folderPath = [folder]
                                 }
                             }
                             .padding(.leading, 18)

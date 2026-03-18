@@ -4,7 +4,7 @@ import SwiftUI
 struct AICanvasApp: App {
     @StateObject private var store = NotebookStore()
     @State private var selectedNotebook: Notebook?
-    @State private var selectedFolder: Folder?
+    @State private var folderPath: [Folder] = []
     @State private var showSidebar = true
 
     var body: some Scene {
@@ -15,7 +15,7 @@ struct AICanvasApp: App {
                     SidebarView(
                         store: store,
                         selectedNotebook: $selectedNotebook,
-                        selectedFolder: $selectedFolder,
+                        folderPath: $folderPath,
                         showSidebar: $showSidebar
                     )
                     .frame(width: 260)
@@ -38,10 +38,10 @@ struct AICanvasApp: App {
                         NotebookListView(
                             store: store,
                             selectedNotebook: $selectedNotebook,
-                            selectedFolder: $selectedFolder,
+                            folderPath: $folderPath,
                             showSidebar: $showSidebar
                         )
-                        .id(selectedFolder?.id ?? UUID())
+                        .id(folderPath.last?.id)
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

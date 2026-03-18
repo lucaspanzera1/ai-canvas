@@ -26,6 +26,7 @@ struct Folder: Identifiable, Codable, Equatable {
     var colorIndex: Int
     var createdAt: Date
     var lastModified: Date
+    var parentFolderId: UUID?
     var bannerImageData: Data?
     
     init(
@@ -33,12 +34,14 @@ struct Folder: Identifiable, Codable, Equatable {
         name: String,
         emoji: String = "📁",
         colorIndex: Int = 0,
+        parentFolderId: UUID? = nil,
         bannerImageData: Data? = nil
     ) {
         self.id = id
         self.name = name
         self.emoji = emoji
         self.colorIndex = colorIndex
+        self.parentFolderId = parentFolderId
         self.bannerImageData = bannerImageData
         self.createdAt = Date()
         self.lastModified = Date()
@@ -112,7 +115,7 @@ final class NotebookStore: ObservableObject {
     @Published var folders: [Folder] = []
 
     private let metadataKey = "ai_canvas_notebooks_v2"
-    private let foldersMetadataKey = "ai_canvas_folders_v1"
+    private let foldersMetadataKey = "ai_canvas_folders_v2"
     private let drawingsDirectory: URL
     private let pdfsDirectory: URL
 
@@ -234,28 +237,51 @@ final class NotebookStore: ObservableObject {
     // MARK: - CRUD Folders
 
     @discardableResult
-    func createFolder(name: String, emoji: String, colorIndex: Int, bannerImageData: Data? = nil) -> Folder {
-        let folder = Folder(name: name, emoji: emoji, colorIndex: colorIndex, bannerImageData: bannerImageData)
+    func createFolder(name: String, emoji: String, colorIndex: Int, parentFolderId: UUID? = nil, bannerImageData: Data? = nil) -> Folder {
+        let folder = Folder(name: name, emoji: emoji, colorIndex: colorIndex, parentFolderId: parentFolderId, bannerImageData: bannerImageData)
         folders.append(folder)
         saveMetadata()
         return folder
     }
 
     func deleteFolder(_ folder: Folder) {
-        folders.removeAll { $0.id == folder.id }
+        // Recursively delete subfolders
+        let subfolders = folders.filter { $0.parentFolderId == folder.id }
+        for subfolder in subfolders {
+            deleteFolder(subfolder)
+        }
+        // Delete notebooks in this folder
         let notebooksToDelete = notebooks.filter { $0.folderId == folder.id }
         for nb in notebooksToDelete {
             deleteNotebook(nb)
         }
+        // Remove the folder itself
+        folders.removeAll { $0.id == folder.id }
         saveMetadata()
     }
 
+    func moveFolder(_ folder: Folder, to parentFolderId: UUID?) {
+        guard let idx = folders.firstIndex(where: { $0.id == folder.id }) else { return }
+        folders[idx].parentFolderId = parentFolderId
+        folders[idx].lastModified = Date()
+        saveMetadata()
+    }
+
+    func moveNotebook(_ notebook: Notebook, to folderId: UUID?) {
+        guard let idx = notebooks.firstIndex(where: { $0.id == notebook.id }) else { return }
+        notebooks[idx].folderId = folderId
+        notebooks[idx].lastModified = Date()
+        saveMetadata()
+    }
+
+    // NEW: rename/update folder metadata
     func renameFolder(_ folder: Folder, to name: String, emoji: String? = nil, colorIndex: Int? = nil, bannerImageData: Data?? = nil) {
         guard let idx = folders.firstIndex(where: { $0.id == folder.id }) else { return }
         folders[idx].name = name
         if let emoji = emoji { folders[idx].emoji = emoji }
         if let colorIndex = colorIndex { folders[idx].colorIndex = colorIndex }
         if let bannerImageData = bannerImageData { folders[idx].bannerImageData = bannerImageData }
+        folders[idx].lastModified = Date()
         saveMetadata()
     }
 
