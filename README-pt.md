@@ -12,6 +12,11 @@ O **AICanvas** é um ecossistema de cadernos digitais de código aberto (Open So
 
 A ideia principal é oferecer um ambiente minimalista e sem distrações onde você pode organizar vários cadernos, escrever usando a estética nativa em um canvas infinito com páginas tamanho A4 e utilizar diversas provedoras de IA Multimodal para acelerar seu aprendizado e resolução de problemas. Essa ferramenta atua como seu companheiro inteligente de estudos, capaz de compreender suas anotações manuais e diagramas complexos.
 
+
+<div align="center">
+<img src="./.github/src/mockup.png" width="700" alt="AI Canvas Logo">
+</div>
+
 ## ✨ Principais Funcionalidades
 * **Estética Nativa Apple:** Experiência de escrita de baixa latência altamente otimizada, utilizando PencilKit para iPad e Apple Pencil.
 * **Área de Trabalho Infinita:** Um canvas com rolagem infinita segmentado em páginas A4, com fundos customizáveis como linhas ou grade.
