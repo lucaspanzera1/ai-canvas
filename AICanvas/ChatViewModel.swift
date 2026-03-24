@@ -147,6 +147,22 @@ final class ChatViewModel: ObservableObject {
                     // Em vez de remover o texto, substituímos as tags por uma formatação bacana no chat
                     finalReply = finalReply.replacingOccurrences(of: "<canvas_text>", with: "📝 **Enviado para o Canvas:**\n> ")
                     finalReply = finalReply.replacingOccurrences(of: "</canvas_text>", with: "")
+                } else if snapshot != nil {
+                    // Fallback: se a IA não usou <canvas_text> mas analisou o canvas,
+                    // extrair linhas que parecem resultados de cálculos (contém "=") e escrever no canvas
+                    let lines = reply.components(separatedBy: "\n")
+                    let resultLines = lines.filter { line in
+                        let trimmed = line.trimmingCharacters(in: .whitespaces)
+                        // Linhas que contém "=" e parecem ser resultados matemáticos
+                        return trimmed.contains("=") && !trimmed.hasPrefix("-") && !trimmed.hasPrefix("*") && trimmed.count < 100
+                    }
+                    if !resultLines.isEmpty {
+                        let resultText = resultLines.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.joined(separator: "\n")
+                        await MainActor.run {
+                            self.canvasManager?.addTextToCanvas(resultText)
+                        }
+                        finalReply += "\n\n📝 **Resultado enviado para o Canvas**"
+                    }
                 }
                 
                 if !finalReply.isEmpty {
@@ -163,7 +179,7 @@ final class ChatViewModel: ObservableObject {
 
     /// One-tap "Analisar canvas" action: takes a snapshot and sends a default analysis prompt.
     func analyzeCanvas() {
-        sendMessageWithCanvas(customPrompt: "Analise meu canvas: descreva o que está desenhado ou escrito, identifique cálculos, fórmulas ou anotações, e dê sugestões úteis.")
+        sendMessageWithCanvas(customPrompt: "Analise meu canvas detalhadamente: descreva o que está desenhado ou escrito. Se houver cálculos, equações ou fórmulas, RESOLVA-OS PASSO A PASSO mostrando todo o raciocínio e o resultado final. IMPORTANTE: Sempre envie o resultado final (resposta do cálculo, solução, etc.) dentro de tags <canvas_text>resultado aqui</canvas_text> para que ele seja escrito no canvas.")
     }
 
     func clearChat() {

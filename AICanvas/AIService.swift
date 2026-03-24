@@ -138,7 +138,7 @@ final class AIService {
         let body: [String: Any] = [
             "model": model.id,
             "messages": apiMessages,
-            "max_tokens": 2048
+            "max_tokens": 4096
         ]
 
         var request = URLRequest(url: url)
@@ -201,7 +201,7 @@ final class AIService {
 
         var body: [String: Any] = [
             "model": model.id,
-            "max_tokens": 2048,
+            "max_tokens": 4096,
             "messages": apiMessages
         ]
         if let systemPrompt {
@@ -259,7 +259,7 @@ final class AIService {
 
         var body: [String: Any] = [
             "contents": [["role": "user", "parts": parts]],
-            "generationConfig": ["temperature": 0.7, "maxOutputTokens": 2048]
+            "generationConfig": ["temperature": 0.7, "maxOutputTokens": 4096]
         ]
 
         if let systemPrompt {
@@ -384,7 +384,7 @@ final class AIService {
             "model": model.id,
             "messages": apiMessages,
             "temperature": 0.7,
-            "max_tokens": 2048
+            "max_tokens": 4096
         ]
         
         var request = URLRequest(url: url)
@@ -666,7 +666,7 @@ final class AIService {
         
         var body: [String: Any] = [
             "model": model.id,
-            "max_tokens": 2048,
+            "max_tokens": 4096,
             "messages": apiMessages
         ]
         
@@ -766,7 +766,7 @@ final class AIService {
             ],
             "generationConfig": [
                 "temperature": 0.7,
-                "maxOutputTokens": 2048
+                "maxOutputTokens": 4096
             ]
         ]
         
@@ -809,12 +809,13 @@ final class AIService {
         var cleaned = content
         
         // Use [\\s\\S]*? to match across newlines instead of relying on a non-existent option
+        // NOTE: Only remove internal "thinking" tags that LLMs use for chain-of-thought.
+        // Do NOT remove <analysis> — models often use it to wrap actual calculation results.
         let patterns = [
             "<think>[\\s\\S]*?</think>",
             "<thinking>[\\s\\S]*?</thinking>",
             "<thought>[\\s\\S]*?</thought>",
-            "<reason>[\\s\\S]*?</reason>",
-            "<analysis>[\\s\\S]*?</analysis>"
+            "<reason>[\\s\\S]*?</reason>"
         ]
         
         for pattern in patterns {
