@@ -1,9 +1,10 @@
 <div align="center">
   <img src="./.github/src/cat.png" width="150" alt="AI Canvas Logo">
    <h1>AI Canvas </h1>
-</div>
+ </div>
 
-[![Português](https://img.shields.io/badge/Leia_em-Português-green.svg)](README-pt.md)
+[![Português](https://img.shields.io/badge/Leia_em-Português-green.svg)](README-pt.md) <img src="https://komarev.com/ghpvc/?username=lucaspanzera1&repo=ai-canvas&label=Views&color=brightgreen&style=flat" alt="Profile Views">
+
 
 ---
 
