@@ -216,7 +216,7 @@ struct NotebookListView: View {
                             if folderPath.count > 1 {
                                 let parent = folderPath[folderPath.count - 2]
                                 Button { store.moveFolder(folder, to: parent.id) } label: {
-                                    Label("Mover para \(parent.emoji) \(parent.name)", systemImage: "folder")
+                                    Label("Mover para \(parent.name)", systemImage: "folder")
                                 }
                             }
                             Button { store.moveFolder(folder, to: nil) } label: {
@@ -263,7 +263,7 @@ struct NotebookListView: View {
                             if folderPath.count > 1 {
                                 let parent = folderPath[folderPath.count - 2]
                                 Button { store.moveNotebook(notebook, to: parent.id) } label: {
-                                    Label("Mover para \(parent.emoji) \(parent.name)", systemImage: "folder")
+                                    Label("Mover para \(parent.name)", systemImage: "folder")
                                 }
                             }
                             Button { store.moveNotebook(notebook, to: nil) } label: {
@@ -359,9 +359,12 @@ struct NotebookListView: View {
                             ))
                             .padding(.bottom, 4)
 
-                            Text("\(folder.emoji) \(folder.name)")
-                                .font(.system(size: 34, weight: .bold, design: .rounded))
-                                .foregroundStyle(AppTheme.textPrimary)
+                            HStack(spacing: 8) {
+                                NoteIcon(icon: folder.emoji, size: 30)
+                                Text(folder.name)
+                                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                                    .foregroundStyle(AppTheme.textPrimary)
+                            }
                         }
                     } else {
                         Group {
@@ -573,8 +576,7 @@ struct FolderCard: View {
                 }
 
                 HStack {
-                    Text(folder.emoji)
-                        .font(.system(size: 28))
+                    NoteIcon(icon: folder.emoji, size: 28)
                         .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
                     Spacer()
                     Image(systemName: "folder.fill")
@@ -640,8 +642,7 @@ struct NotebookCard: View {
                     .frame(height: 70)
                 }
 
-                Text(notebook.emoji)
-                    .font(.system(size: 34))
+                NoteIcon(icon: notebook.emoji, size: 34)
                     .padding(.horizontal, 16)
                     .padding(.top, 16)
                     .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
@@ -767,6 +768,7 @@ struct ItemEditorSheet: View {
     @State private var selectedColorIndex = 0
     @State private var bannerImageData: Data? = nil
     @State private var selectedBannerItem: PhotosPickerItem? = nil
+    @State private var showEmojiPicker = false
     @FocusState private var nameFocused: Bool
 
     var body: some View {
@@ -823,8 +825,7 @@ struct ItemEditorSheet: View {
                             }
 
                             HStack(spacing: 14) {
-                                Text(selectedEmoji)
-                                    .font(.system(size: 32))
+                                NoteIcon(icon: selectedEmoji, size: 32)
 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(name.isEmpty ? "Nome" : name)
@@ -865,19 +866,38 @@ struct ItemEditorSheet: View {
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(AppTheme.textMuted)
 
-                            TextField("Emoji", text: $selectedEmoji)
-                                .textFieldStyle(.plain)
-                                .font(.system(size: 32))
-                                .multilineTextAlignment(.center)
-                                .frame(width: 60, height: 60)
-                                .background(AppTheme.surfaceElevated)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
-                                .onChange(of: selectedEmoji) { newValue in
-                                    if newValue.count > 1 {
-                                        selectedEmoji = String(newValue.prefix(1))
+                            Button { showEmojiPicker = true } label: {
+                                HStack(spacing: 12) {
+                                    NoteIcon(icon: selectedEmoji, size: 32)
+                                        .frame(width: 56, height: 56)
+                                        .background(AppTheme.background)
+                                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text("Toque para escolher")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundStyle(AppTheme.textPrimary)
+                                        Text("Biblioteca de emojis por categoria")
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(AppTheme.textMuted)
                                     }
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(AppTheme.textMuted)
                                 }
+                                .padding(12)
+                                .background(AppTheme.surfaceElevated)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                            .sheet(isPresented: $showEmojiPicker) {
+                                EmojiPickerView(selectedEmoji: $selectedEmoji, isPresented: $showEmojiPicker)
+                            }
                         }
 
                         // Banner Image Picker
@@ -1032,6 +1052,28 @@ func notebookSwiftColor(at index: Int) -> Color {
     return colors[index % colors.count]
 }
 
+// MARK: - Note Icon
+
+struct NoteIcon: View {
+    let icon: String
+    var size: CGFloat = 28
+
+    var isSFSymbol: Bool { icon.hasPrefix("sf:") }
+    var symbolName: String { String(icon.dropFirst(3)) }
+
+    var body: some View {
+        if isSFSymbol {
+            Image(systemName: symbolName)
+                .font(.system(size: size * 0.75, weight: .semibold))
+                .foregroundStyle(AppTheme.textPrimary)
+                .frame(width: size, height: size)
+        } else {
+            Text(icon)
+                .font(.system(size: size))
+        }
+    }
+}
+
 // MARK: - Drop Delegates
 
 struct FolderDropDelegate: DropDelegate {
@@ -1127,5 +1169,282 @@ extension Date {
         formatter.unitsStyle = .short
         formatter.locale = Locale(identifier: "pt_BR")
         return formatter.localizedString(for: self, relativeTo: Date())
+    }
+}
+
+// MARK: - Emoji Picker Data
+
+private let emojiPickerCategories: [(name: String, icon: String, emojis: [String])] = [
+    ("Estudo", "📚", ["📓","📔","📒","📕","📗","📘","📙","📚","📖","📝","✏️","🖊️","🖋️","📐","📏","🔬","🔭","🧪","🧫","🧬","🎓","🏫","📎","🖇️","📌","📍","🗒️","🗓️"]),
+    ("Trabalho", "💼", ["💼","🏢","📱","💻","⌨️","🖥️","🖨️","📞","📟","📠","📊","📈","📉","📋","🗂️","🗃️","🗄️","📁","📂","📅","📆","⚙️","🔧","🛠️","🔒","🔑"]),
+    ("Criativo", "🎨", ["🎨","🖌️","🎭","🎬","🎤","🎵","🎶","🎸","🎹","🎺","🎻","🥁","🎯","🎮","🕹️","🎲","✨","💫","⭐","🌟","🏆","🥇","🎪","🎠","🎡","🎢","🎑","🎆"]),
+    ("Natureza", "🌿", ["🌱","🌲","🌳","🌴","🌵","🌷","🌸","🌺","🌻","🌹","🍀","☘️","🍃","🌿","🌾","🌊","🔥","⚡","❄️","🌈","🌙","☀️","⛅","🌤️","🌍","🌎","🌏","🦋"]),
+    ("Pessoas", "😊", ["😊","🤔","😎","🥳","🤩","💪","🙌","👏","🤝","👋","❤️","💙","💚","💛","💜","🧠","👁️","🐱","🐶","🦊","🐼","🦁","🐯","🦄","🐸","🐧","🦉","🦅"]),
+    ("Comida", "🍕", ["🍕","🍔","🍟","🌮","🌯","🍜","🍝","🍣","🍱","🍩","🍪","🎂","🍰","☕","🍵","🧃","🥤","🧁","🍫","🍓","🍎","🍋","🍇","🥑","🍉","🍑","🥐","🧇"]),
+    ("Viagem", "✈️", ["✈️","🚀","🛸","🚗","🚂","🚢","🏠","🏡","🏛️","⛺","🗺️","🧭","🏔️","🏝️","🎡","🗼","🗽","🏰","🌄","🌃","🌆","🛕","⛩️","🕌","🕍","🏟️","🚁","🛩️"]),
+    ("Objetos", "🔮", ["🔮","💡","🔑","🗝️","🔒","💎","🏺","🎁","🎀","🎊","🎉","🎈","🔧","🔨","🛠️","📡","💰","💳","🧲","🪄","🎩","🧸","🪞","🛋️","🖼️","🪴","🕯️","💿"]),
+]
+
+// MARK: - SF Symbols Data
+
+private let sfSymbolCategories: [(name: String, icon: String, symbols: [String])] = [
+    ("Estudo", "book.fill", [
+        "book.fill","book.closed.fill","books.vertical.fill","text.book.closed.fill",
+        "doc.fill","doc.text.fill","pencil","pencil.and.outline","highlighter",
+        "graduationcap.fill","backpack.fill","ruler.fill","paperclip","pin.fill",
+        "bookmark.fill","note.text","list.bullet","list.clipboard.fill",
+        "magnifyingglass","brain.head.profile","lightbulb.fill","flask.fill"
+    ]),
+    ("Trabalho", "briefcase.fill", [
+        "briefcase.fill","folder.fill","folder.badge.plus","tray.fill","tray.2.fill",
+        "archivebox.fill","doc.richtext.fill","calendar","calendar.badge.plus",
+        "clock.fill","alarm.fill","chart.bar.fill","chart.line.uptrend.xyaxis",
+        "chart.pie.fill","envelope.fill","phone.fill","bubble.left.fill",
+        "flag.fill","checkmark.circle.fill","person.2.fill","building.2.fill","network"
+    ]),
+    ("Criativo", "paintbrush.fill", [
+        "paintbrush.fill","paintpalette.fill","camera.fill","photo.fill","film.fill",
+        "music.note","music.quarternote.3","microphone.fill","theatermasks.fill",
+        "pencil.and.scribble","wand.and.stars","sparkles","star.fill","star.circle.fill",
+        "heart.fill","bolt.fill","flame.fill","crown.fill","trophy.fill","medal.fill",
+        "photo.artframe","cube.fill","square.3.layers.3d"
+    ]),
+    ("Tecnologia", "laptopcomputer", [
+        "laptopcomputer","iphone","desktopcomputer","keyboard","display","printer.fill",
+        "wifi","cpu.fill","memorychip.fill","externaldrive.fill","server.rack",
+        "terminal.fill","chevron.left.forwardslash.chevron.right","curlybraces",
+        "lock.fill","key.fill","shield.fill","gear","gearshape.fill",
+        "antenna.radiowaves.left.and.right","sensor.tag.radiowaves.forward.fill","qrcode"
+    ]),
+    ("Pessoas", "person.fill", [
+        "person.fill","person.2.fill","person.3.fill","figure.walk","figure.run",
+        "heart.fill","hand.raised.fill","hands.clap.fill","brain.head.profile",
+        "eye.fill","face.smiling.fill","figure.mind.and.body","figure.yoga",
+        "figure.strengthtraining.traditional","medal.fill","trophy.fill","crown.fill",
+        "gift.fill","balloon.fill","party.popper","handbag.fill","figure.child"
+    ]),
+    ("Natureza", "leaf.fill", [
+        "leaf.fill","tree.fill","cloud.fill","sun.max.fill","moon.fill",
+        "bolt.fill","flame.fill","drop.fill","snowflake","wind","rainbow",
+        "mountain.2.fill","tent.fill","globe.europe.africa.fill","water.waves",
+        "tornado","bird.fill","fish.fill","hare.fill","tortoise.fill",
+        "ant.fill","pawprint.fill","sun.and.horizon.fill"
+    ]),
+    ("Objetos", "giftcard.fill", [
+        "giftcard.fill","gift.fill","bag.fill","cart.fill","creditcard.fill",
+        "key.fill","lock.fill","tag.fill","flashlight.on.fill","lightbulb.fill",
+        "battery.100.bolt","cross.case.fill","stethoscope","pills.fill",
+        "dumbbell.fill","soccerball","basketball.fill","gamecontroller.fill",
+        "map.fill","mappin.and.ellipse","binoculars.fill","camera.filters"
+    ]),
+    ("Símbolos", "star.fill", [
+        "star.fill","heart.fill","bolt.fill","flame.fill","drop.fill",
+        "checkmark.circle.fill","xmark.circle.fill","exclamationmark.circle.fill",
+        "questionmark.circle.fill","info.circle.fill","plus.circle.fill",
+        "minus.circle.fill","arrow.up.circle.fill","arrow.down.circle.fill",
+        "arrow.right.circle.fill","arrow.left.circle.fill","infinity.circle.fill",
+        "sparkles","wand.and.stars","tornado","hurricane","aqi.medium"
+    ]),
+]
+
+// MARK: - Emoji Picker View
+
+private enum IconPickerMode: String, CaseIterable {
+    case emoji = "Emojis"
+    case sfSymbol = "SF Symbols"
+}
+
+struct EmojiPickerView: View {
+    @Binding var selectedEmoji: String
+    @Binding var isPresented: Bool
+
+    @State private var searchText = ""
+    @State private var selectedCategoryIndex = 0
+    @State private var mode: IconPickerMode = .emoji
+
+    private let columns = [GridItem(.adaptive(minimum: 52), spacing: 6)]
+
+    private var currentCategories: [(name: String, icon: String, items: [String])] {
+        switch mode {
+        case .emoji:
+            return emojiPickerCategories.map { ($0.name, $0.icon, $0.emojis) }
+        case .sfSymbol:
+            return sfSymbolCategories.map { ($0.name, $0.icon, $0.symbols) }
+        }
+    }
+
+    private var displayedItems: [String] {
+        let all = currentCategories
+        if searchText.isEmpty {
+            let idx = min(selectedCategoryIndex, all.count - 1)
+            return all[idx].items
+        }
+        let lower = searchText.lowercased()
+        return all.flatMap { $0.items }.filter { $0.lowercased().contains(lower) }
+    }
+
+    private var selectedIsCurrentMode: Bool {
+        switch mode {
+        case .emoji: return !selectedEmoji.hasPrefix("sf:")
+        case .sfSymbol: return selectedEmoji.hasPrefix("sf:")
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            AppTheme.background.ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Button("Cancelar") { isPresented = false }
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .buttonStyle(.plain)
+
+                    Spacer()
+
+                    Text("Escolher Ícone")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+
+                    Spacer()
+
+                    Text("Cancelar")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.clear)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
+
+                // Mode toggle
+                Picker("Modo", selection: $mode) {
+                    ForEach(IconPickerMode.allCases, id: \.self) { m in
+                        Text(m.rawValue).tag(m)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .onChange(of: mode) { _ in
+                    selectedCategoryIndex = 0
+                    searchText = ""
+                }
+
+                // Search bar
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(AppTheme.textMuted)
+                        .font(.system(size: 14))
+                    TextField(mode == .emoji ? "Buscar emoji…" : "Buscar símbolo…", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 14))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    if !searchText.isEmpty {
+                        Button { searchText = "" } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(AppTheme.textMuted)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(12)
+                .background(AppTheme.surfaceElevated)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+
+                // Category tabs (hidden during search)
+                if searchText.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(currentCategories.indices, id: \.self) { idx in
+                                Button {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        selectedCategoryIndex = idx
+                                    }
+                                } label: {
+                                    HStack(spacing: 6) {
+                                        if mode == .sfSymbol {
+                                            Image(systemName: currentCategories[idx].icon)
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundStyle(selectedCategoryIndex == idx ? AppTheme.textPrimary : AppTheme.textSecondary)
+                                        } else {
+                                            Text(currentCategories[idx].icon)
+                                                .font(.system(size: 15))
+                                        }
+                                        Text(currentCategories[idx].name)
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundStyle(selectedCategoryIndex == idx ? AppTheme.textPrimary : AppTheme.textSecondary)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(selectedCategoryIndex == idx ? AppTheme.surfaceElevated : .clear)
+                                    .clipShape(Capsule())
+                                    .overlay(Capsule().stroke(selectedCategoryIndex == idx ? AppTheme.border : .clear, lineWidth: 1))
+                                }
+                                .buttonStyle(.plain)
+                                .animation(.spring(response: 0.2), value: selectedCategoryIndex)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                    }
+                } else {
+                    Spacer().frame(height: 12)
+                }
+
+                // Grid
+                ScrollView {
+                    if displayedItems.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 36))
+                                .foregroundStyle(AppTheme.textMuted)
+                            Text("Nenhum resultado")
+                                .font(.system(size: 14))
+                                .foregroundStyle(AppTheme.textMuted)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 40)
+                    } else {
+                        LazyVGrid(columns: columns, spacing: 6) {
+                            ForEach(displayedItems, id: \.self) { item in
+                                let stored = mode == .sfSymbol ? "sf:\(item)" : item
+                                let isSelected = selectedEmoji == stored && selectedIsCurrentMode
+
+                                Button {
+                                    selectedEmoji = stored
+                                    isPresented = false
+                                } label: {
+                                    Group {
+                                        if mode == .sfSymbol {
+                                            Image(systemName: item)
+                                                .font(.system(size: 24, weight: .medium))
+                                                .foregroundStyle(AppTheme.textPrimary)
+                                        } else {
+                                            Text(item)
+                                                .font(.system(size: 30))
+                                        }
+                                    }
+                                    .frame(width: 52, height: 52)
+                                    .background(isSelected ? AppTheme.accent.opacity(0.12) : Color.clear)
+                                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(isSelected ? AppTheme.accent.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 40)
+                    }
+                }
+            }
+        }
     }
 }
