@@ -14,7 +14,7 @@
 The core idea is to provide a minimalist, distraction-free environment where you can organize multiple notebooks, write using Apple's native ink aesthetics on infinite A4-segmented canvases, and leverage multiple Multimodal AI providers to enhance your learning process and problem-solving. This tool acts as your intelligent study companion, capable of understanding both your handwritten notes and complex diagrams.
 
 <div align="center">
-<img src="./.github/src/mockup.png" width="700" alt="AI Canvas Logo">
+<img src="./.github/src/mockup.PNG" width="700" alt="AI Canvas Logo">
 </div>
 
 ## ✨ Key Features

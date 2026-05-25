@@ -14,7 +14,7 @@ A ideia principal é oferecer um ambiente minimalista e sem distrações onde vo
 
 
 <div align="center">
-<img src="./.github/src/mockup.png" width="700" alt="AI Canvas Logo">
+<img src="./.github/src/mockup.PNG" width="700" alt="AI Canvas Logo">
 </div>
 
 ## ✨ Principais Funcionalidades
