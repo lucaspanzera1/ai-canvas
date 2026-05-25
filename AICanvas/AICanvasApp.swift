@@ -3,9 +3,16 @@ import SwiftUI
 @main
 struct AICanvasApp: App {
     @StateObject private var store = NotebookStore()
+    @StateObject private var syncManager: SyncManager
     @State private var selectedNotebook: Notebook?
     @State private var folderPath: [Folder] = []
     @State private var showSidebar = true
+
+    init() {
+        let s = NotebookStore()
+        _store = StateObject(wrappedValue: s)
+        _syncManager = StateObject(wrappedValue: SyncManager(store: s))
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -14,6 +21,7 @@ struct AICanvasApp: App {
                 if showSidebar {
                     SidebarView(
                         store: store,
+                        syncManager: syncManager,
                         selectedNotebook: $selectedNotebook,
                         folderPath: $folderPath,
                         showSidebar: $showSidebar

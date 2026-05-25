@@ -3,17 +3,19 @@ import UniformTypeIdentifiers
 
 struct SidebarView: View {
     @ObservedObject var store: NotebookStore
+    @ObservedObject var syncManager: SyncManager
     @Binding var selectedNotebook: Notebook?
     @Binding var folderPath: [Folder]
     @Binding var showSidebar: Bool
 
     private var selectedFolder: Folder? { folderPath.last }
-    
+
     @State private var expandedFolders: Set<UUID> = []
-    
+
     @State private var showCreateNotebook = false
     @State private var showCreateFolder = false
     @State private var showPDFImporter = false
+    @State private var showSyncSettings = false
     @State private var creatingInFolderId: UUID? = nil
     
     var body: some View {
@@ -184,10 +186,49 @@ struct SidebarView: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(AppTheme.textSecondary)
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 8)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+
+                Divider()
+                    .foregroundStyle(AppTheme.border.opacity(0.3))
+
+                Button {
+                    if SyncSettings.load().isConfigured {
+                        Task { await syncManager.sync() }
+                    } else {
+                        showSyncSettings = true
+                    }
+                } label: {
+                    HStack {
+                        if syncManager.isSyncing {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .frame(width: 20)
+                        } else {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .frame(width: 20)
+                        }
+                        Text(syncManager.isSyncing ? "Sincronizando…" : "Sincronizar")
+                        Spacer()
+                        if !SyncSettings.load().isConfigured {
+                            Image(systemName: "exclamationmark.circle")
+                                .foregroundStyle(.orange)
+                                .font(.system(size: 12))
+                        }
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(syncManager.isSyncing)
+                .contextMenu {
+                    Button("Configurações de Sync") { showSyncSettings = true }
+                }
             }
         }
         .background(AppTheme.background.ignoresSafeArea()) // Lighter sidebar background like Notion
@@ -196,6 +237,9 @@ struct SidebarView: View {
         }
         .sheet(isPresented: $showCreateNotebook) {
             ItemEditorSheet(store: store, mode: .createNotebook(folderId: creatingInFolderId), isPresented: $showCreateNotebook)
+        }
+        .sheet(isPresented: $showSyncSettings) {
+            SyncSettingsView(syncManager: syncManager)
         }
         .fileImporter(isPresented: $showPDFImporter, allowedContentTypes: [.pdf], allowsMultipleSelection: false) { result in
             handlePDFImport(result)

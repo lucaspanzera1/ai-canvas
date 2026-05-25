@@ -326,6 +326,35 @@ final class NotebookStore: ObservableObject {
         saveMetadata()
     }
 
+    // MARK: - File-based Metadata (used by SyncManager)
+
+    var metadataFileURL: URL {
+        drawingsDirectory.appendingPathComponent("metadata.json")
+    }
+
+    func saveMetadataToFile() {
+        struct MetadataBundle: Codable {
+            var notebooks: [Notebook]
+            var folders: [Folder]
+        }
+        let bundle = MetadataBundle(notebooks: notebooks, folders: folders)
+        if let data = try? JSONEncoder().encode(bundle) {
+            try? data.write(to: metadataFileURL, options: .atomic)
+        }
+    }
+
+    func loadMetadataFromFile() {
+        struct MetadataBundle: Codable {
+            var notebooks: [Notebook]
+            var folders: [Folder]
+        }
+        guard let data = try? Data(contentsOf: metadataFileURL),
+              let bundle = try? JSONDecoder().decode(MetadataBundle.self, from: data) else { return }
+        notebooks = bundle.notebooks
+        folders = bundle.folders
+        saveMetadata()
+    }
+
     func pdfDocumentURL(for notebook: Notebook) -> URL? {
         guard notebook.type == .pdf else { return nil }
         let url = pdfURL(for: notebook)

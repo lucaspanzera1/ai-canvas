@@ -36,6 +36,8 @@
 		D5D525552F623C73000A4DB3 /* ModelInfoDatabase 2.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525542F623C73000A4DB3 /* ModelInfoDatabase 2.swift */; };
 		D5D525572F623C7A000A4DB3 /* ModelComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525562F623C7A000A4DB3 /* ModelComparisonView.swift */; };
 		D5D525592F623D7B000A4DB3 /* ImageResizeDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5D525582F623D7B000A4DB3 /* ImageResizeDialog.swift */; };
+		DD000001 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000011 /* SyncManager.swift */; };
+		DD000002 /* SyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000012 /* SyncSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -69,6 +71,8 @@
 		D5D525542F623C73000A4DB3 /* ModelInfoDatabase 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelInfoDatabase 2.swift"; sourceTree = "<group>"; };
 		D5D525562F623C7A000A4DB3 /* ModelComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelComparisonView.swift; sourceTree = "<group>"; };
 		D5D525582F623D7B000A4DB3 /* ImageResizeDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageResizeDialog.swift; sourceTree = "<group>"; };
+		DD000011 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
+		DD000012 /* SyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +126,8 @@
 				D5D525562F623C7A000A4DB3 /* ModelComparisonView.swift */,
 				D505AF102F6391A2003BFBA4 /* BannerSelectorView 2.swift */,
 				D5D525582F623D7B000A4DB3 /* ImageResizeDialog.swift */,
+				DD000011 /* SyncManager.swift */,
+				DD000012 /* SyncSettingsView.swift */,
 			);
 			path = AICanvas;
 			sourceTree = "<group>";
@@ -239,6 +245,8 @@
 				AB000003 /* SidebarView.swift in Sources */,
 				AB000004 /* PDFNotebookView.swift in Sources */,
 				D5D525592F623D7B000A4DB3 /* ImageResizeDialog.swift in Sources */,
+				DD000001 /* SyncManager.swift in Sources */,
+				DD000002 /* SyncSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
