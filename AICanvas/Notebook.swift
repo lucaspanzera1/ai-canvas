@@ -413,8 +413,12 @@ final class NotebookStore: ObservableObject {
 
     // MARK: - Private
 
-    private func drawingURL(for notebook: Notebook) -> URL {
+    func drawingFileURL(for notebook: Notebook) -> URL {
         drawingsDirectory.appendingPathComponent("\(notebook.id.uuidString).drawing")
+    }
+
+    private func drawingURL(for notebook: Notebook) -> URL {
+        drawingFileURL(for: notebook)
     }
 
     private func chatURL(for notebook: Notebook) -> URL {

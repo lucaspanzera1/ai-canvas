@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import PencilKit
 import UIKit
 import Vision
@@ -82,27 +83,31 @@ final class SyncManager: ObservableObject {
             // 3. Lista arquivos locais
             let localFiles = collectLocalFiles()
 
-            // 4. Compara e decide o que push/pull
+            // 4. Compara por SHA-256 — só transfere se conteúdo realmente mudou
             var toPush: [(localURL: URL, remotePath: String)] = []
             var toPull: [String] = []
 
             for (localURL, remotePath) in localFiles {
-                let localMtime = (try? localURL.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate?.timeIntervalSince1970 ?? 0
+                let localHash = sha256(of: localURL)
                 if let serverEntry = serverManifest[remotePath] {
-                    if localMtime > serverEntry.mtime + 1 {
+                    guard localHash != serverEntry.sha256 else { continue } // igual → skip
+                    let localMtime = (try? localURL.resourceValues(forKeys: [.contentModificationDateKey]))?
+                        .contentModificationDate?.timeIntervalSince1970 ?? 0
+                    if localMtime >= serverEntry.mtime {
                         toPush.append((localURL, remotePath))
-                    } else if serverEntry.mtime > localMtime + 1 {
+                    } else {
                         toPull.append(remotePath)
                     }
                 } else {
-                    // Não existe no servidor → push
                     toPush.append((localURL, remotePath))
                 }
             }
 
-            // Arquivos que existem no servidor mas não localmente → pull
+            // Arquivos que existem só no servidor → pull
             let localRemotePaths = Set(localFiles.map { $0.remotePath })
             for remotePath in serverManifest.keys where !localRemotePaths.contains(remotePath) {
+                // Ignora .md do obsidian no pull — são gerados localmente pelo app
+                guard !remotePath.hasPrefix("obsidian/") else { continue }
                 toPull.append(remotePath)
             }
 
@@ -115,7 +120,8 @@ final class SyncManager: ObservableObject {
             var pulledMetadata = false
             for remotePath in toPull {
                 let localDest = localURL(for: remotePath)
-                try await pullFile(remotePath: remotePath, to: localDest, base: baseURL, apiKey: settings.apiKey)
+                let serverMtime = serverManifest[remotePath]?.mtime
+                try await pullFile(remotePath: remotePath, to: localDest, base: baseURL, apiKey: settings.apiKey, serverMtime: serverMtime)
                 if remotePath == "metadata.json" { pulledMetadata = true }
             }
 
@@ -152,6 +158,15 @@ final class SyncManager: ObservableObject {
         try? fm.createDirectory(at: obsidianDir, withIntermediateDirectories: true)
 
         for notebook in store.notebooks where notebook.type == .notebook || notebook.type == .whiteboard {
+            // Só reconverte se o drawing mudou após o último .md gerado
+            let mdURL = obsidianDir.appendingPathComponent(sanitizeFilename(notebook.name) + ".md")
+            let drawingURL = store.drawingFileURL(for: notebook)
+            if let mdMtime = (try? mdURL.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate,
+               let drawingMtime = (try? drawingURL.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate,
+               drawingMtime <= mdMtime {
+                continue
+            }
+
             let drawing = store.loadDrawing(for: notebook)
             guard !drawing.bounds.isEmpty else { continue }
 
@@ -337,6 +352,7 @@ final class SyncManager: ObservableObject {
     private struct ManifestEntry: Decodable {
         let size: Int
         let mtime: Double
+        let sha256: String
     }
 
     private struct ManifestResponse: Decodable {
@@ -361,12 +377,19 @@ final class SyncManager: ObservableObject {
             req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             req.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
             req.httpBody = data
-            let (_, resp) = try await URLSession.shared.data(for: req)
+            let (respData, resp) = try await URLSession.shared.data(for: req)
             try validateResponse(resp)
+            // Sincroniza mtime local com o mtime que o servidor atribuiu ao arquivo,
+            // evitando que o próximo sync considere o arquivo "modificado" novamente.
+            if let json = try? JSONSerialization.jsonObject(with: respData) as? [String: Any],
+               let serverMtime = json["mtime"] as? Double {
+                let date = Date(timeIntervalSince1970: serverMtime)
+                try? FileManager.default.setAttributes([.modificationDate: date], ofItemAtPath: localURL.path)
+            }
         }
     }
 
-    private func pullFile(remotePath: String, to dest: URL, base: URL, apiKey: String) async throws {
+    private func pullFile(remotePath: String, to dest: URL, base: URL, apiKey: String, serverMtime: Double? = nil) async throws {
         let encodedPath = remotePath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? remotePath
         var req = URLRequest(url: base.appendingPathComponent("sync/pull/\(encodedPath)"))
         req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
@@ -374,6 +397,17 @@ final class SyncManager: ObservableObject {
         try validateResponse(resp)
         try? FileManager.default.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
         try data.write(to: dest, options: .atomic)
+        // Espelha o mtime do servidor para evitar re-pull no próximo sync
+        if let mtime = serverMtime {
+            let date = Date(timeIntervalSince1970: mtime)
+            try? FileManager.default.setAttributes([.modificationDate: date], ofItemAtPath: dest.path)
+        }
+    }
+
+    private func sha256(of url: URL) -> String? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        let digest = SHA256.hash(data: data)
+        return digest.map { String(format: "%02x", $0) }.joined()
     }
 
     private func validateResponse(_ response: URLResponse) throws {

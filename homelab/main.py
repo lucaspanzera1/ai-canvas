@@ -72,11 +72,20 @@ def _validate_path(file_path: str) -> Path:
     return resolved
 
 
-def _file_info(path: Path, relative_to: Path) -> dict:
+def _file_hash(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _file_info(path: Path) -> dict:
     stat = path.stat()
     return {
         "size": stat.st_size,
         "mtime": stat.st_mtime,
+        "sha256": _file_hash(path),
     }
 
 
@@ -102,8 +111,7 @@ def manifest(authorization: Annotated[str | None, Header()] = None):
         if path.suffix.lower() not in ALLOWED_EXTENSIONS:
             continue
         rel = path.relative_to(DATA_DIR).as_posix()
-        stat = path.stat()
-        files[rel] = {"size": stat.st_size, "mtime": stat.st_mtime}
+        files[rel] = _file_info(path)
 
     return {"files": files}
 
@@ -125,7 +133,7 @@ async def push(
     dest.parent.mkdir(parents=True, exist_ok=True)
     content = await request.body()
     dest.write_bytes(content)
-    return {"received": decoded_path}
+    return {"received": decoded_path, "mtime": dest.stat().st_mtime}
 
 
 @app.get("/sync/pull/{file_path:path}")
