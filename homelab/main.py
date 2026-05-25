@@ -28,8 +28,8 @@ from fastapi.responses import FileResponse, JSONResponse
 API_KEY = os.environ.get("AICANVAS_API_KEY", "")
 DATA_DIR = Path(os.environ.get("AICANVAS_DATA_DIR", "/var/aicanvas/data"))
 
-ALLOWED_EXTENSIONS = {".drawing", ".chat", ".pdf", ".json"}
-ALLOWED_PREFIXES = {"drawings/", "pdfs/", "metadata.json"}
+ALLOWED_EXTENSIONS = {".drawing", ".chat", ".pdf", ".json", ".md"}
+ALLOWED_PREFIXES = {"drawings/", "pdfs/", "obsidian/", "metadata.json"}
 
 # ---------------------------------------------------------------------------
 # App
@@ -145,3 +145,23 @@ def pull(
     if not dest.exists():
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(dest)
+
+
+@app.get("/obsidian")
+def list_obsidian(authorization: Annotated[str | None, Header()] = None):
+    """List all generated Markdown files with metadata."""
+    require_auth(authorization)
+    obsidian_dir = DATA_DIR / "obsidian"
+    obsidian_dir.mkdir(parents=True, exist_ok=True)
+
+    files = []
+    for path in sorted(obsidian_dir.glob("*.md")):
+        stat = path.stat()
+        files.append({
+            "name": path.stem,
+            "filename": path.name,
+            "size": stat.st_size,
+            "updated_at": stat.st_mtime,
+            "pull_url": f"/sync/pull/obsidian/{path.name}",
+        })
+    return {"notes": files, "count": len(files)}

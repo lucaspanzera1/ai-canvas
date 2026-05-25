@@ -1,12 +1,15 @@
 import Foundation
+import PencilKit
+import UIKit
 
 // MARK: - Settings
 
 struct SyncSettings: Codable {
     var serverURL: String   // ex: https://sync.seudominio.com
     var apiKey: String
+    var fetchflowKey: String
 
-    static let empty = SyncSettings(serverURL: "", apiKey: "")
+    static let empty = SyncSettings(serverURL: "", apiKey: "", fetchflowKey: "")
 
     private static let key = "aicanvas_sync_settings"
 
@@ -25,6 +28,7 @@ struct SyncSettings: Codable {
     }
 
     var isConfigured: Bool { !serverURL.isEmpty && !apiKey.isEmpty }
+    var fetchflowConfigured: Bool { !fetchflowKey.isEmpty }
 }
 
 // MARK: - Sync Result
@@ -119,6 +123,15 @@ final class SyncManager: ObservableObject {
                 store.loadMetadataFromFile()
             }
 
+            // 8. Converte cadernos para Markdown via FetchFlow (se configurado)
+            if settings.fetchflowConfigured {
+                await convertNotebooksToObsidian(
+                    fetchflowKey: settings.fetchflowKey,
+                    base: baseURL,
+                    syncApiKey: settings.apiKey
+                )
+            }
+
             lastSyncDate = Date()
             return .success(pushed: toPush.count, pulled: toPull.count)
 
@@ -127,6 +140,112 @@ final class SyncManager: ObservableObject {
             lastError = msg
             return .failure(msg)
         }
+    }
+
+    // MARK: - FetchFlow → Obsidian Markdown
+
+    func convertNotebooksToObsidian(fetchflowKey: String, base: URL, syncApiKey: String) async {
+        let fm = FileManager.default
+        let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let obsidianDir = docs.appendingPathComponent("AICanvas_Obsidian")
+        try? fm.createDirectory(at: obsidianDir, withIntermediateDirectories: true)
+
+        for notebook in store.notebooks where notebook.type == .notebook || notebook.type == .whiteboard {
+            let drawing = store.loadDrawing(for: notebook)
+            guard !drawing.bounds.isEmpty else { continue }
+
+            guard let image = renderDrawing(drawing) else { continue }
+            guard let jpegData = image.jpegData(compressionQuality: 0.82) else { continue }
+            let base64 = jpegData.base64EncodedString()
+
+            guard let markdown = await callFetchFlow(
+                apiKey: fetchflowKey,
+                notebookName: notebook.name,
+                imageBase64: base64
+            ) else { continue }
+
+            let filename = sanitizeFilename(notebook.name) + ".md"
+            let localMD = obsidianDir.appendingPathComponent(filename)
+            try? markdown.data(using: .utf8)?.write(to: localMD, options: .atomic)
+
+            let remotePath = "obsidian/\(filename)"
+            try? await pushFiles([(localMD, remotePath)], base: base, apiKey: syncApiKey)
+        }
+    }
+
+    private func renderDrawing(_ drawing: PKDrawing) -> UIImage? {
+        let bounds = drawing.bounds.insetBy(dx: -40, dy: -40)
+        guard bounds.width > 0, bounds.height > 0 else { return nil }
+        // Limita resolução para não estourar memória em desenhos muito grandes
+        let scale: CGFloat = min(1.5, 3000 / max(bounds.width, bounds.height))
+        var image: UIImage!
+        let trait = UITraitCollection(userInterfaceStyle: .light)
+        trait.performAsCurrent {
+            image = drawing.image(from: bounds, scale: scale)
+        }
+        // Composta sobre fundo branco
+        let size = CGSize(width: bounds.width * scale, height: bounds.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { ctx in
+            UIColor.white.setFill()
+            ctx.fill(CGRect(origin: .zero, size: size))
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+
+    private func callFetchFlow(apiKey: String, notebookName: String, imageBase64: String) async -> String? {
+        guard let url = URL(string: "https://api.fetchflow.io/v1/chat/completions") else { return nil }
+
+        let prompt = """
+        Você recebeu uma imagem de anotações de um caderno chamado "\(notebookName)".
+        Transcreva e organize TODO o conteúdo visível como um documento Markdown formatado para o Obsidian.
+        Regras:
+        - Use # para o título principal (nome do caderno)
+        - Use ## e ### para seções identificadas
+        - Preserve listas, fórmulas e estruturas visuais como tabelas Markdown quando possível
+        - Se houver diagramas ou desenhos, descreva-os em bloco de citação > [Diagrama: ...]
+        - Não invente conteúdo — transcreva apenas o que está visível
+        - Retorne SOMENTE o Markdown, sem explicações adicionais
+        """
+
+        let body: [String: Any] = [
+            "model": "swift",
+            "messages": [
+                [
+                    "role": "user",
+                    "content": [
+                        ["type": "image_url",
+                         "image_url": ["url": "data:image/jpeg;base64,\(imageBase64)"]],
+                        ["type": "text", "text": prompt]
+                    ]
+                ]
+            ]
+        ]
+
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: body) else { return nil }
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = bodyData
+        req.timeoutInterval = 60
+
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              let http = resp as? HTTPURLResponse, http.statusCode == 200 else { return nil }
+
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let first = choices.first,
+              let message = first["message"] as? [String: Any],
+              let content = message["content"] as? String else { return nil }
+
+        return content
+    }
+
+    private func sanitizeFilename(_ name: String) -> String {
+        let invalid = CharacterSet(charactersIn: "/\\:*?\"<>|")
+        return name.components(separatedBy: invalid).joined(separator: "-")
     }
 
     // MARK: - Local file enumeration

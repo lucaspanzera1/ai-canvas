@@ -6,6 +6,7 @@ struct SyncSettingsView: View {
 
     @State private var serverURL: String = ""
     @State private var apiKey: String = ""
+    @State private var fetchflowKey: String = ""
     @State private var showResult = false
     @State private var resultMessage = ""
     @State private var resultIsError = false
@@ -32,6 +33,16 @@ struct SyncSettingsView: View {
                     Text("Chave de Autenticação")
                 } footer: {
                     Text("A chave gerada pelo script setup.sh no servidor.")
+                }
+
+                Section {
+                    SecureField("FetchFlow API Key (opcional)", text: $fetchflowKey)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                } header: {
+                    Text("FetchFlow → Obsidian")
+                } footer: {
+                    Text("Se preenchido, cada caderno é convertido para .md via FetchFlow e enviado para obsidian/ no servidor.")
                 }
 
                 Section {
@@ -76,6 +87,7 @@ struct SyncSettingsView: View {
                 let s = SyncSettings.load()
                 serverURL = s.serverURL
                 apiKey = s.apiKey
+                fetchflowKey = s.fetchflowKey
             }
             .alert(resultMessage, isPresented: $showResult) {
                 Button("OK", role: .cancel) {}
@@ -84,8 +96,11 @@ struct SyncSettingsView: View {
     }
 
     private func saveAndSync() {
-        var settings = SyncSettings(serverURL: serverURL.trimmingCharacters(in: .whitespacesAndNewlines),
-                                    apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines))
+        var settings = SyncSettings(
+            serverURL: serverURL.trimmingCharacters(in: .whitespacesAndNewlines),
+            apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
+            fetchflowKey: fetchflowKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
         // Remove trailing slash from URL
         while settings.serverURL.hasSuffix("/") {
             settings.serverURL = String(settings.serverURL.dropLast())

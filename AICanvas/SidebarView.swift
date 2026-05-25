@@ -194,40 +194,51 @@ struct SidebarView: View {
                 Divider()
                     .foregroundStyle(AppTheme.border.opacity(0.3))
 
-                Button {
-                    if SyncSettings.load().isConfigured {
-                        Task { await syncManager.sync() }
-                    } else {
-                        showSyncSettings = true
-                    }
-                } label: {
-                    HStack {
-                        if syncManager.isSyncing {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 20)
+                HStack(spacing: 0) {
+                    Button {
+                        if SyncSettings.load().isConfigured {
+                            Task { await syncManager.sync() }
                         } else {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .frame(width: 20)
+                            showSyncSettings = true
                         }
-                        Text(syncManager.isSyncing ? "Sincronizando…" : "Sincronizar")
-                        Spacer()
-                        if !SyncSettings.load().isConfigured {
-                            Image(systemName: "exclamationmark.circle")
-                                .foregroundStyle(.orange)
-                                .font(.system(size: 12))
+                    } label: {
+                        HStack {
+                            if syncManager.isSyncing {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .frame(width: 20)
+                            } else {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .frame(width: 20)
+                            }
+                            Text(syncManager.isSyncing ? "Sincronizando…" : "Sincronizar")
+                            Spacer()
+                            if !SyncSettings.load().isConfigured {
+                                Image(systemName: "exclamationmark.circle")
+                                    .foregroundStyle(.orange)
+                                    .font(.system(size: 12))
+                            }
                         }
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .padding(.leading, 16)
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
                     }
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(syncManager.isSyncing)
-                .contextMenu {
-                    Button("Configurações de Sync") { showSyncSettings = true }
+                    .buttonStyle(.plain)
+                    .disabled(syncManager.isSyncing)
+
+                    Button {
+                        showSyncSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 13))
+                            .foregroundStyle(AppTheme.textMuted)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
