@@ -12,10 +12,9 @@ struct CanvasRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> PKCanvasView {
         let canvasView = CenteredCanvasView()
 
-        canvasView.drawingPolicy = .anyInput
+        canvasView.drawingPolicy = canvasManager.pencilOnlyMode ? .pencilOnly : .anyInput
         canvasView.backgroundColor = .clear
         canvasView.isOpaque = false
-        canvasView.allowsFingerDrawing = true
         canvasView.isScrollEnabled = true
         
         if notebookType == .whiteboard {
@@ -95,6 +94,8 @@ struct CanvasRepresentable: UIViewRepresentable {
             }
         }
         
+        canvasView.drawingPolicy = canvasManager.pencilOnlyMode ? .pencilOnly : .anyInput
+
         let isLassoMode = canvasManager.isSelectionMode && canvasView.tool is PKLassoTool
         let isManualSelection = canvasManager.isSelectionMode && !isLassoMode
 

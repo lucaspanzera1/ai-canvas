@@ -224,6 +224,16 @@ struct DrawingToolkit: View {
                 }
             }
 
+            // Palm rejection toggle
+            barToggleButton(
+                icon: canvasManager.pencilOnlyMode ? "hand.raised.slash" : "hand.raised",
+                label: "Palma",
+                isOn: canvasManager.pencilOnlyMode,
+                tint: canvasManager.pencilOnlyMode ? .purple : AppTheme.textSecondary
+            ) {
+                canvasManager.pencilOnlyMode.toggle()
+            }
+
             tkDivider
 
             // Image Insert Button
@@ -267,27 +277,29 @@ struct DrawingToolkit: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: canvasManager.toolConfig.type.icon)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(canvasManager.toolConfig.type == .eraser
                                          ? AppTheme.textSecondary
                                          : canvasManager.toolConfig.color)
 
                     Text(canvasManager.toolConfig.type.label)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(AppTheme.textPrimary)
 
                     Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 9, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(AppTheme.textMuted)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(activePanel == .tools ? AppTheme.background : Color.clear)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(activePanel == .tools ? AppTheme.background : AppTheme.surfaceElevated)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(activePanel == .tools ? AppTheme.borderHover : Color.clear, lineWidth: 1)
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(activePanel == .tools ? AppTheme.borderHover : AppTheme.border, lineWidth: 1)
                         )
                 )
             }

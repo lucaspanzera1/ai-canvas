@@ -259,8 +259,7 @@ struct CanvasToolbar: View {
 
             // Notebook title
             HStack(spacing: 8) {
-                Text(notebook.emoji)
-                    .font(.system(size: 16))
+                NoteIcon(icon: notebook.emoji, size: 16)
 
                 Text(notebook.name)
                     .font(.system(size: 14, weight: .semibold))

@@ -40,6 +40,14 @@ final class CanvasManager: ObservableObject {
     // Tool state
     @Published var toolConfig = DrawingToolConfig()
 
+    // Pencil-only mode — enables system palm rejection
+    @Published var pencilOnlyMode: Bool = false {
+        didSet {
+            UserDefaults.standard.set(pencilOnlyMode, forKey: "ai_canvas_pencil_only_mode")
+            applyDrawingPolicy()
+        }
+    }
+
     weak var canvasView: PKCanvasView?
 
     /// Called every time the drawing changes — used for auto-save.
@@ -70,6 +78,11 @@ final class CanvasManager: ObservableObject {
     func setup() {
         canvasView?.drawing = initialDrawing
         applyCurrentTool()
+        applyDrawingPolicy()
+    }
+
+    func applyDrawingPolicy() {
+        canvasView?.drawingPolicy = pencilOnlyMode ? .pencilOnly : .anyInput
     }
 
     // MARK: - Tool Application
@@ -152,6 +165,8 @@ final class CanvasManager: ObservableObject {
 
     private func loadPersistedToolConfig() {
         let defaults = UserDefaults.standard
+
+        pencilOnlyMode = defaults.bool(forKey: "ai_canvas_pencil_only_mode")
 
         let typeIndex = defaults.integer(forKey: Preferences.toolTypeIndexKey)
         if DrawingToolType.allCases.indices.contains(typeIndex) {

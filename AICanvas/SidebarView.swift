@@ -276,8 +276,7 @@ struct FolderSidebarRow: View {
                     }
                     .buttonStyle(.plain)
                     
-                    Text(folder.emoji)
-                        .font(.system(size: 14))
+                    NoteIcon(icon: folder.emoji, size: 14)
                     Text(folder.name)
                         .font(.system(size: 14, weight: .semibold))
                         .lineLimit(1)
@@ -346,8 +345,7 @@ struct NotebookSidebarRow: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Text(notebook.emoji)
-                    .font(.system(size: 14))
+                NoteIcon(icon: notebook.emoji, size: 14)
                     .frame(width: 16)
                 
                 Text(notebook.name)
