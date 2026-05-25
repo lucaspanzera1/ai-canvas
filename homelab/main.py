@@ -15,6 +15,7 @@ import os
 import time
 import secrets
 import hashlib
+import urllib.parse
 from pathlib import Path
 from typing import Annotated
 
@@ -118,11 +119,13 @@ async def push(
     Example: POST /sync/push/drawings/abc.drawing
     """
     require_auth(authorization)
-    dest = _validate_path(file_path)
+    # Starlette does not always decode %xx in path parameters — decode explicitly.
+    decoded_path = urllib.parse.unquote(file_path)
+    dest = _validate_path(decoded_path)
     dest.parent.mkdir(parents=True, exist_ok=True)
     content = await request.body()
     dest.write_bytes(content)
-    return {"received": file_path}
+    return {"received": decoded_path}
 
 
 @app.get("/sync/pull/{file_path:path}")

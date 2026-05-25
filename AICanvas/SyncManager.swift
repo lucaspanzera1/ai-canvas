@@ -1,6 +1,7 @@
 import Foundation
 import PencilKit
 import UIKit
+import Vision
 
 // MARK: - Settings
 
@@ -155,14 +156,27 @@ final class SyncManager: ObservableObject {
             guard !drawing.bounds.isEmpty else { continue }
 
             guard let image = renderDrawing(drawing) else { continue }
-            guard let jpegData = image.jpegData(compressionQuality: 0.82) else { continue }
-            let base64 = jpegData.base64EncodedString()
 
-            guard let markdown = await callFetchFlow(
+            // OCR on-device → extrai texto antes de enviar para FetchFlow
+            let recognizedText = await recognizeText(from: image)
+
+            let markdown: String
+            if recognizedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                // Caderno visual sem texto detectável: gera placeholder
+                let formatter = DateFormatter()
+                formatter.dateStyle = .short
+                formatter.timeStyle = .none
+                markdown = "# \(notebook.name)\n\n> Caderno sem texto identificável via OCR.\n> Última modificação: \(formatter.string(from: notebook.lastModified))\n"
+            } else if let formatted = await callFetchFlow(
                 apiKey: fetchflowKey,
                 notebookName: notebook.name,
-                imageBase64: base64
-            ) else { continue }
+                recognizedText: recognizedText
+            ) {
+                markdown = formatted
+            } else {
+                // FetchFlow falhou: salva o texto bruto do OCR
+                markdown = "# \(notebook.name)\n\n\(recognizedText)\n"
+            }
 
             let filename = sanitizeFilename(notebook.name) + ".md"
             let localMD = obsidianDir.appendingPathComponent(filename)
@@ -193,33 +207,46 @@ final class SyncManager: ObservableObject {
         }
     }
 
-    private func callFetchFlow(apiKey: String, notebookName: String, imageBase64: String) async -> String? {
+    private func recognizeText(from image: UIImage) async -> String {
+        guard let cgImage = image.cgImage else { return "" }
+        return await withCheckedContinuation { continuation in
+            let request = VNRecognizeTextRequest { req, _ in
+                let observations = req.results as? [VNRecognizedTextObservation] ?? []
+                let text = observations
+                    .compactMap { $0.topCandidates(1).first?.string }
+                    .joined(separator: "\n")
+                continuation.resume(returning: text)
+            }
+            request.recognitionLevel = .accurate
+            request.recognitionLanguages = ["pt-BR", "en-US"]
+            request.usesLanguageCorrection = true
+
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? handler.perform([request])
+        }
+    }
+
+    private func callFetchFlow(apiKey: String, notebookName: String, recognizedText: String) async -> String? {
         guard let url = URL(string: "https://api.fetchflow.io/v1/chat/completions") else { return nil }
 
         let prompt = """
-        Você recebeu uma imagem de anotações de um caderno chamado "\(notebookName)".
-        Transcreva e organize TODO o conteúdo visível como um documento Markdown formatado para o Obsidian.
+        Você recebeu anotações de um caderno chamado "\(notebookName)", extraídas via OCR de anotações manuscritas.
+        Organize e formate o conteúdo como um documento Markdown para o Obsidian.
         Regras:
         - Use # para o título principal (nome do caderno)
-        - Use ## e ### para seções identificadas
-        - Preserve listas, fórmulas e estruturas visuais como tabelas Markdown quando possível
-        - Se houver diagramas ou desenhos, descreva-os em bloco de citação > [Diagrama: ...]
-        - Não invente conteúdo — transcreva apenas o que está visível
+        - Use ## e ### para seções que conseguir identificar
+        - Preserve listas e estruturas
+        - Corrija erros óbvios de OCR mantendo o sentido original
+        - Não invente conteúdo que não esteja no texto
         - Retorne SOMENTE o Markdown, sem explicações adicionais
+
+        Texto extraído via OCR:
+        \(recognizedText)
         """
 
         let body: [String: Any] = [
             "model": "swift",
-            "messages": [
-                [
-                    "role": "user",
-                    "content": [
-                        ["type": "image_url",
-                         "image_url": ["url": "data:image/jpeg;base64,\(imageBase64)"]],
-                        ["type": "text", "text": prompt]
-                    ]
-                ]
-            ]
+            "messages": [["role": "user", "content": prompt]]
         ]
 
         guard let bodyData = try? JSONSerialization.data(withJSONObject: body) else { return nil }
