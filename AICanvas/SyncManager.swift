@@ -326,45 +326,17 @@ final class SyncManager: ObservableObject {
     }
 
     private func pushFiles(_ files: [(localURL: URL, remotePath: String)], base: URL, apiKey: String) async throws {
-        // Push in batches of 5
-        let batchSize = 5
-        var offset = 0
-        while offset < files.count {
-            let batch = Array(files[offset..<min(offset + batchSize, files.count)])
-            try await pushBatch(batch, base: base, apiKey: apiKey)
-            offset += batchSize
+        for (localURL, remotePath) in files {
+            guard let data = try? Data(contentsOf: localURL) else { continue }
+            let encoded = remotePath.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? remotePath
+            var req = URLRequest(url: base.appendingPathComponent("sync/push/\(encoded)"))
+            req.httpMethod = "POST"
+            req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            req.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+            req.httpBody = data
+            let (_, resp) = try await URLSession.shared.data(for: req)
+            try validateResponse(resp)
         }
-    }
-
-    private func pushBatch(_ batch: [(localURL: URL, remotePath: String)], base: URL, apiKey: String) async throws {
-        let boundary = "Boundary-\(UUID().uuidString)"
-        var req = URLRequest(url: base.appendingPathComponent("sync/push"))
-        req.httpMethod = "POST"
-        req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-
-        var body = Data()
-        for (url, path) in batch {
-            guard let data = try? Data(contentsOf: url) else { continue }
-            let mimeType = mimeType(for: url.pathExtension)
-
-            // paths field
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"paths\"\r\n\r\n".data(using: .utf8)!)
-            body.append("\(path)\r\n".data(using: .utf8)!)
-
-            // files field
-            body.append("--\(boundary)\r\n".data(using: .utf8)!)
-            body.append("Content-Disposition: form-data; name=\"files\"; filename=\"\(url.lastPathComponent)\"\r\n".data(using: .utf8)!)
-            body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
-            body.append(data)
-            body.append("\r\n".data(using: .utf8)!)
-        }
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-        req.httpBody = body
-
-        let (_, resp) = try await URLSession.shared.data(for: req)
-        try validateResponse(resp)
     }
 
     private func pullFile(remotePath: String, to dest: URL, base: URL, apiKey: String) async throws {
@@ -386,13 +358,6 @@ final class SyncManager: ObservableObject {
         }
     }
 
-    private func mimeType(for ext: String) -> String {
-        switch ext.lowercased() {
-        case "pdf": return "application/pdf"
-        case "json": return "application/json"
-        default: return "application/octet-stream"
-        }
-    }
 }
 
 // MARK: - Errors

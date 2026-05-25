@@ -18,7 +18,7 @@ import hashlib
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, Header, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, Header, HTTPException, Request, UploadFile, File
 from fastapi.responses import FileResponse, JSONResponse
 
 # ---------------------------------------------------------------------------
@@ -107,31 +107,22 @@ def manifest(authorization: Annotated[str | None, Header()] = None):
     return {"files": files}
 
 
-@app.post("/sync/push")
+@app.post("/sync/push/{file_path:path}")
 async def push(
+    file_path: str,
+    request: Request,
     authorization: Annotated[str | None, Header()] = None,
-    files: list[UploadFile] = File(...),
-    paths: list[str] = Form(...),
 ):
     """
-    Upload files from the device to the server.
-    `files` and `paths` must be parallel arrays of the same length.
-    `paths` are relative paths like 'drawings/<UUID>.drawing'.
+    Upload a single file. Path is in the URL, body is raw bytes.
+    Example: POST /sync/push/drawings/abc.drawing
     """
     require_auth(authorization)
-
-    if len(files) != len(paths):
-        raise HTTPException(status_code=400, detail="files and paths must have the same length")
-
-    received: list[str] = []
-    for upload, rel_path in zip(files, paths):
-        dest = _validate_path(rel_path)
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        content = await upload.read()
-        dest.write_bytes(content)
-        received.append(rel_path)
-
-    return {"received": received, "count": len(received)}
+    dest = _validate_path(file_path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    content = await request.body()
+    dest.write_bytes(content)
+    return {"received": file_path}
 
 
 @app.get("/sync/pull/{file_path:path}")
