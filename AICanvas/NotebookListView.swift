@@ -499,7 +499,7 @@ struct NotebookListView: View {
                         Text("Criar Caderno")
                     }
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color(uiColor: .systemBackground))
                     .padding(.horizontal, 24)
                     .padding(.vertical, 14)
                     .background(AppTheme.accent)
@@ -964,7 +964,7 @@ struct ItemEditorSheet: View {
                         } label: {
                             Text(mode.buttonTitle)
                                 .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(Color(uiColor: .systemBackground))
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(name.isEmpty ? AppTheme.borderHover : AppTheme.accent)

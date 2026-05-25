@@ -280,7 +280,7 @@ struct PresetSelectorView: View {
                                 Text("Aplicar")
                                     .font(.system(size: 12, weight: .semibold))
                             }
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Color(uiColor: .systemBackground))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
                             .background(AppTheme.accent)

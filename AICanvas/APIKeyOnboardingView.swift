@@ -109,7 +109,7 @@ struct APIKeyOnboardingView: View {
                         Text(isValidating ? "Validando..." : "Continuar")
                             .font(.system(size: 15, weight: .semibold))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color(uiColor: .systemBackground))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(
