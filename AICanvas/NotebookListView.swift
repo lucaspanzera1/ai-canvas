@@ -47,6 +47,7 @@ enum DraggableItem: Codable, Transferable {
 
 struct NotebookListView: View {
     @ObservedObject var store: NotebookStore
+    @ObservedObject var syncManager: SyncManager
     @Binding var selectedNotebook: Notebook?
     @Binding var folderPath: [Folder]
     @Binding var showSidebar: Bool
@@ -239,7 +240,7 @@ struct NotebookListView: View {
                 let combinedIndex = visibleFolders.count + nbIndex
                 let nbDelay = Double(combinedIndex) * 0.05
 
-                NotebookCard(notebook: notebook)
+                NotebookCard(notebook: notebook, syncManager: syncManager)
                     .onTapGesture {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                             selectedNotebook = notebook
@@ -618,11 +619,15 @@ struct FolderCard: View {
 
 struct NotebookCard: View {
     let notebook: Notebook
+    @ObservedObject var syncManager: SyncManager
     @State private var hovered = false
 
     private var accentColor: Color {
         notebookSwiftColor(at: notebook.colorIndex)
     }
+
+    private var isSyncing: Bool { syncManager.syncingNotebooks.contains(notebook.id) }
+    private var hasChanges: Bool { syncManager.notebookHasChanges(notebook) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -661,7 +666,34 @@ struct NotebookCard: View {
                     Text(notebook.lastModified.relativeString)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(AppTheme.textMuted)
+
+                    Spacer()
+
+                    if SyncSettings.load().isConfigured && (hasChanges || isSyncing) {
+                        Button {
+                            guard !isSyncing else { return }
+                            Task { await syncManager.syncNotebook(notebook) }
+                        } label: {
+                            Group {
+                                if isSyncing {
+                                    ProgressView()
+                                        .scaleEffect(0.6)
+                                        .frame(width: 14, height: 14)
+                                } else {
+                                    Image(systemName: "arrow.triangle.2.circlepath")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(accentColor)
+                                }
+                            }
+                            .padding(6)
+                            .background(accentColor.opacity(0.1))
+                            .clipShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .transition(.scale.combined(with: .opacity))
+                    }
                 }
+                .animation(.spring(response: 0.3), value: hasChanges)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)

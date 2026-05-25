@@ -38,6 +38,7 @@ struct AICanvasApp: App {
                         ContentView(
                             notebook: notebook,
                             store: store,
+                            syncManager: syncManager,
                             selectedNotebook: $selectedNotebook,
                             showSidebar: $showSidebar
                         )
@@ -45,6 +46,7 @@ struct AICanvasApp: App {
                     } else {
                         NotebookListView(
                             store: store,
+                            syncManager: syncManager,
                             selectedNotebook: $selectedNotebook,
                             folderPath: $folderPath,
                             showSidebar: $showSidebar

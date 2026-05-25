@@ -28,6 +28,7 @@ struct AppTheme {
 struct ContentView: View {
     let notebook: Notebook
     @ObservedObject var store: NotebookStore
+    @ObservedObject var syncManager: SyncManager
     @Binding var selectedNotebook: Notebook?
     @Binding var showSidebar: Bool
 
@@ -46,9 +47,10 @@ struct ContentView: View {
     @State private var imageResizeSize: CGSize = .zero
     @State private var showClearCanvasAlert = false
 
-    init(notebook: Notebook, store: NotebookStore, selectedNotebook: Binding<Notebook?>, showSidebar: Binding<Bool>) {
+    init(notebook: Notebook, store: NotebookStore, syncManager: SyncManager, selectedNotebook: Binding<Notebook?>, showSidebar: Binding<Bool>) {
         self.notebook = notebook
         self.store = store
+        self.syncManager = syncManager
         self._selectedNotebook = selectedNotebook
         self._showSidebar = showSidebar
 
@@ -81,6 +83,7 @@ struct ContentView: View {
                         CanvasToolbar(
                             notebook: notebook,
                             canvasManager: canvasManager,
+                            syncManager: syncManager,
                             showAIPanel: $showAIPanel,
                             showSidebar: $showSidebar,
                             backgroundPattern: $backgroundPattern,
@@ -89,7 +92,6 @@ struct ContentView: View {
                                 store.updateNotebookPattern(notebook, to: pattern)
                             },
                             onBack: {
-                                // Salva metadados ao sair
                                 store.persistMetadata()
                                 withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
                                     selectedNotebook = nil
@@ -210,6 +212,7 @@ struct ContentView: View {
 struct CanvasToolbar: View {
     let notebook: Notebook
     @ObservedObject var canvasManager: CanvasManager
+    @ObservedObject var syncManager: SyncManager
     @Binding var showAIPanel: Bool
     @Binding var showSidebar: Bool
     @Binding var backgroundPattern: BackgroundPattern
@@ -333,6 +336,36 @@ struct CanvasToolbar: View {
                 }
             }
 
+            // Sync button (shows when notebook has changes or is syncing)
+            let isSyncingThis = syncManager.syncingNotebooks.contains(notebook.id)
+            let hasChanges = syncManager.notebookHasChanges(notebook)
+            if SyncSettings.load().isConfigured && (hasChanges || isSyncingThis) {
+                Button {
+                    Task { await syncManager.syncNotebook(notebook) }
+                } label: {
+                    HStack(spacing: 5) {
+                        if isSyncingThis {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .frame(width: 14, height: 14)
+                        } else {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        Text("Sync")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundStyle(AppTheme.action)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(AppTheme.action.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 7))
+                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(AppTheme.action.opacity(0.3), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(isSyncingThis)
+            }
+
             Rectangle()
                 .fill(AppTheme.border)
                 .frame(width: 1, height: 20)
@@ -403,9 +436,11 @@ struct ToolButtonSimple: View {
 // MARK: - Previews
 
 #Preview {
+    let store = NotebookStore()
     ContentView(
         notebook: Notebook(name: "Preview", emoji: "✏️", colorIndex: 0),
-        store: NotebookStore(),
+        store: store,
+        syncManager: SyncManager(store: store),
         selectedNotebook: .constant(nil),
         showSidebar: .constant(true)
     )

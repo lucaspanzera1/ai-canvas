@@ -45,6 +45,7 @@ enum SyncResult {
 @MainActor
 final class SyncManager: ObservableObject {
     @Published var isSyncing = false
+    @Published var syncingNotebooks: Set<UUID> = []
     @Published var lastSyncDate: Date? = nil
     @Published var lastError: String? = nil
 
@@ -55,6 +56,52 @@ final class SyncManager: ObservableObject {
     }
 
     // MARK: - Public API
+
+    func notebookHasChanges(_ notebook: Notebook) -> Bool {
+        guard let lastSync = lastSyncDate else { return true }
+        return notebook.lastModified > lastSync
+    }
+
+    func syncNotebook(_ notebook: Notebook) async {
+        let settings = SyncSettings.load()
+        guard settings.isConfigured, let baseURL = URL(string: settings.serverURL) else { return }
+
+        syncingNotebooks.insert(notebook.id)
+        defer { syncingNotebooks.remove(notebook.id) }
+
+        do {
+            var toPush: [(localURL: URL, remotePath: String)] = []
+
+            let drawingURL = store.drawingFileURL(for: notebook)
+            if FileManager.default.fileExists(atPath: drawingURL.path) {
+                toPush.append((drawingURL, "drawings/\(notebook.id.uuidString).drawing"))
+            }
+            let chatURL = store.chatFileURL(for: notebook)
+            if FileManager.default.fileExists(atPath: chatURL.path) {
+                toPush.append((chatURL, "drawings/\(notebook.id.uuidString).chat"))
+            }
+            if !toPush.isEmpty {
+                try await pushFiles(toPush, base: baseURL, apiKey: settings.apiKey)
+            }
+
+            store.saveMetadataToFile()
+            try await pushFiles([(store.metadataFileURL, "metadata.json")],
+                                base: baseURL, apiKey: settings.apiKey)
+
+            if settings.fetchflowConfigured {
+                await convertNotebooksToObsidian(
+                    notebooks: [notebook],
+                    fetchflowKey: settings.fetchflowKey,
+                    base: baseURL,
+                    syncApiKey: settings.apiKey
+                )
+            }
+
+            lastSyncDate = Date()
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
 
     func sync() async -> SyncResult {
         let settings = SyncSettings.load()
@@ -133,6 +180,7 @@ final class SyncManager: ObservableObject {
             // 8. Converte cadernos para Markdown via FetchFlow (se configurado)
             if settings.fetchflowConfigured {
                 await convertNotebooksToObsidian(
+                    notebooks: store.notebooks,
                     fetchflowKey: settings.fetchflowKey,
                     base: baseURL,
                     syncApiKey: settings.apiKey
@@ -151,13 +199,13 @@ final class SyncManager: ObservableObject {
 
     // MARK: - FetchFlow → Obsidian Markdown
 
-    func convertNotebooksToObsidian(fetchflowKey: String, base: URL, syncApiKey: String) async {
+    func convertNotebooksToObsidian(notebooks: [Notebook], fetchflowKey: String, base: URL, syncApiKey: String) async {
         let fm = FileManager.default
         let docs = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let obsidianDir = docs.appendingPathComponent("AICanvas_Obsidian")
         try? fm.createDirectory(at: obsidianDir, withIntermediateDirectories: true)
 
-        for notebook in store.notebooks where notebook.type == .notebook || notebook.type == .whiteboard {
+        for notebook in notebooks where notebook.type == .notebook || notebook.type == .whiteboard {
             // Só reconverte se o drawing mudou após o último .md gerado
             let mdURL = obsidianDir.appendingPathComponent(sanitizeFilename(notebook.name) + ".md")
             let drawingURL = store.drawingFileURL(for: notebook)
