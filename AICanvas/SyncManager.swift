@@ -245,15 +245,42 @@ final class SyncManager: ObservableObject {
         guard let url = URL(string: "https://api.fetchflow.io/v1/chat/completions") else { return nil }
 
         let prompt = """
-        Você recebeu anotações de um caderno chamado "\(notebookName)", extraídas via OCR de anotações manuscritas.
-        Organize e formate o conteúdo como um documento Markdown para o Obsidian.
-        Regras:
-        - Use # para o título principal (nome do caderno)
-        - Use ## e ### para seções que conseguir identificar
-        - Preserve listas e estruturas
-        - Corrija erros óbvios de OCR mantendo o sentido original
-        - Não invente conteúdo que não esteja no texto
-        - Retorne SOMENTE o Markdown, sem explicações adicionais
+        Você é um formatador de anotações manuscritas para o Obsidian.
+        O texto abaixo foi extraído via OCR de um caderno chamado "\(notebookName)".
+        Converta para Markdown compatível com Obsidian seguindo EXATAMENTE estas regras:
+
+        ESTRUTURA:
+        - Primeira linha: # \(notebookName)
+        - Seções identificadas: ## Título da Seção
+        - Subseções: ### Subtítulo
+
+        TAREFAS E CHECKLISTS:
+        - Quadrinho vazio [ ] ou □ ou ○ antes de texto → - [ ] texto
+        - Quadrinho marcado [x] ou [✓] ou ☑ ou riscado → - [x] texto
+        - Lista simples com traço ou bullet → - item
+
+        DESTAQUES:
+        - Texto sublinhado ou com asterisco → **texto** (negrito)
+        - Texto em itálico ou inclinado → *texto*
+        - Texto entre aspas ou destacado → `código` se parecer técnico
+
+        CALLOUTS DO OBSIDIAN (use quando o contexto indicar):
+        - Nota importante → > [!note] conteúdo
+        - Aviso ou atenção → > [!warning] conteúdo
+        - Ideia → > [!tip] conteúdo
+        - Tarefa urgente → > [!todo] conteúdo
+
+        OUTROS:
+        - Datas no formato dd/mm/aaaa → mantenha como estão
+        - Palavras com # antes → #tag (tag do Obsidian)
+        - Referências a outros cadernos → [[Nome do Caderno]]
+        - Tabelas identificadas → converta para tabela Markdown com | col | col |
+        - Fórmulas matemáticas → $formula$ (LaTeX inline)
+        - Corrija erros óbvios de OCR (letras trocadas, espaços errados) mantendo o sentido
+
+        IMPORTANTE:
+        - Retorne SOMENTE o Markdown, sem explicações, sem blocos de código envolvendo o resultado
+        - Não invente conteúdo que não esteja no texto original
 
         Texto extraído via OCR:
         \(recognizedText)
