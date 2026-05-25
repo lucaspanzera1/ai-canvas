@@ -61,6 +61,11 @@ struct NotebookListView: View {
     @State private var appeared = false
     @State private var showOnboarding = false
     @StateObject private var aiConfig = AIConfiguration()
+    @State private var isHeaderDropTargeted = false
+
+    private var parentFolderId: UUID? {
+        folderPath.count > 1 ? folderPath[folderPath.count - 2].id : nil
+    }
 
     private let columns = [
         GridItem(.adaptive(minimum: 180, maximum: 240), spacing: 16)
@@ -206,6 +211,20 @@ struct NotebookListView: View {
                         Button { activeAction = .folder(folder, .edit) } label: {
                             Label("Editar Pasta", systemImage: "pencil")
                         }
+                        if let sel = selectedFolder {
+                            Divider()
+                            if folderPath.count > 1 {
+                                let parent = folderPath[folderPath.count - 2]
+                                Button { store.moveFolder(folder, to: parent.id) } label: {
+                                    Label("Mover para \(parent.emoji) \(parent.name)", systemImage: "folder")
+                                }
+                            }
+                            Button { store.moveFolder(folder, to: nil) } label: {
+                                Label("Mover para Início", systemImage: "house")
+                            }
+                            let _ = sel // suppress unused warning
+                        }
+                        Divider()
                         Button(role: .destructive) { activeAction = .folder(folder, .delete) } label: {
                             Label("Apagar Pasta", systemImage: "trash")
                         }
@@ -239,6 +258,20 @@ struct NotebookListView: View {
                         Button { activeAction = .notebook(notebook, .edit) } label: {
                             Label("Editar Caderno", systemImage: "pencil")
                         }
+                        if let sel = selectedFolder {
+                            Divider()
+                            if folderPath.count > 1 {
+                                let parent = folderPath[folderPath.count - 2]
+                                Button { store.moveNotebook(notebook, to: parent.id) } label: {
+                                    Label("Mover para \(parent.emoji) \(parent.name)", systemImage: "folder")
+                                }
+                            }
+                            Button { store.moveNotebook(notebook, to: nil) } label: {
+                                Label("Mover para Início", systemImage: "house")
+                            }
+                            let _ = sel // suppress unused warning
+                        }
+                        Divider()
                         Button(role: .destructive) { activeAction = .notebook(notebook, .delete) } label: {
                             Label("Apagar Caderno", systemImage: "trash")
                         }
@@ -306,17 +339,24 @@ struct NotebookListView: View {
                                 }
                             }) {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "chevron.left")
+                                    Image(systemName: isHeaderDropTargeted ? "tray.and.arrow.down.fill" : "chevron.left")
                                     Text(folderPath.count > 1 ? folderPath[folderPath.count - 2].name : "Início")
                                 }
                                 .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(AppTheme.textSecondary)
+                                .foregroundStyle(isHeaderDropTargeted ? AppTheme.accent : AppTheme.textSecondary)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
-                                .background(AppTheme.textSecondary.opacity(0.1))
+                                .background(isHeaderDropTargeted ? AppTheme.accent.opacity(0.15) : AppTheme.textSecondary.opacity(0.1))
                                 .clipShape(Capsule())
+                                .overlay(Capsule().stroke(isHeaderDropTargeted ? AppTheme.accent.opacity(0.6) : Color.clear, lineWidth: 1.5))
+                                .animation(.spring(response: 0.25), value: isHeaderDropTargeted)
                             }
                             .buttonStyle(.plain)
+                            .onDrop(of: [.data], delegate: ParentDropDelegate(
+                                targetFolderId: parentFolderId,
+                                store: store,
+                                isTargeted: $isHeaderDropTargeted
+                            ))
                             .padding(.bottom, 4)
 
                             Text("\(folder.emoji) \(folder.name)")
@@ -1022,7 +1062,7 @@ struct FolderDropDelegate: DropDelegate {
 
 struct RootDropDelegate: DropDelegate {
     let store: NotebookStore
-    
+
     func performDrop(info: DropInfo) -> Bool {
         for itemProvider in info.itemProviders(for: [.data]) {
             itemProvider.loadDataRepresentation(forTypeIdentifier: UTType.data.identifier) { data, error in
@@ -1036,6 +1076,42 @@ struct RootDropDelegate: DropDelegate {
                     case .folder(let id):
                         if let folder = store.folders.first(where: { $0.id == id }) {
                             store.moveFolder(folder, to: nil)
+                        }
+                    }
+                }
+            }
+        }
+        return true
+    }
+}
+
+struct ParentDropDelegate: DropDelegate {
+    let targetFolderId: UUID?
+    let store: NotebookStore
+    @Binding var isTargeted: Bool
+
+    func dropEntered(info: DropInfo) {
+        withAnimation(.spring(response: 0.25)) { isTargeted = true }
+    }
+
+    func dropExited(info: DropInfo) {
+        withAnimation(.spring(response: 0.25)) { isTargeted = false }
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        isTargeted = false
+        for itemProvider in info.itemProviders(for: [.data]) {
+            itemProvider.loadDataRepresentation(forTypeIdentifier: UTType.data.identifier) { data, error in
+                guard let data = data, let draggableItem = DraggableItem(jsonData: data) else { return }
+                DispatchQueue.main.async {
+                    switch draggableItem {
+                    case .notebook(let id):
+                        if let notebook = store.notebooks.first(where: { $0.id == id }) {
+                            store.moveNotebook(notebook, to: targetFolderId)
+                        }
+                    case .folder(let id):
+                        if let folder = store.folders.first(where: { $0.id == id }), folder.id != targetFolderId {
+                            store.moveFolder(folder, to: targetFolderId)
                         }
                     }
                 }
