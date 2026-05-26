@@ -106,7 +106,7 @@ async def _sync_obsidian_to_gdrive() -> None:
     src = str(DATA_DIR / "obsidian") + "/"
     dest = f"{GDRIVE_REMOTE}:{GDRIVE_PATH}/"
     proc = await asyncio.create_subprocess_exec(
-        "rclone", "copy", src, dest, "--update",
+        "rclone", "copy", src, dest, "--update", "--create-empty-src-dirs",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
