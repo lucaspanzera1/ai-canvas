@@ -168,19 +168,23 @@ struct NotebookListView: View {
                 .frame(width: 500, height: 500)
                 .offset(x: 300, y: 100)
 
-            VStack(spacing: 0) {
-                listHeader
-                    .padding(.bottom, 8)
-
-                if visibleFolders.isEmpty && visibleNotebooks.isEmpty {
+            if visibleFolders.isEmpty && visibleNotebooks.isEmpty {
+                VStack(spacing: 0) {
+                    listHeader
+                        .padding(.bottom, 8)
                     emptyState
-                } else {
-                    ScrollView {
-                        gridContent
-                            .padding(20)
-                            .padding(.bottom, 40)
-                    }
-                    .onDrop(of: [.data], delegate: RootDropDelegate(store: store))
+                }
+            } else {
+                ScrollView {
+                    gridContent
+                        .padding(20)
+                        .padding(.bottom, 40)
+                }
+                .onDrop(of: [.data], delegate: RootDropDelegate(store: store))
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    listHeader
+                        .padding(.bottom, 8)
+                        .background(AppTheme.background)
                 }
             }
         }
@@ -193,11 +197,6 @@ struct NotebookListView: View {
                 let folderDelay = Double(folderIndex) * 0.05
 
                 FolderCard(folder: folder)
-                    .onTapGesture {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            folderPath.append(folder)
-                        }
-                    }
                     .onDrag {
                         let provider = NSItemProvider()
                         let data = DraggableItem.folder(folder.id).jsonData
@@ -233,6 +232,11 @@ struct NotebookListView: View {
                     .scaleEffect(appeared ? 1 : 0.85)
                     .opacity(appeared ? 1 : 0)
                     .animation(.spring(response: 0.45).delay(folderDelay), value: appeared)
+                    .highPriorityGesture(TapGesture().onEnded {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            folderPath.append(folder)
+                        }
+                    })
             }
 
             ForEach(visibleNotebooks) { notebook in

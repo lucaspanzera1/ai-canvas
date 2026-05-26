@@ -9,8 +9,14 @@ Endpoints:
   GET  /sync/pull/{file_path}   → download a specific file
 
 Auth: Authorization: Bearer <API_KEY>
+
+Google Drive sync (via rclone):
+  Set GDRIVE_REMOTE=gdrive and GDRIVE_PATH=Obsidian to enable automatic
+  upload whenever a file under obsidian/ is pushed.
 """
 
+import asyncio
+import logging
 import os
 import time
 import secrets
@@ -19,8 +25,10 @@ import urllib.parse
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import FastAPI, Header, HTTPException, Request, UploadFile, File
+from fastapi import BackgroundTasks, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
+
+logger = logging.getLogger("aicanvas")
 
 # ---------------------------------------------------------------------------
 # Config
@@ -28,6 +36,8 @@ from fastapi.responses import FileResponse, JSONResponse
 
 API_KEY = os.environ.get("AICANVAS_API_KEY", "")
 DATA_DIR = Path(os.environ.get("AICANVAS_DATA_DIR", "/var/aicanvas/data"))
+GDRIVE_REMOTE = os.environ.get("GDRIVE_REMOTE", "")   # e.g. "gdrive"
+GDRIVE_PATH = os.environ.get("GDRIVE_PATH", "Obsidian")  # folder on Drive
 
 ALLOWED_EXTENSIONS = {".drawing", ".chat", ".pdf", ".json", ".md"}
 ALLOWED_PREFIXES = {"drawings/", "pdfs/", "obsidian/", "metadata.json"}
@@ -89,6 +99,22 @@ def _file_info(path: Path) -> dict:
     }
 
 
+async def _sync_obsidian_to_gdrive() -> None:
+    """Push obsidian/ to Google Drive via rclone (fire-and-forget)."""
+    if not GDRIVE_REMOTE:
+        return
+    src = str(DATA_DIR / "obsidian") + "/"
+    dest = f"{GDRIVE_REMOTE}:{GDRIVE_PATH}/"
+    proc = await asyncio.create_subprocess_exec(
+        "rclone", "copy", src, dest, "--update",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    _, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        logger.error("rclone failed (rc=%d): %s", proc.returncode, stderr.decode())
+
+
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
@@ -120,6 +146,7 @@ def manifest(authorization: Annotated[str | None, Header()] = None):
 async def push(
     file_path: str,
     request: Request,
+    background_tasks: BackgroundTasks,
     authorization: Annotated[str | None, Header()] = None,
 ):
     """
@@ -133,6 +160,10 @@ async def push(
     dest.parent.mkdir(parents=True, exist_ok=True)
     content = await request.body()
     dest.write_bytes(content)
+
+    if decoded_path.startswith("obsidian/"):
+        background_tasks.add_task(_sync_obsidian_to_gdrive)
+
     return {"received": decoded_path, "mtime": dest.stat().st_mtime}
 
 

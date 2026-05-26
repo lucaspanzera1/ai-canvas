@@ -10,6 +10,8 @@ WorkingDirectory=/opt/aicanvas-sync
 # Gere uma chave forte com: python3 -c "import secrets; print(secrets.token_hex(32))"
 Environment=AICANVAS_API_KEY=COLOQUE_SUA_CHAVE_AQUI
 Environment=AICANVAS_DATA_DIR=/var/aicanvas/data
+Environment=GDRIVE_REMOTE=panda-ubuntu
+Environment=GDRIVE_PATH=Notes
 
 ExecStart=/opt/aicanvas-sync/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8765
 Restart=always
