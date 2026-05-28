@@ -12,6 +12,9 @@ Environment=AICANVAS_API_KEY=COLOQUE_SUA_CHAVE_AQUI
 Environment=AICANVAS_DATA_DIR=/var/aicanvas/data
 Environment=GDRIVE_REMOTE=panda-ubuntu
 Environment=GDRIVE_PATH=Notes
+# Notion: crie uma integration em https://www.notion.so/my-integrations
+Environment=NOTION_TOKEN=
+Environment=NOTION_DATABASE_ID=
 
 ExecStart=/opt/aicanvas-sync/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8765
 Restart=always
