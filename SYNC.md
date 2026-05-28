@@ -1,6 +1,10 @@
-# AICanvas Sync — Complete Technical Reference
+# AICanvas Sync — Complete Technical Referenc
 
 This document explains end-to-end how AICanvas synchronises notebooks from the iOS app to your homelab server, how handwritten notes are converted to Markdown, and how those Markdown files are pushed to Obsidian (via Google Drive) and Notion.
+
+<div align="center">
+<img src="./.github/src/dark.PNG" width="700" alt="AI Canvas Logo">
+</div>
 
 ---
 
