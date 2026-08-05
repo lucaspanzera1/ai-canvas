@@ -268,20 +268,20 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     /// Short description for the provider card
     var tagline: String {
         switch self {
-        case .groq: return "Inferência ultrarrápida"
-        case .openai: return "GPT-4o e mais"
-        case .anthropic: return "Inteligência segura"
-        case .gemini: return "IA do Google"
+        case .groq: return "Inferência ultrarrápida".localized
+        case .openai: return "GPT-4o e mais".localized
+        case .anthropic: return "Inteligência segura".localized
+        case .gemini: return "IA do Google".localized
         }
     }
-    
+
     /// Use cases recommendations
     var useCases: [String] {
         switch self {
-        case .groq: return ["Respostas rápidas", "Análise de imagens", "STEM", "Código"]
-        case .openai: return ["Máxima qualidade", "Visão avançada", "Tarefas complexas", "GPT-4o"]
-        case .anthropic: return ["Redação criativa", "Análise profunda", "Segurança", "Claude"]
-        case .gemini: return ["Multi-modal", "Análise visual", "Pesquisa", "Integração Google"]
+        case .groq: return ["Respostas rápidas".localized, "Análise de imagens".localized, "STEM".localized, "Código".localized]
+        case .openai: return ["Máxima qualidade".localized, "Visão avançada".localized, "Tarefas complexas".localized, "GPT-4o"]
+        case .anthropic: return ["Redação criativa".localized, "Análise profunda".localized, "Segurança".localized, "Claude"]
+        case .gemini: return ["Multi-modal".localized, "Análise visual".localized, "Pesquisa".localized, "Integração Google".localized]
         }
     }
     

@@ -33,14 +33,14 @@ let toolkitColors: [(Color, String)] = [
 extension DrawingToolType {
     var label: String {
         switch self {
-        case .pen:         return "Caneta"
-        case .pencil:      return "Lápis"
-        case .marker:      return "Marcador"
-        case .monoline:    return "Monoline"
-        case .fountainPen: return "Pena"
-        case .watercolor:  return "Aquarela"
-        case .crayon:      return "Giz de cera"
-        case .eraser:      return "Borracha"
+        case .pen:         return "Caneta".localized
+        case .pencil:      return "Lápis".localized
+        case .marker:      return "Marcador".localized
+        case .monoline:    return "Monoline".localized
+        case .fountainPen: return "Pena".localized
+        case .watercolor:  return "Aquarela".localized
+        case .crayon:      return "Giz de cera".localized
+        case .eraser:      return "Borracha".localized
         }
     }
 
@@ -133,6 +133,7 @@ extension CanvasManager {
 /// Substitui DrawingToolbar com todas as funcionalidades do PencilKit
 struct DrawingToolkit: View {
     @ObservedObject var canvasManager: CanvasManager
+    @ObservedObject private var localization = LocalizationManager.shared
 
     // Callbacks for image insertion (wired from ContentView)
     var onInsertImageFromLibrary: (() -> Void)? = nil
@@ -803,7 +804,7 @@ struct DrawingToolkit: View {
                     .font(.system(size: 14, weight: isOn ? .semibold : .regular))
                     .foregroundStyle(tint)
                     .frame(height: 18)
-                Text(label)
+                Text(label.localized)
                     .font(.system(size: 8, weight: isOn ? .semibold : .regular, design: .rounded))
                     .foregroundStyle(tint.opacity(0.85))
             }

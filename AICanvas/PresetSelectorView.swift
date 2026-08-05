@@ -140,6 +140,7 @@ struct PresetCard: View {
     let preset: AIPreset
     let isSelected: Bool
     let onSelect: () -> Void
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var isHovered = false
     
     var body: some View {
@@ -150,10 +151,10 @@ struct PresetCard: View {
                         .font(.system(size: 28))
                     
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(preset.name)
+                        Text(preset.name.localized)
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(AppTheme.textPrimary)
-                        Text(preset.description)
+                        Text(preset.description.localized)
                             .font(.system(size: 12))
                             .foregroundStyle(AppTheme.textSecondary)
                     }
@@ -180,7 +181,7 @@ struct PresetCard: View {
                 // Features pills
                 HStack(spacing: 6) {
                     ForEach(preset.features, id: \.self) { feature in
-                        Text(feature)
+                        Text(feature.localized)
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(hex: preset.color))
                             .padding(.horizontal, 8)

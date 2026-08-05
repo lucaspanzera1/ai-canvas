@@ -835,7 +835,7 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
                     UIAction(title: "Trazer para frente", image: UIImage(systemName: "arrow.up"), handler: { [weak self] _ in
                         self?.bringToFront()
                     }),
-                    UIAction(title: "Enviar para trás", image: UIImage(systemName: "arrow.down"), handler: { [weak self] _ in
+                    UIAction(title: "Enviar para trás".localized, image: UIImage(systemName: "arrow.down"), handler: { [weak self] _ in
                         self?.sendToBack()
                     })
                 ]),

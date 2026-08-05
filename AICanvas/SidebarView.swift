@@ -16,6 +16,7 @@ struct SidebarView: View {
     @State private var showCreateFolder = false
     @State private var showPDFImporter = false
     @State private var showSyncSettings = false
+    @State private var showSettings = false
     @State private var creatingInFolderId: UUID? = nil
     
     var body: some View {
@@ -229,7 +230,7 @@ struct SidebarView: View {
                     .disabled(syncManager.isSyncing)
 
                     Button {
-                        showSyncSettings = true
+                        showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
                             .font(.system(size: 13))
@@ -251,6 +252,9 @@ struct SidebarView: View {
         }
         .sheet(isPresented: $showSyncSettings) {
             SyncSettingsView(syncManager: syncManager)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(syncManager: syncManager)
         }
         .fileImporter(isPresented: $showPDFImporter, allowedContentTypes: [.pdf], allowsMultipleSelection: false) { result in
             handlePDFImport(result)
@@ -278,16 +282,17 @@ struct SidebarItemButton: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
-    
+
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var isHovered = false
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.system(size: 14))
                     .frame(width: 20)
-                Text(title)
+                Text(title.localized)
                     .font(.system(size: 14, weight: .medium))
                 Spacer()
             }

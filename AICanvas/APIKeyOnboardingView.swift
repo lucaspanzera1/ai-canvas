@@ -3,6 +3,7 @@ import SwiftUI
 /// Legacy single-provider onboarding screen — Game Edition.
 struct APIKeyOnboardingView: View {
     @Binding var isPresented: Bool
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var apiKey = ""
     @State private var isValidating = false
     @State private var errorMessage: String?
@@ -145,7 +146,7 @@ struct APIKeyOnboardingView: View {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !trimmed.isEmpty else {
-            errorMessage = "Informe a API Key."
+            errorMessage = "Informe a API Key.".localized
             return
         }
 
@@ -163,7 +164,7 @@ struct APIKeyOnboardingView: View {
                         isPresented = false
                     }
                 } else {
-                    errorMessage = "API Key inválida. Verifique e tente novamente."
+                    errorMessage = "API Key inválida. Verifique e tente novamente.".localized
                 }
             }
         }

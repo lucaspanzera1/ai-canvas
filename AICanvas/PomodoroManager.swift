@@ -176,11 +176,11 @@ final class PomodoroManager: ObservableObject {
         let content = UNMutableNotificationContent()
         switch mode {
         case .work:
-            content.title = "Foco concluído! 🍅"
-            content.body = "Hora de fazer uma pausa."
+            content.title = "Foco concluído! 🍅".localized
+            content.body = "Hora de fazer uma pausa.".localized
         case .shortBreak, .longBreak:
-            content.title = "Pausa concluída"
-            content.body = "Hora de voltar ao foco."
+            content.title = "Pausa concluída".localized
+            content.body = "Hora de voltar ao foco.".localized
         }
         content.sound = .default
 

@@ -4,6 +4,7 @@ import SwiftUI
 struct ModelComparisonView: View {
     let models: [ModelInfo]
     @Binding var isPresented: Bool
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         ZStack {
@@ -76,7 +77,7 @@ struct ModelComparisonView: View {
     private func metricPill(title: String, value: Int) -> some View {
         let clamped = max(1, min(5, value))
         return HStack(spacing: 4) {
-            Text(title)
+            Text(title.localized)
                 .font(.system(size: 9, weight: .semibold))
             Text(String(repeating: "●", count: clamped))
                 .font(.system(size: 9))

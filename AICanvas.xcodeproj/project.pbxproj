@@ -41,6 +41,9 @@
 		EE000001 /* GraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000011 /* GraphView.swift */; };
 		FF000001 /* PomodoroManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000011 /* PomodoroManager.swift */; };
 		FF000002 /* PomodoroTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000012 /* PomodoroTimerView.swift */; };
+		GG000001 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = GG000011 /* LocalizationManager.swift */; };
+		GG000002 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = GG000012 /* SettingsView.swift */; };
+		GG000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = GG000013 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -79,6 +82,9 @@
 		EE000011 /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
 		FF000011 /* PomodoroManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroManager.swift; sourceTree = "<group>"; };
 		FF000012 /* PomodoroTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroTimerView.swift; sourceTree = "<group>"; };
+		GG000011 /* LocalizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationManager.swift; sourceTree = "<group>"; };
+		GG000012 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		GG000013 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +143,9 @@
 				EE000011 /* GraphView.swift */,
 				FF000011 /* PomodoroManager.swift */,
 				FF000012 /* PomodoroTimerView.swift */,
+				GG000011 /* LocalizationManager.swift */,
+				GG000012 /* SettingsView.swift */,
+				GG000013 /* Localizable.xcstrings */,
 			);
 			path = AICanvas;
 			sourceTree = "<group>";
@@ -194,9 +203,10 @@
 			};
 			buildConfigurationList = AA000051 /* Build configuration list for PBXProject "AICanvas" */;
 			compatibilityVersion = "Xcode 14.0";
-			developmentRegion = en;
+			developmentRegion = "pt-BR";
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				"pt-BR",
 				en,
 				Base,
 			);
@@ -217,6 +227,7 @@
 			files = (
 				AA000006 /* Preview Assets.xcassets in Resources */,
 				AA000005 /* Assets.xcassets in Resources */,
+				GG000003 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -259,6 +270,8 @@
 				EE000001 /* GraphView.swift in Sources */,
 				FF000001 /* PomodoroManager.swift in Sources */,
 				FF000002 /* PomodoroTimerView.swift in Sources */,
+				GG000001 /* LocalizationManager.swift in Sources */,
+				GG000002 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

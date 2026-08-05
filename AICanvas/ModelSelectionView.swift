@@ -19,6 +19,7 @@ struct ProviderLogoView: View {
 struct ModelSelectionView: View {
     @ObservedObject var aiConfig: AIConfiguration
     @Binding var isPresented: Bool
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var showProviderSetup = false
     @State private var selectedProvider: AIProvider?
     @State private var showDeleteConfirm = false
@@ -699,7 +700,7 @@ struct ProviderSetupView: View {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard !trimmed.isEmpty else {
-            errorMessage = "Informe a API Key."
+            errorMessage = "Informe a API Key.".localized
             return
         }
         
@@ -728,7 +729,7 @@ struct ProviderSetupView: View {
                     }
                 } else {
                     withAnimation {
-                        errorMessage = "API Key inválida. Verifique e tente novamente."
+                        errorMessage = "API Key inválida. Verifique e tente novamente.".localized
                     }
                 }
             }

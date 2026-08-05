@@ -211,7 +211,8 @@ final class ModelInfoDatabase {
 /// Enhanced model details card with performance metrics
 struct ModelDetailsCard: View {
     let modelInfo: AIModelInfo
-    
+    @ObservedObject private var localization = LocalizationManager.shared
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Header with model name
@@ -220,7 +221,7 @@ struct ModelDetailsCard: View {
                     Text(modelInfo.model.name)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text(modelInfo.bestFor)
+                    Text(modelInfo.bestFor.localized)
                         .font(.system(size: 11))
                         .foregroundStyle(AppTheme.textSecondary)
                 }
@@ -240,7 +241,7 @@ struct ModelDetailsCard: View {
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(AppTheme.textSecondary)
                         }
-                        Text(modelInfo.speed.rawValue)
+                        Text(modelInfo.speed.rawValue.localized)
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppTheme.textPrimary)
                     }
@@ -259,7 +260,7 @@ struct ModelDetailsCard: View {
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(AppTheme.textSecondary)
                         }
-                        Text(modelInfo.quality.rawValue)
+                        Text(modelInfo.quality.rawValue.localized)
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppTheme.textPrimary)
                     }
@@ -278,7 +279,7 @@ struct ModelDetailsCard: View {
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(AppTheme.textSecondary)
                         }
-                        Text(modelInfo.cost.rawValue)
+                        Text(modelInfo.cost.rawValue.localized)
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(AppTheme.textPrimary)
                     }

@@ -846,15 +846,15 @@ enum AIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noAPIKey(let provider):
-            return "API Key do \(provider.displayName) não configurada."
+            return String(format: "API Key do %@ não configurada.".localized, provider.displayName)
         case .invalidURL:
-            return "URL inválida."
+            return "URL inválida.".localized
         case .invalidResponse:
-            return "Resposta inválida do servidor."
+            return "Resposta inválida do servidor.".localized
         case .parsingError:
-            return "Erro ao processar resposta."
+            return "Erro ao processar resposta.".localized
         case .apiError(let code, let message):
-            return "Erro \(code): \(message)"
+            return String(format: "Erro %d: %@".localized, code, message)
         }
     }
 }

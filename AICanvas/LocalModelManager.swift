@@ -170,7 +170,7 @@ final class LocalModelManager: ObservableObject {
                     return
                 }
                 guard let tempURL else {
-                    self.downloadError = "Download falhou sem URL temporária."
+                    self.downloadError = "Download falhou sem URL temporária.".localized
                     return
                 }
                 let dest = self.modelsDirectory.appendingPathComponent(info.filename)
@@ -183,7 +183,7 @@ final class LocalModelManager: ObservableObject {
                     self.updateModelsCache()
                     self.refreshCatalog()
                 } catch {
-                    self.downloadError = "Erro ao salvar: \(error.localizedDescription)"
+                    self.downloadError = String(format: "Erro ao salvar: %@".localized, error.localizedDescription)
                 }
             }
         }

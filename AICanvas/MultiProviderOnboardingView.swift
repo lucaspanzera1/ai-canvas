@@ -211,7 +211,8 @@ struct ProviderOnboardingCard: View {
     let provider: AIProvider
     @ObservedObject var aiConfig: AIConfiguration
     let onConfigured: () -> Void
-    
+    @ObservedObject private var localization = LocalizationManager.shared
+
     @State private var apiKey = ""
     @State private var isValidating = false
     @State private var errorMessage: String?
@@ -517,7 +518,7 @@ struct ProviderOnboardingCard: View {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         
         guard !trimmed.isEmpty else {
-            errorMessage = "Informe a API Key."
+            errorMessage = "Informe a API Key.".localized
             return
         }
         
@@ -544,7 +545,7 @@ struct ProviderOnboardingCard: View {
                     }
                 } else {
                     withAnimation {
-                        errorMessage = "API Key inválida. Verifique e tente novamente."
+                        errorMessage = "API Key inválida. Verifique e tente novamente.".localized
                     }
                 }
             }

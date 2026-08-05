@@ -106,12 +106,12 @@ final class SyncManager: ObservableObject {
     func sync() async -> SyncResult {
         let settings = SyncSettings.load()
         guard settings.isConfigured else {
-            let msg = "Sync não configurado. Acesse as configurações."
+            let msg = "Sync não configurado. Acesse as configurações.".localized
             lastError = msg
             return .failure(msg)
         }
         guard let baseURL = URL(string: settings.serverURL) else {
-            let msg = "URL do servidor inválida."
+            let msg = "URL do servidor inválida.".localized
             lastError = msg
             return .failure(msg)
         }
@@ -229,7 +229,7 @@ final class SyncManager: ObservableObject {
                 let formatter = DateFormatter()
                 formatter.dateStyle = .short
                 formatter.timeStyle = .none
-                markdown = "# \(notebook.name)\n\n> Caderno sem texto identificável via OCR.\n> Última modificação: \(formatter.string(from: notebook.lastModified))\n"
+                markdown = String(format: "# %@\n\n> Caderno sem texto identificável via OCR.\n> Última modificação: %@\n".localized, notebook.name, formatter.string(from: notebook.lastModified))
             } else if let formatted = await callFetchFlow(
                 apiKey: fetchflowKey,
                 notebookName: notebook.name,
@@ -504,8 +504,8 @@ enum SyncError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidResponse: return "Resposta inválida do servidor."
-        case .httpError(let code): return "Erro HTTP \(code) do servidor."
+        case .invalidResponse: return "Resposta inválida do servidor.".localized
+        case .httpError(let code): return String(format: "Erro HTTP %d do servidor.".localized, code)
         }
     }
 }

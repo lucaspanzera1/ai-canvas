@@ -3,9 +3,6 @@
    <h1>AI Canvas </h1>
  </div>
 
-[![Português](https://img.shields.io/badge/Leia_em-Português-green.svg)](README-pt.md) <img src="https://komarev.com/ghpvc/?username=lucaspanzera1&repo=ai-canvas&label=Views&color=brightgreen&style=flat" alt="Profile Views">
-
-
 ---
 
 ## 💡 About the Project
@@ -19,10 +16,12 @@ The core idea is to provide a minimalist, distraction-free environment where you
 
 ## ✨ Key Features
 * **Native Apple Aesthetics:** Low-latency, highly optimized handwriting experience using PencilKit for iPad and Apple Pencil.
+* **Graph View & Visual Knowledge Network:** Visualize connections and relationships between your folders, notebooks, and individual pages in an interactive node graph.
+* **Integrated Pomodoro Timer:** Stay focused and boost productivity with an inline Pomodoro timer designed for structured study sessions.
 * **Infinite Workspace:** An infinite, scrollable canvas segmented into A4 pages, complete with customizable line and grid backgrounds.
 * **PDF Export:** Export your infinite canvas to PDF effortlessly, perfectly capturing your handwriting alongside chosen background patterns (lines/grids) for seamless sharing.
 * **Dark Mode Support:** Fully optimized for both light and dark modes, ensuring a comfortable note-taking experience in any environment.
-* **Smart Notebook Management:** Manage multiple notebooks for different subjects with a delightful, gamified grid interface and auto-saving.
+* **Smart Notebook Management:** Manage multiple notebooks and folders for different subjects with a delightful, gamified grid interface and auto-saving.
 * **Multimodal AI Integration:** A built-in AI chat panel that can "see" your canvas and help you:
     * Perform complex mathematical and engineering calculations based on your hand-drawn formulas.
     * Summarize handwritten or typed notes.

@@ -4,7 +4,8 @@ import SwiftUI
 struct PresetSelectorView: View {
     @ObservedObject var aiConfig: AIConfiguration
     @Binding var isPresented: Bool
-    
+    @ObservedObject private var localization = LocalizationManager.shared
+
     @State private var selectedPresetId: String
     @State private var showCustomPromptEditor = false
     @State private var tempCustomPrompt: String
@@ -116,10 +117,10 @@ struct PresetSelectorView: View {
                 Text("PRESET ATIVO")
                     .font(.system(size: 9, weight: .semibold, design: .rounded))
                     .foregroundStyle(color(fromHex: current.color))
-                Text(current.name)
+                Text(current.name.localized)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary)
-                Text(current.description)
+                Text(current.description.localized)
                     .font(.system(size: 12))
                     .foregroundStyle(AppTheme.textSecondary)
                     .lineLimit(2)
@@ -182,10 +183,10 @@ struct PresetSelectorView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(preset.name)
+                    Text(preset.name.localized)
                         .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
                         .foregroundStyle(isSelected ? AppTheme.textPrimary : AppTheme.textSecondary)
-                    Text(preset.description)
+                    Text(preset.description.localized)
                         .font(.system(size: 11))
                         .foregroundStyle(AppTheme.textSecondary)
                         .lineLimit(2)

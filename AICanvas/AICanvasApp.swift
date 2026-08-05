@@ -5,6 +5,7 @@ struct AICanvasApp: App {
     @StateObject private var store = NotebookStore()
     @StateObject private var syncManager: SyncManager
     @StateObject private var pomodoroManager = PomodoroManager()
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var selectedNotebook: Notebook?
     @State private var folderPath: [Folder] = []
     @State private var showSidebar = true
@@ -64,6 +65,7 @@ struct AICanvasApp: App {
                 // Floating Pomodoro widget — stays on top across every screen
                 PomodoroWidgetView(manager: pomodoroManager)
             }
+            .environment(\.locale, localization.locale)
         }
     }
 }

@@ -4,6 +4,7 @@ import SwiftUI
 struct AIChatPanelView: View {
     @ObservedObject var viewModel: ChatViewModel
     @ObservedObject var aiConfig: AIConfiguration
+    @ObservedObject private var localization = LocalizationManager.shared
     @Binding var isVisible: Bool
     @FocusState private var isInputFocused: Bool
     @State private var showModelSelection = false

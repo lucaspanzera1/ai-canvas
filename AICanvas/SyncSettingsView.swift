@@ -111,10 +111,10 @@ struct SyncSettingsView: View {
             let result = await syncManager.sync()
             switch result {
             case .success(let pushed, let pulled):
-                resultMessage = "Sync concluído! Enviados: \(pushed) | Baixados: \(pulled)"
+                resultMessage = String(format: "Sync concluído! Enviados: %d | Baixados: %d".localized, pushed, pulled)
                 resultIsError = false
             case .failure(let msg):
-                resultMessage = "Falha: \(msg)"
+                resultMessage = String(format: "Falha: %@".localized, msg)
                 resultIsError = true
             }
             showResult = true

@@ -197,6 +197,7 @@ struct PomodoroWidgetView: View {
 
 struct PomodoroSettingsView: View {
     @ObservedObject var manager: PomodoroManager
+    @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -215,7 +216,7 @@ struct PomodoroSettingsView: View {
 
     private func settingRow(title: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
         HStack {
-            Text(title)
+            Text(title.localized)
                 .font(.system(size: 13))
                 .foregroundStyle(AppTheme.textSecondary)
             Spacer()

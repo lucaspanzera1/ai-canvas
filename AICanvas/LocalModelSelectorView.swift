@@ -6,6 +6,7 @@ struct LocalModelSelectorView: View {
     @ObservedObject var aiConfig: AIConfiguration
     @Binding var isPresented: Bool
     @StateObject private var manager = LocalModelManager.shared
+    @ObservedObject private var localization = LocalizationManager.shared
 
     private let localColor = AIProvider.local.brandColor
 
@@ -146,7 +147,7 @@ struct LocalModelSelectorView: View {
     private func sectionLabel(_ text: String, icon: String, color: Color) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon).font(.system(size: 11)).foregroundStyle(color)
-            Text(text).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(AppTheme.textPrimary)
+            Text(text.localized).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(AppTheme.textPrimary)
         }
         .padding(.horizontal, 4)
     }

@@ -48,6 +48,7 @@ enum DraggableItem: Codable, Transferable {
 struct NotebookListView: View {
     @ObservedObject var store: NotebookStore
     @ObservedObject var syncManager: SyncManager
+    @ObservedObject private var localization = LocalizationManager.shared
     @Binding var selectedNotebook: Notebook?
     @Binding var folderPath: [Folder]
     @Binding var showSidebar: Bool
@@ -445,7 +446,7 @@ struct NotebookListView: View {
                         .font(.system(size: 16))
                         .foregroundStyle(AppTheme.textSecondary)
                     let count = selectedFolder == nil ? store.notebooks.count + store.folders.filter { $0.parentFolderId == nil }.count : visibleNotebooks.count + visibleFolders.count
-                    Text("\(count) \(count == 1 ? "item" : "itens")")
+                    Text("\(count) \((count == 1 ? "item" : "itens").localized)")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(AppTheme.textSecondary)
                 }
@@ -742,6 +743,7 @@ struct NewItemCard: View {
     let title: String
     let icon: String
     let action: () -> Void
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var hovered = false
 
     var body: some View {
@@ -757,7 +759,7 @@ struct NewItemCard: View {
                         .foregroundStyle(AppTheme.textPrimary)
                 }
 
-                Text(title)
+                Text(title.localized)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -1223,7 +1225,7 @@ extension Date {
     var relativeString: String {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .short
-        formatter.locale = Locale(identifier: "pt_BR")
+        formatter.locale = LocalizationManager.shared.locale
         return formatter.localizedString(for: self, relativeTo: Date())
     }
 }
