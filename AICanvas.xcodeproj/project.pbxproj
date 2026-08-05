@@ -39,6 +39,8 @@
 		DD000001 /* SyncManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000011 /* SyncManager.swift */; };
 		DD000002 /* SyncSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD000012 /* SyncSettingsView.swift */; };
 		EE000001 /* GraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE000011 /* GraphView.swift */; };
+		FF000001 /* PomodoroManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000011 /* PomodoroManager.swift */; };
+		FF000002 /* PomodoroTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF000012 /* PomodoroTimerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -75,6 +77,8 @@
 		DD000011 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
 		DD000012 /* SyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsView.swift; sourceTree = "<group>"; };
 		EE000011 /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
+		FF000011 /* PomodoroManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroManager.swift; sourceTree = "<group>"; };
+		FF000012 /* PomodoroTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroTimerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,6 +135,8 @@
 				DD000011 /* SyncManager.swift */,
 				DD000012 /* SyncSettingsView.swift */,
 				EE000011 /* GraphView.swift */,
+				FF000011 /* PomodoroManager.swift */,
+				FF000012 /* PomodoroTimerView.swift */,
 			);
 			path = AICanvas;
 			sourceTree = "<group>";
@@ -251,6 +257,8 @@
 				DD000001 /* SyncManager.swift in Sources */,
 				DD000002 /* SyncSettingsView.swift in Sources */,
 				EE000001 /* GraphView.swift in Sources */,
+				FF000001 /* PomodoroManager.swift in Sources */,
+				FF000002 /* PomodoroTimerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
