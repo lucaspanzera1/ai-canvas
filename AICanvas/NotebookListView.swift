@@ -57,6 +57,7 @@ struct NotebookListView: View {
     @State private var showCreateNotebook = false
     @State private var showCreateFolder = false
     @State private var showPDFImporter = false
+    @State private var showGraphView = false
     @State private var activeAction: ItemSelection?
     
     @State private var appeared = false
@@ -168,7 +169,14 @@ struct NotebookListView: View {
                 .frame(width: 500, height: 500)
                 .offset(x: 300, y: 100)
 
-            if visibleFolders.isEmpty && visibleNotebooks.isEmpty {
+            if showGraphView {
+                GraphView(
+                    store: store,
+                    selectedNotebook: $selectedNotebook,
+                    folderPath: $folderPath,
+                    showGraphView: $showGraphView
+                )
+            } else if visibleFolders.isEmpty && visibleNotebooks.isEmpty {
                 VStack(spacing: 0) {
                     listHeader
                         .padding(.bottom, 8)
@@ -407,7 +415,19 @@ struct NotebookListView: View {
                             .foregroundStyle(AppTheme.textSecondary)
                     }
                     .buttonStyle(.plain)
-                    
+
+                    // Graph View Toggle
+                    Button {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                            showGraphView.toggle()
+                        }
+                    } label: {
+                        Image(systemName: "point.3.connected.trianglepath.dotted")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(showGraphView ? AppTheme.accent : AppTheme.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+
                     // Config IAs
                     Button {
                         showOnboarding = true
