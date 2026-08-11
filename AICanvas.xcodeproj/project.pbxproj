@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		449AD1DA7B936AAB7544B709 /* AICanvasWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C991AE6FAB75C9AA1FAE4C9 /* AICanvasWidgetBundle.swift */; };
+		4B4BE85F4EDDC8507FA84A8D /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 458C2833C46CF98B07B3DE33 /* WidgetKit.framework */; };
+		5AA113BC7200C8840CF86672 /* PomodoroStatusWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EFDEA743EA4D072266B338D /* PomodoroStatusWidget.swift */; };
+		66010E77541251E403FE2F6A /* QuickNewNotebookWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5566AAA820529976647484D /* QuickNewNotebookWidget.swift */; };
+		73A8478D3CB1C7DB6CC1BBC9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BACF6E37247A4B587E117289 /* Foundation.framework */; };
+		748FB351DD8DF9F7D99D0A72 /* RecentNotebooksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE11FA3E0BD8AB2DB9982AC1 /* RecentNotebooksWidget.swift */; };
+		7D8BAFFE64E5C7DF2276B5B4 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6AC6D696A79241A7A176E1C /* SwiftUI.framework */; };
+		A94E582195FD350DD3F2854D /* AICanvasSharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D825FC0898DE343CB8901E4A /* AICanvasSharedModels.swift */; };
 		AA000001 /* AICanvasApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011 /* AICanvasApp.swift */; };
 		AA000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012 /* ContentView.swift */; };
 		AA000003 /* CanvasManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000013 /* CanvasManager.swift */; };
@@ -26,6 +34,8 @@
 		AB000002 /* NotebookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000012 /* NotebookListView.swift */; };
 		AB000003 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000013 /* SidebarView.swift */; };
 		AB000004 /* PDFNotebookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000014 /* PDFNotebookView.swift */; };
+		B5C13D6CC87989EDA6DCB72E /* AICanvasSharedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D825FC0898DE343CB8901E4A /* AICanvasSharedModels.swift */; };
+		B62FD7B0CEB109DBB51E5230 /* AICanvasWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8C7E5AF1717AE79B029DEE37 /* AICanvasWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		BB000002 /* ShareSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB000001 /* ShareSheet.swift */; };
 		CC000001 /* DrawingToolkit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000011 /* DrawingToolkit.swift */; };
 		CC000002 /* CanvasImagePickers.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC000012 /* CanvasImagePickers.swift */; };
@@ -46,7 +56,37 @@
 		GG000003 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = GG000013 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		7756289D84C86EF7A388A97D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000050 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A5B39792A8991E8EBAB82CB;
+			remoteInfo = AICanvasWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		BC4A24014AF70178BC0A06FC /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B62FD7B0CEB109DBB51E5230 /* AICanvasWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		1C991AE6FAB75C9AA1FAE4C9 /* AICanvasWidgetBundle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AICanvasWidgetBundle.swift; sourceTree = "<group>"; };
+		458C2833C46CF98B07B3DE33 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/WidgetKit.framework; sourceTree = DEVELOPER_DIR; };
+		4EFDEA743EA4D072266B338D /* PomodoroStatusWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PomodoroStatusWidget.swift; sourceTree = "<group>"; };
+		553D87A6E407765A178EB3C1 /* AICanvasWidgetExtension.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = AICanvasWidgetExtension.entitlements; sourceTree = "<group>"; };
+		743CC45DDE7D070392FF52B8 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8C7E5AF1717AE79B029DEE37 /* AICanvasWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = AICanvasWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000010 /* AICanvas.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AICanvas.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000011 /* AICanvasApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICanvasApp.swift; sourceTree = "<group>"; };
 		AA000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -67,19 +107,24 @@
 		AB000012 /* NotebookListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotebookListView.swift; sourceTree = "<group>"; };
 		AB000013 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		AB000014 /* PDFNotebookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFNotebookView.swift; sourceTree = "<group>"; };
+		AE11FA3E0BD8AB2DB9982AC1 /* RecentNotebooksWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecentNotebooksWidget.swift; sourceTree = "<group>"; };
+		BACF6E37247A4B587E117289 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		BB000001 /* ShareSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareSheet.swift; sourceTree = "<group>"; };
 		CC000011 /* DrawingToolkit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawingToolkit.swift; sourceTree = "<group>"; };
 		CC000012 /* CanvasImagePickers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasImagePickers.swift; sourceTree = "<group>"; };
 		D505AF102F6391A2003BFBA4 /* BannerSelectorView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BannerSelectorView 2.swift"; sourceTree = "<group>"; };
+		D5566AAA820529976647484D /* QuickNewNotebookWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickNewNotebookWidget.swift; sourceTree = "<group>"; };
 		D5D5254E2F623B2E000A4DB3 /* PresetSelectorView 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PresetSelectorView 2.swift"; sourceTree = "<group>"; };
 		D5D525502F623B66000A4DB3 /* QuickPromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickPromptManager.swift; sourceTree = "<group>"; };
 		D5D525522F623C67000A4DB3 /* ModelInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfo.swift; sourceTree = "<group>"; };
 		D5D525542F623C73000A4DB3 /* ModelInfoDatabase 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelInfoDatabase 2.swift"; sourceTree = "<group>"; };
 		D5D525562F623C7A000A4DB3 /* ModelComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelComparisonView.swift; sourceTree = "<group>"; };
 		D5D525582F623D7B000A4DB3 /* ImageResizeDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageResizeDialog.swift; sourceTree = "<group>"; };
+		D825FC0898DE343CB8901E4A /* AICanvasSharedModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AICanvasSharedModels.swift; sourceTree = "<group>"; };
 		DD000011 /* SyncManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncManager.swift; sourceTree = "<group>"; };
 		DD000012 /* SyncSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncSettingsView.swift; sourceTree = "<group>"; };
 		EE000011 /* GraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphView.swift; sourceTree = "<group>"; };
+		F6AC6D696A79241A7A176E1C /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/SwiftUI.framework; sourceTree = DEVELOPER_DIR; };
 		FF000011 /* PomodoroManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroManager.swift; sourceTree = "<group>"; };
 		FF000012 /* PomodoroTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroTimerView.swift; sourceTree = "<group>"; };
 		GG000011 /* LocalizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationManager.swift; sourceTree = "<group>"; };
@@ -95,14 +140,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F18F49C444205AE0572F80AF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				73A8478D3CB1C7DB6CC1BBC9 /* Foundation.framework in Frameworks */,
+				4B4BE85F4EDDC8507FA84A8D /* WidgetKit.framework in Frameworks */,
+				7D8BAFFE64E5C7DF2276B5B4 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A3ECD9C74EAA73A625207A90 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D825FC0898DE343CB8901E4A /* AICanvasSharedModels.swift */,
+			);
+			name = Shared;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 		AA000030 = {
 			isa = PBXGroup;
 			children = (
 				AA000031 /* AICanvas */,
 				AA000032 /* Products */,
+				A3ECD9C74EAA73A625207A90 /* Shared */,
+				C86C00F6453DE2C23A1061AE /* Frameworks */,
+				E8AA956B80E36B10382A1BFD /* AICanvasWidget */,
 			);
 			sourceTree = "<group>";
 		};
@@ -154,6 +221,7 @@
 			isa = PBXGroup;
 			children = (
 				AA000010 /* AICanvas.app */,
+				8C7E5AF1717AE79B029DEE37 /* AICanvasWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -166,9 +234,58 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		AA0F5CC5DFB0C1FC83E31E19 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				BACF6E37247A4B587E117289 /* Foundation.framework */,
+				458C2833C46CF98B07B3DE33 /* WidgetKit.framework */,
+				F6AC6D696A79241A7A176E1C /* SwiftUI.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		C86C00F6453DE2C23A1061AE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AA0F5CC5DFB0C1FC83E31E19 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		E8AA956B80E36B10382A1BFD /* AICanvasWidget */ = {
+			isa = PBXGroup;
+			children = (
+				1C991AE6FAB75C9AA1FAE4C9 /* AICanvasWidgetBundle.swift */,
+				AE11FA3E0BD8AB2DB9982AC1 /* RecentNotebooksWidget.swift */,
+				4EFDEA743EA4D072266B338D /* PomodoroStatusWidget.swift */,
+				D5566AAA820529976647484D /* QuickNewNotebookWidget.swift */,
+				553D87A6E407765A178EB3C1 /* AICanvasWidgetExtension.entitlements */,
+				743CC45DDE7D070392FF52B8 /* Info.plist */,
+			);
+			name = AICanvasWidget;
+			path = AICanvasWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		5A5B39792A8991E8EBAB82CB /* AICanvasWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EDFF4F8D1742E86267136495 /* Build configuration list for PBXNativeTarget "AICanvasWidgetExtension" */;
+			buildPhases = (
+				EB640E3ECB1F166FE19A2F80 /* Sources */,
+				F18F49C444205AE0572F80AF /* Frameworks */,
+				E1C4BFF0BFF151DC72856E57 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AICanvasWidgetExtension;
+			productName = AICanvasWidgetExtension;
+			productReference = 8C7E5AF1717AE79B029DEE37 /* AICanvasWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		AA000040 /* AICanvas */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AA000060 /* Build configuration list for PBXNativeTarget "AICanvas" */;
@@ -176,10 +293,12 @@
 				AA000041 /* Sources */,
 				AA000020 /* Frameworks */,
 				AA000042 /* Resources */,
+				BC4A24014AF70178BC0A06FC /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				43161541ACBA7A157D51650E /* PBXTargetDependency */,
 			);
 			name = AICanvas;
 			productName = AICanvas;
@@ -216,6 +335,7 @@
 			projectRoot = "";
 			targets = (
 				AA000040 /* AICanvas */,
+				5A5B39792A8991E8EBAB82CB /* AICanvasWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -228,6 +348,13 @@
 				AA000006 /* Preview Assets.xcassets in Resources */,
 				AA000005 /* Assets.xcassets in Resources */,
 				GG000003 /* Localizable.xcstrings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E1C4BFF0BFF151DC72856E57 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -272,10 +399,32 @@
 				FF000002 /* PomodoroTimerView.swift in Sources */,
 				GG000001 /* LocalizationManager.swift in Sources */,
 				GG000002 /* SettingsView.swift in Sources */,
+				A94E582195FD350DD3F2854D /* AICanvasSharedModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EB640E3ECB1F166FE19A2F80 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				449AD1DA7B936AAB7544B709 /* AICanvasWidgetBundle.swift in Sources */,
+				748FB351DD8DF9F7D99D0A72 /* RecentNotebooksWidget.swift in Sources */,
+				5AA113BC7200C8840CF86672 /* PomodoroStatusWidget.swift in Sources */,
+				66010E77541251E403FE2F6A /* QuickNewNotebookWidget.swift in Sources */,
+				B5C13D6CC87989EDA6DCB72E /* AICanvasSharedModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		43161541ACBA7A157D51650E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = AICanvasWidgetExtension;
+			target = 5A5B39792A8991E8EBAB82CB /* AICanvasWidgetExtension */;
+			targetProxy = 7756289D84C86EF7A388A97D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AA000070 /* Debug */ = {
@@ -402,12 +551,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AICanvas/AICanvas.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"AICanvas/Preview Content\"";
 				DEVELOPMENT_TEAM = L8422P85XN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AICanvas/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "AI Canvas";
 				INFOPLIST_KEY_NSCameraUsageDescription = "AI Canvas usa a camera para capturar imagens e inseri-las nos cadernos e quadros.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AI Canvas usa suas fotos para inserir imagens nos cadernos e quadros.";
@@ -437,12 +588,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AICanvas/AICanvas.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"AICanvas/Preview Content\"";
 				DEVELOPMENT_TEAM = L8422P85XN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AICanvas/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "AI Canvas";
 				INFOPLIST_KEY_NSCameraUsageDescription = "AI Canvas usa a camera para capturar imagens e inseri-las nos cadernos e quadros.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "AI Canvas usa suas fotos para inserir imagens nos cadernos e quadros.";
@@ -467,6 +620,65 @@
 			};
 			name = Release;
 		};
+		C06710F7136190848ECE609B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = AICanvasWidget/AICanvasWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L8422P85XN;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AICanvasWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "AICanvas Widgets";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.panzera.AICanvas.Widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		CC222F12746A9F5714F508E8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = AICanvasWidget/AICanvasWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = L8422P85XN;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AICanvasWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "AICanvas Widgets";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.panzera.AICanvas.Widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -484,6 +696,15 @@
 			buildConfigurations = (
 				AA000072 /* Debug */,
 				AA000073 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EDFF4F8D1742E86267136495 /* Build configuration list for PBXNativeTarget "AICanvasWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC222F12746A9F5714F508E8 /* Release */,
+				C06710F7136190848ECE609B /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

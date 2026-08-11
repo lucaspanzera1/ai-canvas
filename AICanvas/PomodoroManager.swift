@@ -2,6 +2,7 @@ import Foundation
 import Combine
 import UserNotifications
 import UIKit
+import WidgetKit
 
 enum PomodoroMode: String, Codable {
     case work
@@ -86,6 +87,7 @@ final class PomodoroManager: ObservableObject {
         longBreakMinutes = long
         sessionsUntilLongBreak = sessions
         remainingSeconds = work * 60
+        syncWidgetSnapshot()
     }
 
     func toggle() {
@@ -100,6 +102,7 @@ final class PomodoroManager: ObservableObject {
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.tick()
         }
+        syncWidgetSnapshot()
     }
 
     func pause() {
@@ -107,11 +110,13 @@ final class PomodoroManager: ObservableObject {
         timer?.invalidate()
         timer = nil
         cancelPendingNotification()
+        syncWidgetSnapshot()
     }
 
     func reset() {
         pause()
         remainingSeconds = totalSeconds
+        syncWidgetSnapshot()
     }
 
     /// Manually advances to the next mode without waiting for the countdown.
@@ -123,6 +128,7 @@ final class PomodoroManager: ObservableObject {
     private func resetRemainingIfIdle() {
         guard !isRunning else { return }
         remainingSeconds = totalSeconds
+        syncWidgetSnapshot()
     }
 
     private func tick() {
@@ -151,6 +157,23 @@ final class PomodoroManager: ObservableObject {
             completedWorkSessions = 0
         }
         remainingSeconds = totalSeconds
+        syncWidgetSnapshot()
+    }
+
+    // MARK: - Widget Sync
+
+    private func syncWidgetSnapshot() {
+        let snapshot = WidgetPomodoroSnapshot(
+            modeLabel: mode.label,
+            modeRaw: mode.rawValue,
+            isRunning: isRunning,
+            startDate: isRunning ? Date() : nil,
+            endDate: isRunning ? Date().addingTimeInterval(TimeInterval(remainingSeconds)) : nil,
+            remainingSeconds: remainingSeconds,
+            totalSeconds: totalSeconds
+        )
+        AICanvasAppGroup.save(snapshot, forKey: AICanvasAppGroup.pomodoroStateKey)
+        WidgetCenter.shared.reloadTimelines(ofKind: "PomodoroStatusWidget")
     }
 
     private static func duration(for mode: PomodoroMode, work: Int, shortBreak: Int, longBreak: Int) -> Int {

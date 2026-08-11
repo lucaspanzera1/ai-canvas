@@ -1,5 +1,6 @@
 import Foundation
 import PencilKit
+import WidgetKit
 
 // MARK: - Background Pattern
 
@@ -441,6 +442,26 @@ final class NotebookStore: ObservableObject {
         if let data = try? JSONEncoder().encode(folders) {
             UserDefaults.standard.set(data, forKey: foldersMetadataKey)
         }
+        syncWidgetSnapshot()
+    }
+
+    // MARK: - Widget Sync
+
+    private func syncWidgetSnapshot() {
+        let recent = notebooks
+            .sorted { $0.lastModified > $1.lastModified }
+            .prefix(AICanvasAppGroup.maxRecentNotebooks)
+            .map {
+                WidgetNotebookSnapshot(
+                    id: $0.id,
+                    name: $0.name,
+                    emoji: $0.emoji,
+                    colorIndex: $0.colorIndex,
+                    lastModified: $0.lastModified
+                )
+            }
+        AICanvasAppGroup.save(Array(recent), forKey: AICanvasAppGroup.recentNotebooksKey)
+        WidgetCenter.shared.reloadTimelines(ofKind: "RecentNotebooksWidget")
     }
 
     private func loadMetadata() {

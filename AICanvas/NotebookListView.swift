@@ -184,16 +184,17 @@ struct NotebookListView: View {
                     emptyState
                 }
             } else {
-                ScrollView {
-                    gridContent
-                        .padding(20)
-                        .padding(.bottom, 40)
-                }
-                .onDrop(of: [.data], delegate: RootDropDelegate(store: store))
-                .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
                     listHeader
                         .padding(.bottom, 8)
                         .background(AppTheme.background)
+
+                    ScrollView {
+                        gridContent
+                            .padding(20)
+                            .padding(.bottom, 40)
+                    }
+                    .onDrop(of: [.data], delegate: RootDropDelegate(store: store))
                 }
             }
         }
@@ -202,7 +203,7 @@ struct NotebookListView: View {
     private var gridContent: some View {
         LazyVGrid(columns: columns, spacing: 16) {
             ForEach(visibleFolders) { folder in
-                let folderIndex = store.folders.firstIndex(of: folder) ?? 0
+                let folderIndex = visibleFolders.firstIndex(of: folder) ?? 0
                 let folderDelay = Double(folderIndex) * 0.05
 
                 FolderCard(folder: folder)
@@ -249,7 +250,7 @@ struct NotebookListView: View {
             }
 
             ForEach(visibleNotebooks) { notebook in
-                let nbIndex = store.notebooks.firstIndex(of: notebook) ?? 0
+                let nbIndex = visibleNotebooks.firstIndex(of: notebook) ?? 0
                 let combinedIndex = visibleFolders.count + nbIndex
                 let nbDelay = Double(combinedIndex) * 0.05
 
