@@ -59,9 +59,9 @@ struct LegacyDrawingToolbar: View {
                 collapsedButton
             }
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: expanded)
-        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: showColorPicker)
-        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: showWidthPicker)
+        .animation(AppTheme.motion, value: expanded)
+        .animation(AppTheme.motion, value: showColorPicker)
+        .animation(AppTheme.motion, value: showWidthPicker)
     }
 
     // MARK: - Main Toolbar
@@ -70,14 +70,14 @@ struct LegacyDrawingToolbar: View {
         HStack(spacing: 6) {
             // Collapse button
             Button {
-                withAnimation(.spring(response: 0.3)) { expanded = false }
+                withAnimation(AppTheme.motion) { expanded = false }
             } label: {
                 Image(systemName: "chevron.down")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(AppTheme.textMuted)
                     .frame(width: 28, height: 28)
                     .background(AppTheme.background)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(Rectangle())
             }
             .buttonStyle(.plain)
 
@@ -93,8 +93,8 @@ struct LegacyDrawingToolbar: View {
                     .font(.system(size: 15, weight: canvasManager.isSelectionMode ? .semibold : .regular))
                     .foregroundStyle(canvasManager.isSelectionMode ? AppTheme.accent : AppTheme.textSecondary)
                     .frame(width: 34, height: 30)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(canvasManager.isSelectionMode ? AppTheme.background : Color.clear))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(canvasManager.isSelectionMode ? AppTheme.borderHover : Color.clear, lineWidth: 1))
+                    .background(Rectangle().fill(canvasManager.isSelectionMode ? AppTheme.background : Color.clear))
+                    .overlay(Rectangle().stroke(canvasManager.isSelectionMode ? AppTheme.borderHover : Color.clear, lineWidth: 1))
             }
             .buttonStyle(.plain)
 
@@ -137,7 +137,6 @@ struct LegacyDrawingToolbar: View {
                         Circle()
                             .fill(canvasManager.toolConfig.color)
                             .frame(width: 26, height: 26)
-                            .shadow(color: canvasManager.toolConfig.color.opacity(0.8), radius: showColorPicker ? 8 : 4)
 
                         Circle()
                             .stroke(
@@ -161,11 +160,11 @@ struct LegacyDrawingToolbar: View {
                     // A simple width indicator dot whose size reflects current width
                     let dotSize = min(max(canvasManager.toolConfig.width / 18 * 22, 4), 22)
                     ZStack {
-                        RoundedRectangle(cornerRadius: 6)
+                        Rectangle()
                             .fill(AppTheme.background)
                             .frame(width: 34, height: 28)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 6)
+                                Rectangle()
                                     .stroke(AppTheme.borderHover, lineWidth: 1)
                             )
                         Circle()
@@ -179,14 +178,13 @@ struct LegacyDrawingToolbar: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            Rectangle()
                 .fill(AppTheme.surface)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    Rectangle()
                         .stroke(AppTheme.borderHover, lineWidth: 1)
                 )
         )
-        .shadow(color: AppTheme.shadowColor, radius: 10, x: 0, y: 4)
     }
 
     // MARK: - Color Picker Panel
@@ -208,16 +206,16 @@ struct LegacyDrawingToolbar: View {
                         ZStack {
                             // Checkered background for white
                             if colorEntry.1 == "Branco" {
-                                RoundedRectangle(cornerRadius: 6)
+                                Rectangle()
                                     .fill(Color(white: 0.95))
                                     .frame(width: 30, height: 30)
                             }
 
-                            RoundedRectangle(cornerRadius: 6)
+                            Rectangle()
                                 .fill(colorEntry.0)
                                 .frame(width: 30, height: 30)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 6)
+                                    Rectangle()
                                         .stroke(
                                             isSelected ? AppTheme.accent : AppTheme.borderHover.opacity(0.3),
                                             lineWidth: isSelected ? 2 : 1
@@ -233,20 +231,19 @@ struct LegacyDrawingToolbar: View {
                     }
                     .buttonStyle(.plain)
                     .scaleEffect(isSelected ? 1.05 : 1.0)
-                    .animation(.spring(response: 0.25), value: isSelected)
+                    .animation(AppTheme.motion, value: isSelected)
                 }
             }
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            Rectangle()
                 .fill(AppTheme.surface)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    Rectangle()
                         .stroke(AppTheme.borderHover, lineWidth: 1)
                 )
         )
-        .shadow(color: AppTheme.shadowColor, radius: 8, x: 0, y: 2)
     }
 
     // MARK: - Width Picker Panel
@@ -265,11 +262,11 @@ struct LegacyDrawingToolbar: View {
                         canvasManager.setWidth(width)
                     } label: {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 8)
+                            Rectangle()
                                 .fill(isSelected ? AppTheme.background : AppTheme.surfaceElevated)
                                 .frame(width: 44, height: 36)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
+                                    Rectangle()
                                         .stroke(
                                             isSelected ? AppTheme.accent : AppTheme.border,
                                             lineWidth: 1
@@ -283,27 +280,26 @@ struct LegacyDrawingToolbar: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .animation(.spring(response: 0.25), value: isSelected)
+                    .animation(AppTheme.motion, value: isSelected)
                 }
             }
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            Rectangle()
                 .fill(AppTheme.surface)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    Rectangle()
                         .stroke(AppTheme.borderHover, lineWidth: 1)
                 )
         )
-        .shadow(color: AppTheme.shadowColor, radius: 8, x: 0, y: 2)
     }
 
     // MARK: - Collapsed Button
 
     private var collapsedButton: some View {
         Button {
-            withAnimation(.spring(response: 0.3)) { expanded = true }
+            withAnimation(AppTheme.motion) { expanded = true }
         } label: {
             HStack(spacing: 6) {
                 ZStack {
@@ -321,11 +317,10 @@ struct LegacyDrawingToolbar: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
-                Capsule()
+                Rectangle()
                     .fill(AppTheme.surface)
-                    .overlay(Capsule().stroke(AppTheme.borderHover, lineWidth: 1))
+                    .overlay(Rectangle().stroke(AppTheme.borderHover, lineWidth: 1))
             )
-            .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.plain)
     }
@@ -364,9 +359,9 @@ struct ToolButton: View {
 
     var body: some View {
         Button {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) { pressed = true }
+            withAnimation(AppTheme.motion) { pressed = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                withAnimation(.spring(response: 0.2, dampingFraction: 0.6)) { pressed = false }
+                withAnimation(AppTheme.motion) { pressed = false }
             }
             action()
         } label: {
@@ -383,7 +378,7 @@ struct ToolButton: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 4)
             .background(
-                RoundedRectangle(cornerRadius: 8)
+                Rectangle()
                     .fill(
                         isSelected
                         ? AppTheme.background
@@ -391,7 +386,7 @@ struct ToolButton: View {
                     )
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 8)
+                Rectangle()
                     .stroke(
                         isSelected
                         ? AppTheme.borderHover

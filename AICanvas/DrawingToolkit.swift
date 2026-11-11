@@ -175,7 +175,7 @@ struct DrawingToolkit: View {
                             .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
-                .animation(.spring(response: 0.3, dampingFraction: 0.82), value: activePanel)
+                .animation(AppTheme.motion, value: activePanel)
 
                 mainBar
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -183,7 +183,7 @@ struct DrawingToolkit: View {
                 collapsedPill
             }
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: expanded)
+        .animation(AppTheme.motion, value: expanded)
         .onReceive(canvasManager.$toolConfig) { _ in
             // reset lasso state when tool changes externally
         }
@@ -195,7 +195,7 @@ struct DrawingToolkit: View {
         HStack(spacing: 0) {
             // Collapse
             barButton(icon: "chevron.down", tint: AppTheme.textMuted) {
-                withAnimation(.spring(response: 0.3)) { expanded = false }
+                withAnimation(AppTheme.motion) { expanded = false }
             }
 
             tkDivider
@@ -205,7 +205,7 @@ struct DrawingToolkit: View {
                 icon: "lasso",
                 label: "Lasso",
                 isOn: isLassoActive,
-                tint: isLassoActive ? .blue : AppTheme.textSecondary
+                tint: isLassoActive ? AppTheme.onAccent : AppTheme.textSecondary
             ) {
                 toggleLasso()
             }
@@ -215,7 +215,7 @@ struct DrawingToolkit: View {
                 icon: "ruler",
                 label: "Régua",
                 isOn: rulerActive,
-                tint: rulerActive ? .orange : AppTheme.textSecondary
+                tint: rulerActive ? AppTheme.onAccent : AppTheme.textSecondary
             ) {
                 rulerActive.toggle()
                 if rulerActive {
@@ -230,7 +230,7 @@ struct DrawingToolkit: View {
                 icon: canvasManager.pencilOnlyMode ? "hand.raised.slash" : "hand.raised",
                 label: "Palma",
                 isOn: canvasManager.pencilOnlyMode,
-                tint: canvasManager.pencilOnlyMode ? .purple : AppTheme.textSecondary
+                tint: canvasManager.pencilOnlyMode ? AppTheme.onAccent : AppTheme.textSecondary
             ) {
                 canvasManager.pencilOnlyMode.toggle()
             }
@@ -262,9 +262,10 @@ struct DrawingToolkit: View {
                         .font(.system(size: 14, weight: .regular))
                         .foregroundStyle(AppTheme.textSecondary)
                         .frame(height: 18)
-                    Text("Imagem")
-                        .font(.system(size: 8, weight: .regular, design: .rounded))
-                        .foregroundStyle(AppTheme.textMuted)
+                    Text("Imagem".localized.uppercased())
+                        .font(.system(size: 7, weight: .medium, design: .monospaced))
+                        .tracking(0.6)
+                        .foregroundStyle(AppTheme.textSecondary)
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 5)
@@ -279,9 +280,7 @@ struct DrawingToolkit: View {
                 HStack(spacing: 6) {
                     Image(systemName: canvasManager.toolConfig.type.icon)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(canvasManager.toolConfig.type == .eraser
-                                         ? AppTheme.textSecondary
-                                         : canvasManager.toolConfig.color)
+                        .foregroundStyle(AppTheme.textPrimary)
 
                     Text(canvasManager.toolConfig.type.label)
                         .font(.system(size: 13, weight: .medium))
@@ -295,14 +294,7 @@ struct DrawingToolkit: View {
                 .padding(.vertical, 10)
                 .frame(minHeight: 44)
                 .contentShape(Rectangle())
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(activePanel == .tools ? AppTheme.background : AppTheme.surfaceElevated)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(activePanel == .tools ? AppTheme.borderHover : AppTheme.border, lineWidth: 1)
-                        )
-                )
+                .hairline(activePanel == .tools ? AppTheme.accent : AppTheme.border)
             }
             .buttonStyle(.plain)
 
@@ -313,19 +305,11 @@ struct DrawingToolkit: View {
                 Button {
                     togglePanel(.color)
                 } label: {
-                    ZStack {
-                        Circle()
-                            .fill(canvasManager.toolConfig.color)
-                            .frame(width: 28, height: 28)
-                            .shadow(color: canvasManager.toolConfig.color.opacity(0.6),
-                                    radius: activePanel == .color ? 8 : 3)
-
-                        if activePanel == .color {
-                            Circle()
-                                .stroke(Color.white, lineWidth: 2)
-                                .frame(width: 28, height: 28)
-                        }
-                    }
+                    Rectangle()
+                        .fill(canvasManager.toolConfig.color)
+                        .frame(width: 22, height: 22)
+                        .padding(3)
+                        .hairline(activePanel == .color ? AppTheme.accent : AppTheme.borderHover)
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 8)
@@ -342,24 +326,15 @@ struct DrawingToolkit: View {
         }
         .padding(.horizontal, 4)
         .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(AppTheme.surface)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(AppTheme.borderHover, lineWidth: 1)
-                )
-        )
-        .shadow(color: AppTheme.shadowColor, radius: 12, x: 0, y: 5)
+        .background(AppTheme.surface)
+        .hairline(AppTheme.accent)
     }
 
     // MARK: - Tools Panel
 
     private var toolsPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("FERRAMENTAS")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundStyle(AppTheme.textMuted)
+            SectionLabel("FERRAMENTAS")
                 .padding(.horizontal, 2)
 
             // Two-column grid
@@ -372,7 +347,6 @@ struct DrawingToolkit: View {
         }
         .padding(14)
         .background(panelBackground)
-        .shadow(color: AppTheme.shadowColor, radius: 10, x: 0, y: 4)
     }
 
     private func toolCard(_ tool: DrawingToolType) -> some View {
@@ -387,12 +361,8 @@ struct DrawingToolkit: View {
             VStack(spacing: 8) {
                 // Stroke preview canvas
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(isSelected
-                              ? (colorScheme == .dark
-                                 ? Color.white.opacity(0.06)
-                                 : Color.black.opacity(0.04))
-                              : Color.clear)
+                    Rectangle()
+                        .fill(isSelected ? AppTheme.surfaceElevated : Color.clear)
 
                     if tool == .eraser {
                         Image(systemName: "eraser.fill")
@@ -415,8 +385,8 @@ struct DrawingToolkit: View {
                 }
                 .frame(height: 44)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(isSelected ? AppTheme.borderHover : Color.clear, lineWidth: 1.5)
+                    Rectangle()
+                        .strokeBorder(isSelected ? AppTheme.accent : AppTheme.border, lineWidth: 1)
                 )
 
                 Text(tool.label)
@@ -435,9 +405,7 @@ struct DrawingToolkit: View {
 
     private var colorPanel: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("COR")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundStyle(AppTheme.textMuted)
+            SectionLabel("COR")
 
             // Color grid
             LazyVGrid(
@@ -449,14 +417,12 @@ struct DrawingToolkit: View {
                 }
             }
 
-            Divider().padding(.vertical, 2)
+            Rectangle().fill(AppTheme.border).frame(height: 1).padding(.vertical, 2)
 
             // Opacity slider
             VStack(spacing: 6) {
                 HStack {
-                    Text("OPACIDADE")
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppTheme.textMuted)
+                    SectionLabel("OPACIDADE")
                     Spacer()
                     Text("\(Int(opacity * 100))%")
                         .font(.system(size: 11, weight: .semibold, design: .monospaced))
@@ -468,7 +434,6 @@ struct DrawingToolkit: View {
         }
         .padding(14)
         .background(panelBackground)
-        .shadow(color: AppTheme.shadowColor, radius: 10, x: 0, y: 4)
     }
 
     private func colorSwatch(_ entry: (Color, String)) -> some View {
@@ -495,29 +460,27 @@ struct DrawingToolkit: View {
                 if isWhite {
                     // Checkered for white
                     CheckerboardView()
-                        .clipShape(RoundedRectangle(cornerRadius: 7))
+                        .clipShape(Rectangle())
                         .frame(width: 32, height: 32)
                 }
-                RoundedRectangle(cornerRadius: 7)
+                Rectangle()
                     .fill(entry.0)
                     .frame(width: 32, height: 32)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 7)
+                        Rectangle()
                             .stroke(
-                                isSelected ? Color.blue : AppTheme.border.opacity(0.4),
-                                lineWidth: isSelected ? 2.5 : 1
+                                isSelected ? AppTheme.accent : AppTheme.border,
+                                lineWidth: isSelected ? 2 : 1
                             )
                     )
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(isWhite ? .gray : .white)
+                        .foregroundStyle(isWhite ? .black : .white)
                 }
             }
         }
         .buttonStyle(.plain)
-        .scaleEffect(isSelected ? 1.08 : 1.0)
-        .animation(.spring(response: 0.2), value: isSelected)
     }
 
     private var opacitySlider: some View {
@@ -525,7 +488,7 @@ struct DrawingToolkit: View {
             ZStack(alignment: .leading) {
                 // Checkerboard background (shows through for transparency)
                 CheckerboardView()
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(Rectangle())
 
                 // Current color gradient overlay
                 LinearGradient(
@@ -536,19 +499,15 @@ struct DrawingToolkit: View {
                     startPoint: .leading,
                     endPoint: .trailing
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .clipShape(Rectangle())
 
                 // Thumb
                 let thumbX = CGFloat(opacity) * (geo.size.width - 20) + 10
-                Circle()
-                    .fill(Color.white)
-                    .frame(width: 22, height: 22)
-                    .shadow(color: .black.opacity(0.25), radius: 3, x: 0, y: 1)
-                    .overlay(
-                        Circle()
-                            .stroke(Color.black.opacity(0.15), lineWidth: 1)
-                    )
-                    .offset(x: thumbX - 11)
+                Rectangle()
+                    .fill(AppTheme.surface)
+                    .frame(width: 8, height: 26)
+                    .hairline(AppTheme.accent, width: 1.5)
+                    .offset(x: thumbX - 4)
                     .gesture(
                         DragGesture(minimumDistance: 0)
                             .onChanged { value in
@@ -572,9 +531,7 @@ struct DrawingToolkit: View {
     private var widthPanel: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(canvasManager.toolConfig.type == .eraser ? "TAMANHO" : "ESPESSURA")
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppTheme.textMuted)
+                SectionLabel(canvasManager.toolConfig.type == .eraser ? "TAMANHO" : "ESPESSURA")
                 Spacer()
                 Text(String(format: "%.0f pt", canvasManager.toolConfig.width))
                     .font(.system(size: 11, weight: .semibold, design: .monospaced))
@@ -583,16 +540,16 @@ struct DrawingToolkit: View {
 
             // Preview stroke
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
+                Rectangle()
                     .fill(AppTheme.background)
                     .frame(height: 44)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
+                        Rectangle()
                             .stroke(AppTheme.border, lineWidth: 1)
                     )
 
                 if canvasManager.toolConfig.type == .eraser {
-                    RoundedRectangle(cornerRadius: 4)
+                    Rectangle()
                         .fill(AppTheme.textMuted.opacity(0.3))
                         .frame(
                             width: min(max(canvasManager.toolConfig.width * 2.5, 8), 260),
@@ -617,34 +574,28 @@ struct DrawingToolkit: View {
                 let minW: CGFloat = 1
                 let maxW: CGFloat = 36
                 ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(AppTheme.background)
-                        .frame(height: 8)
-                        .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                    Rectangle()
+                        .fill(AppTheme.border)
+                        .frame(height: 2)
 
                     // Filled track
                     let fraction = (canvasManager.toolConfig.width - minW) / (maxW - minW)
                     let trackWidth = min(max(fraction * geo.size.width, 0), geo.size.width)
-                    Capsule()
+                    Rectangle()
                         .fill(
                             canvasManager.toolConfig.type == .eraser
                             ? AnyShapeStyle(AppTheme.textMuted)
-                            : AnyShapeStyle(LinearGradient(
-                                colors: [canvasManager.toolConfig.color.opacity(0.6), canvasManager.toolConfig.color],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            ))
+                            : AnyShapeStyle(AppTheme.accent)
                         )
-                        .frame(width: trackWidth, height: 8)
+                        .frame(width: trackWidth, height: 2)
 
                     // Thumb
                     let thumbX = fraction * (geo.size.width - 24) + 12
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 24, height: 24)
-                        .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 1)
-                        .overlay(Circle().stroke(Color.black.opacity(0.1), lineWidth: 1))
-                        .offset(x: thumbX - 12)
+                    Rectangle()
+                        .fill(AppTheme.surface)
+                        .frame(width: 8, height: 24)
+                        .hairline(AppTheme.accent, width: 1.5)
+                        .offset(x: thumbX - 4)
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
@@ -682,14 +633,7 @@ struct DrawingToolkit: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(isSel ? AppTheme.background : Color.clear)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(isSel ? AppTheme.borderHover : Color.clear, lineWidth: 1)
-                                )
-                        )
+                        .hairline(isSel ? AppTheme.accent : .clear)
                     }
                     .buttonStyle(.plain)
                 }
@@ -697,7 +641,6 @@ struct DrawingToolkit: View {
         }
         .padding(14)
         .background(panelBackground)
-        .shadow(color: AppTheme.shadowColor, radius: 10, x: 0, y: 4)
     }
 
     private var quickWidths: [CGFloat] {
@@ -713,21 +656,18 @@ struct DrawingToolkit: View {
         let dotSize = min(max(w / 36 * 22, 3), 22)
 
         return ZStack {
-            RoundedRectangle(cornerRadius: 7)
-                .fill(activePanel == .width ? AppTheme.background : AppTheme.surfaceElevated)
+            Rectangle()
+                .fill(AppTheme.surface)
                 .frame(width: 38, height: 30)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 7)
-                        .stroke(activePanel == .width ? AppTheme.borderHover : AppTheme.border, lineWidth: 1)
-                )
+                .hairline(activePanel == .width ? AppTheme.accent : AppTheme.border)
 
             if canvasManager.toolConfig.type == .eraser {
-                RoundedRectangle(cornerRadius: 3)
+                Rectangle()
                     .fill(AppTheme.textMuted.opacity(0.5))
                     .frame(width: dotSize, height: dotSize * 0.6)
             } else {
                 Circle()
-                    .fill(canvasManager.toolConfig.color)
+                    .fill(AppTheme.textPrimary)
                     .frame(width: dotSize, height: dotSize)
             }
         }
@@ -737,18 +677,18 @@ struct DrawingToolkit: View {
 
     private var collapsedPill: some View {
         Button {
-            withAnimation(.spring(response: 0.3)) { expanded = true }
+            withAnimation(AppTheme.motion) { expanded = true }
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: isLassoActive ? "lasso" : canvasManager.toolConfig.type.icon)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(
-                        isLassoActive ? .blue :
-                        (canvasManager.toolConfig.type == .eraser ? AppTheme.textSecondary : canvasManager.toolConfig.color)
+                        isLassoActive ? AppTheme.textPrimary :
+                        AppTheme.textPrimary
                     )
 
                 if !isLassoActive && canvasManager.toolConfig.type != .eraser {
-                    Circle()
+                    Rectangle()
                         .fill(canvasManager.toolConfig.color)
                         .frame(width: 8, height: 8)
                 }
@@ -759,12 +699,8 @@ struct DrawingToolkit: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
-            .background(
-                Capsule()
-                    .fill(AppTheme.surface)
-                    .overlay(Capsule().stroke(AppTheme.borderHover, lineWidth: 1))
-            )
-            .shadow(color: AppTheme.shadowColor, radius: 6, x: 0, y: 3)
+            .background(AppTheme.surface)
+            .hairline(AppTheme.accent)
         }
         .buttonStyle(.plain)
     }
@@ -772,12 +708,9 @@ struct DrawingToolkit: View {
     // MARK: - Shared UI helpers
 
     private var panelBackground: some View {
-        RoundedRectangle(cornerRadius: 14)
+        Rectangle()
             .fill(AppTheme.surface)
-            .overlay(
-                RoundedRectangle(cornerRadius: 14)
-                    .stroke(AppTheme.borderHover, lineWidth: 1)
-            )
+            .overlay(Rectangle().strokeBorder(AppTheme.accent, lineWidth: 1))
     }
 
     private var tkDivider: some View {
@@ -804,22 +737,14 @@ struct DrawingToolkit: View {
                     .font(.system(size: 14, weight: isOn ? .semibold : .regular))
                     .foregroundStyle(tint)
                     .frame(height: 18)
-                Text(label.localized)
-                    .font(.system(size: 8, weight: isOn ? .semibold : .regular, design: .rounded))
-                    .foregroundStyle(tint.opacity(0.85))
+                Text(label.localized.uppercased())
+                    .font(.system(size: 7, weight: .medium, design: .monospaced))
+                    .tracking(0.6)
+                    .foregroundStyle(tint)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isOn
-                          ? tint.opacity(colorScheme == .dark ? 0.15 : 0.08)
-                          : Color.clear)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(isOn ? tint.opacity(0.3) : Color.clear, lineWidth: 1)
-                    )
-            )
+            .background(isOn ? AppTheme.accent : Color.clear)
         }
         .buttonStyle(.plain)
     }
@@ -827,7 +752,7 @@ struct DrawingToolkit: View {
     // MARK: - Actions
 
     private func togglePanel(_ panel: ActivePanel) {
-        withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+        withAnimation(AppTheme.motion) {
             activePanel = activePanel == panel ? nil : panel
         }
     }

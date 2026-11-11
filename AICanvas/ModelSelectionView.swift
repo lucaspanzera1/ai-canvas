@@ -11,7 +11,9 @@ struct ProviderLogoView: View {
             .resizable()
             .aspectRatio(contentMode: .fill)
             .frame(width: size, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+            .grayscale(1)
+            .clipShape(Rectangle())
+            .hairline()
     }
 }
 
@@ -102,8 +104,7 @@ struct ModelSelectionView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 34, height: 34)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .shadow(color: AppTheme.shadowColor, radius: 2, y: 1)
+                    .clipShape(Rectangle())
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Modelos de IA")
@@ -124,8 +125,8 @@ struct ModelSelectionView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                         .frame(width: 32, height: 32)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -144,11 +145,10 @@ struct ModelSelectionView: View {
     private var currentModelBanner: some View {
         HStack(spacing: 14) {
             ProviderLogoView(provider: aiConfig.selectedModel.provider, size: 44, cornerRadius: 12)
-                .shadow(color: aiConfig.selectedModel.provider.brandColor.opacity(0.3), radius: 6, y: 3)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("MODELO ATIVO")
-                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(aiConfig.selectedModel.provider.brandColor)
                 
                 Text(aiConfig.selectedModel.name)
@@ -163,7 +163,7 @@ struct ModelSelectionView: View {
             Spacer()
             
             ZStack {
-                Circle()
+                Rectangle()
                     .fill(aiConfig.selectedModel.provider.brandColor.opacity(0.12))
                     .frame(width: 28, height: 28)
                 
@@ -174,9 +174,9 @@ struct ModelSelectionView: View {
         }
         .padding(16)
         .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(Rectangle())
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            Rectangle()
                 .stroke(aiConfig.selectedModel.provider.brandColor.opacity(0.4), lineWidth: 1.5)
         )
     }
@@ -209,8 +209,8 @@ struct ModelSelectionView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(14)
             .background(AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+            .clipShape(Rectangle())
+            .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
@@ -232,7 +232,7 @@ struct ModelSelectionView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(AppTheme.action)
                 Text("PROVEDORES CONFIGURADOS")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary)
             }
             .padding(.horizontal, 4)
@@ -262,17 +262,17 @@ struct ModelSelectionView: View {
                 
                 // Status badge
                 HStack(spacing: 4) {
-                    Circle()
-                        .fill(Color.green)
+                    Rectangle()
+                        .fill(AppTheme.accent)
                         .frame(width: 6, height: 6)
                     Text("Ativo")
                         .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(AppTheme.accent)
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .background(Color.green.opacity(0.1))
-                .clipShape(Capsule())
+                .background(AppTheme.surfaceElevated)
+                .clipShape(Rectangle())
                 
                 // Menu with options
                 Menu {
@@ -295,7 +295,7 @@ struct ModelSelectionView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                         .frame(width: 28, height: 28)
                         .background(AppTheme.background)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .clipShape(Rectangle())
                 }
             }
             .padding(.horizontal, 14)
@@ -316,9 +316,9 @@ struct ModelSelectionView: View {
             .padding(.vertical, 8)
         }
         .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .clipShape(Rectangle())
         .overlay(
-            RoundedRectangle(cornerRadius: 14)
+            Rectangle()
                 .stroke(AppTheme.border, lineWidth: 1)
         )
     }
@@ -327,7 +327,7 @@ struct ModelSelectionView: View {
         let isSelected = model.id == aiConfig.selectedModel.id
         
         return Button {
-            withAnimation(.spring(response: 0.3)) {
+            withAnimation(AppTheme.motion) {
                 aiConfig.setSelectedModel(model)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -337,12 +337,12 @@ struct ModelSelectionView: View {
             HStack(spacing: 10) {
                 // Selection indicator
                 ZStack {
-                    Circle()
+                    Rectangle()
                         .stroke(isSelected ? provider.brandColor : AppTheme.border, lineWidth: 1.5)
                         .frame(width: 18, height: 18)
                     
                     if isSelected {
-                        Circle()
+                        Rectangle()
                             .fill(provider.brandColor)
                             .frame(width: 10, height: 10)
                     }
@@ -356,12 +356,12 @@ struct ModelSelectionView: View {
                 
                 if isSelected {
                     Text("EM USO")
-                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(provider.brandColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(provider.brandColorLight)
-                        .clipShape(Capsule())
+                        .clipShape(Rectangle())
                 }
             }
             .padding(.horizontal, 10)
@@ -371,10 +371,10 @@ struct ModelSelectionView: View {
                 ? provider.brandColorLight
                 : Color.clear
             )
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .animation(.spring(response: 0.3), value: isSelected)
+        .animation(AppTheme.motion, value: isSelected)
     }
     
     // MARK: - Empty State
@@ -382,10 +382,10 @@ struct ModelSelectionView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             ZStack {
-                Circle()
+                Rectangle()
                     .fill(AppTheme.surfaceElevated)
                     .frame(width: 80, height: 80)
-                    .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
+                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 
                 Image(systemName: "brain.head.profile")
                     .font(.system(size: 32))
@@ -417,7 +417,7 @@ struct ModelSelectionView: View {
                             .font(.system(size: 11))
                             .foregroundStyle(AppTheme.textPrimary)
                         Text("DESBLOQUEAR PROVEDORES")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(AppTheme.textPrimary)
                     }
                     .padding(.horizontal, 4)
@@ -462,13 +462,13 @@ struct ModelSelectionView: View {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(provider.brandColorLight)
-                .clipShape(Capsule())
+                .clipShape(Rectangle())
             }
             .padding(14)
             .background(AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .clipShape(Rectangle())
             .overlay(
-                RoundedRectangle(cornerRadius: 14)
+                Rectangle()
                     .stroke(AppTheme.border, lineWidth: 1)
             )
         }
@@ -534,20 +534,19 @@ struct ProviderSetupView: View {
                         
                         // Logo with brand-colored glow
                         ZStack {
-                            Circle()
+                            Rectangle()
                                 .fill(provider.brandColor.opacity(0.08))
                                 .frame(width: 120, height: 120)
                                 .blur(radius: 20)
                             
                             ProviderLogoView(provider: provider, size: 80, cornerRadius: 20)
-                                .shadow(color: provider.brandColor.opacity(0.35), radius: 16, y: 8)
                         }
                         .scaleEffect(keyAppear ? 1 : 0.7)
                         .opacity(keyAppear ? 1 : 0)
                         
                         VStack(spacing: 8) {
                             Text(isEditing ? "Alterar API Key" : "Desbloquear \(provider.displayName)")
-                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .font(.system(size: 24, weight: .bold))
                                 .foregroundStyle(AppTheme.textPrimary)
                             
                             Text(isEditing
@@ -565,25 +564,25 @@ struct ProviderSetupView: View {
                             // Success state
                             VStack(spacing: 16) {
                                 ZStack {
-                                    Circle()
-                                        .fill(Color.green.opacity(0.1))
+                                    Rectangle()
+                                        .fill(AppTheme.surfaceElevated)
                                         .frame(width: 64, height: 64)
                                     
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.system(size: 36))
-                                        .foregroundStyle(Color.green)
+                                        .foregroundStyle(AppTheme.accent)
                                 }
                                 
                                 Text("API Key salva com sucesso!")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(Color.green)
+                                    .foregroundStyle(AppTheme.accent)
                             }
                             .transition(.scale.combined(with: .opacity))
                         } else {
                             // Input
                             VStack(alignment: .leading, spacing: 10) {
                                 Text("API KEY")
-                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 11, weight: .semibold))
                                     .foregroundStyle(AppTheme.textMuted)
                                 
                                 HStack {
@@ -613,9 +612,9 @@ struct ProviderSetupView: View {
                                 }
                                 .padding(14)
                                 .background(AppTheme.surfaceElevated)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .clipShape(Rectangle())
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
+                                    Rectangle()
                                         .stroke(
                                             errorMessage != nil
                                             ? AppTheme.danger
@@ -645,7 +644,7 @@ struct ProviderSetupView: View {
                                 HStack(spacing: 8) {
                                     if isValidating {
                                         ProgressView()
-                                            .tint(.white)
+                                            .tint(AppTheme.onAccent)
                                             .scaleEffect(0.8)
                                     } else {
                                         Image(systemName: "key.fill")
@@ -654,7 +653,7 @@ struct ProviderSetupView: View {
                                     Text(isValidating ? "Validando..." : "Salvar API Key")
                                         .font(.system(size: 15, weight: .semibold))
                                 }
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.onAccent)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 14)
                                 .background(
@@ -662,8 +661,7 @@ struct ProviderSetupView: View {
                                     ? AppTheme.borderHover
                                     : provider.brandColor
                                 )
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .shadow(color: apiKey.isEmpty ? .clear : provider.brandColor.opacity(0.3), radius: 8, y: 4)
+                                .clipShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                             .disabled(apiKey.isEmpty || isValidating)
@@ -690,7 +688,7 @@ struct ProviderSetupView: View {
             }
         }
         .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.75).delay(0.1)) {
+            withAnimation(AppTheme.motion.delay(0.1)) {
                 keyAppear = true
             }
         }
@@ -720,7 +718,7 @@ struct ProviderSetupView: View {
                         aiConfig.setSelectedModel(provider.defaultModels.first!)
                     }
                     
-                    withAnimation(.spring(response: 0.4)) {
+                    withAnimation(AppTheme.motion) {
                         isSuccess = true
                     }
                     

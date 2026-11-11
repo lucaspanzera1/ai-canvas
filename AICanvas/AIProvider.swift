@@ -305,19 +305,15 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         }
     }
     
-    /// Brand color for UI accents
+    /// Accent used wherever a provider is highlighted. The UI is monochrome, so every
+    /// provider shares the theme accent; the logo alone identifies the brand.
     var brandColor: Color {
-        switch self {
-        case .groq: return Color(red: 0.91, green: 0.33, blue: 0.22) // Groq orange-red
-        case .openai: return Color(red: 0.07, green: 0.64, blue: 0.52) // OpenAI teal-green
-        case .anthropic: return Color(red: 0.82, green: 0.53, blue: 0.40) // Claude warm terracotta
-        case .gemini: return Color(red: 0.26, green: 0.52, blue: 0.96) // Google blue
-        }
+        AppTheme.accent
     }
-    
+
     /// Lighter brand color for backgrounds
     var brandColorLight: Color {
-        brandColor.opacity(0.12)
+        AppTheme.surfaceElevated
     }
     
     var baseURL: String {

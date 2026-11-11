@@ -19,7 +19,7 @@ struct APIKeyOnboardingView: View {
 
                 // Icon
                 ZStack {
-                    Circle()
+                    Rectangle()
                         .fill(AppTheme.accent)
                         .frame(width: 80, height: 80)
 
@@ -73,9 +73,9 @@ struct APIKeyOnboardingView: View {
                     }
                     .padding(14)
                     .background(AppTheme.surfaceElevated)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(Rectangle())
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10)
+                        Rectangle()
                             .stroke(
                                 apiKey.isEmpty ? AppTheme.border : AppTheme.borderActive,
                                 lineWidth: 1
@@ -101,7 +101,7 @@ struct APIKeyOnboardingView: View {
                     HStack(spacing: 8) {
                         if isValidating {
                             ProgressView()
-                                .tint(.white)
+                                .tint(AppTheme.onAccent)
                                 .scaleEffect(0.8)
                         } else {
                             Image(systemName: "key.fill")
@@ -118,7 +118,7 @@ struct APIKeyOnboardingView: View {
                         ? AppTheme.borderHover
                         : AppTheme.accent
                     )
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .clipShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .disabled(apiKey.isEmpty || isValidating)
@@ -160,7 +160,7 @@ struct APIKeyOnboardingView: View {
                 isValidating = false
                 if isValid {
                     KeychainManager.shared.saveKey(trimmed, for: .groq)
-                    withAnimation(.spring(response: 0.4)) {
+                    withAnimation(AppTheme.motion) {
                         isPresented = false
                     }
                 } else {

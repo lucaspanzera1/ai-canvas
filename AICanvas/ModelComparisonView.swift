@@ -25,8 +25,8 @@ struct ModelComparisonView: View {
                             .foregroundStyle(AppTheme.textSecondary)
                             .frame(width: 32, height: 32)
                             .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                            .clipShape(Rectangle())
+                            .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -64,8 +64,8 @@ struct ModelComparisonView: View {
                             }
                             .padding(12)
                             .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+                            .clipShape(Rectangle())
+                            .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                         }
                     }
                     .padding(16)
@@ -85,6 +85,6 @@ struct ModelComparisonView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(AppTheme.border.opacity(0.3))
-        .clipShape(Capsule())
+        .clipShape(Rectangle())
     }
 }

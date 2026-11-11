@@ -374,11 +374,11 @@ struct GraphView: View {
             } else {
                 folderPath = []
             }
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            withAnimation(AppTheme.motion) {
                 selectedNotebook = notebook
             }
         }
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+        withAnimation(AppTheme.motion) {
             showGraphView = false
         }
     }
@@ -391,7 +391,7 @@ struct GraphView: View {
             current = f.parentFolderId.flatMap { pid in store.folders.first(where: { $0.id == pid }) }
         }
         if animated {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            withAnimation(AppTheme.motion) {
                 folderPath = chain
             }
         } else {
@@ -414,7 +414,7 @@ struct GraphView: View {
         VStack {
             HStack {
                 Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                    withAnimation(AppTheme.motion) {
                         showGraphView = false
                     }
                 } label: {
@@ -427,9 +427,8 @@ struct GraphView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
                     .background(AppTheme.surfaceElevated)
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
-                    .shadow(color: AppTheme.shadowColor, radius: 6, y: 2)
+                    .clipShape(Rectangle())
+                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
 
@@ -447,14 +446,14 @@ struct GraphView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 9)
                     .background(AppTheme.surfaceElevated)
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                    .clipShape(Rectangle())
+                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
 
                 Spacer()
 
                 Button {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                    withAnimation(AppTheme.motion) {
                         scale = 1.0
                         centerCamera()
                     }
@@ -465,8 +464,8 @@ struct GraphView: View {
                         .foregroundStyle(AppTheme.textPrimary)
                         .padding(10)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -512,16 +511,15 @@ private struct GraphNodeView: View {
     var body: some View {
         VStack(spacing: 4) {
             ZStack {
-                Circle()
+                Rectangle()
                     .fill(color.opacity(isDimmed ? 0.18 : 0.85))
                     .frame(width: radius * 2, height: radius * 2)
                     .overlay(
-                        Circle().stroke(
+                        Rectangle().stroke(
                             isHovered ? AppTheme.textPrimary : color.opacity(isDimmed ? 0.1 : 0.6),
                             lineWidth: isHovered ? 2.5 : 1
                         )
                     )
-                    .shadow(color: isHovered ? color.opacity(0.6) : .clear, radius: 8)
 
                 NoteIcon(icon: node.emoji, size: radius * 1.05)
                     .opacity(isDimmed ? 0.3 : 1)

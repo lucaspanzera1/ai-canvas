@@ -637,25 +637,20 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
 
     private func setupSelectionBorder() {
         selectionBorder.fillColor    = UIColor.clear.cgColor
-        selectionBorder.strokeColor  = UIColor.systemBlue.cgColor
-        selectionBorder.lineWidth    = 2.5
-        selectionBorder.lineDashPattern = [6, 3]
+        selectionBorder.strokeColor  = UIColor.label.cgColor
+        selectionBorder.lineWidth    = 1
+        selectionBorder.lineDashPattern = [4, 4]
         selectionBorder.isHidden     = true
-        selectionBorder.shadowColor  = UIColor.systemBlue.withAlphaComponent(0.3).cgColor
-        selectionBorder.shadowOpacity = 1.0
-        selectionBorder.shadowRadius = 4
-        selectionBorder.shadowOffset = CGSize(width: 0, height: 0)
         layer.addSublayer(selectionBorder)
     }
 
     private func setupHandles() {
         for _ in 0..<4 {
             let h = UIView()
-            h.backgroundColor      = .systemBlue
-            h.layer.borderColor    = UIColor.white.cgColor
-            h.layer.borderWidth    = 2.0
-            h.layer.cornerRadius   = 8
-            h.frame = CGRect(x: 0, y: 0, width: 16, height: 16)
+            h.backgroundColor      = .systemBackground
+            h.layer.borderColor    = UIColor.label.cgColor
+            h.layer.borderWidth    = 1.5
+            h.frame = CGRect(x: 0, y: 0, width: 12, height: 12)
             h.isHidden = true
             addSubview(h)
             handleViews.append(h)
@@ -666,13 +661,13 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
         super.layoutSubviews()
         selectionBorder.frame = bounds
         selectionBorder.path  = UIBezierPath(
-            roundedRect: bounds.insetBy(dx: 1, dy: 1), cornerRadius: 4
+            rect: bounds.insetBy(dx: 0.5, dy: 0.5)
         ).cgPath
         positionHandles()
     }
 
     private func positionHandles() {
-        let handleSize: CGFloat = 16
+        let handleSize: CGFloat = 12
         let handleRadius = handleSize / 2
         
         let corners: [CGPoint] = [
@@ -685,11 +680,6 @@ class DraggableImageView: UIImageView, UIGestureRecognizerDelegate, UIContextMen
         for (i, h) in handleViews.enumerated() {
             h.center     = corners[i]
             h.frame.size = CGSize(width: handleSize, height: handleSize)
-            // Adiciona efeito de sombra aos handles
-            h.layer.shadowColor = UIColor.black.withAlphaComponent(0.3).cgColor
-            h.layer.shadowOpacity = 1.0
-            h.layer.shadowRadius = 2
-            h.layer.shadowOffset = CGSize(width: 0, height: 1)
         }
     }
 

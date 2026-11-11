@@ -56,15 +56,15 @@ struct CanvasRepresentable: UIViewRepresentable {
 
         // Ocultar a caixa de seleção inicial
         let selectionBox = UIView()
-        selectionBox.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)
+        selectionBox.backgroundColor = UIColor.label.withAlphaComponent(0.04)
         selectionBox.isHidden = true
         selectionBox.tag = 888
         // Adiciona uma borda tracejada via CAShapeLayer
         let dashed = CAShapeLayer()
-        dashed.strokeColor = UIColor.systemBlue.cgColor
+        dashed.strokeColor = UIColor.label.cgColor
         dashed.fillColor = UIColor.clear.cgColor
-        dashed.lineWidth = 2
-        dashed.lineDashPattern = [6, 4]
+        dashed.lineWidth = 1
+        dashed.lineDashPattern = [4, 4]
         dashed.name = "selectionDashed"
         selectionBox.layer.addSublayer(dashed)
         canvasView.addSubview(selectionBox)
@@ -130,11 +130,13 @@ struct CanvasRepresentable: UIViewRepresentable {
         // O papel A4
         let paperRect = CGRect(x: xMargin, y: yMargin, width: a4Width, height: a4Height)
         
-        // Sombra da folha
-        context.setShadow(offset: CGSize(width: 0, height: 4), blur: 12, color: UIColor.black.withAlphaComponent(0.08).cgColor)
+        // Folha plana com contorno fino — sem sombra, cantos retos
         UIColor.systemBackground.setFill()
-        let path = UIBezierPath(roundedRect: paperRect, cornerRadius: 2)
+        let path = UIBezierPath(rect: paperRect)
         path.fill()
+        UIColor.separator.setStroke()
+        path.lineWidth = 1
+        path.stroke()
         
         // Limpar sombra para não afetar as linhas
         context.setShadow(offset: .zero, blur: 0, color: nil)

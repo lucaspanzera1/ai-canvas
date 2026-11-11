@@ -35,12 +35,9 @@ struct PomodoroProvider: TimelineProvider {
     )
 }
 
+// Monochrome like the app: the mode is conveyed by the label, not by hue.
 private func modeColor(_ modeRaw: String) -> Color {
-    switch modeRaw {
-    case "work": return .orange
-    case "longBreak": return .blue
-    default: return .green
-    }
+    .primary
 }
 
 struct PomodoroStatusWidgetView: View {
@@ -57,7 +54,7 @@ struct PomodoroStatusWidgetView: View {
 
                 if state.isRunning, let start = state.startDate, let end = state.endDate, start <= end {
                     Text(timerInterval: start...end, countsDown: true)
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .light, design: .monospaced))
                         .monospacedDigit()
                         .minimumScaleFactor(0.6)
 
@@ -65,7 +62,7 @@ struct PomodoroStatusWidgetView: View {
                         .tint(modeColor(state.modeRaw))
                 } else {
                     Text(formatted(state.remainingSeconds))
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .light, design: .monospaced))
                         .monospacedDigit()
 
                     ProgressView(value: progress(state))

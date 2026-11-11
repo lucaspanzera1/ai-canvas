@@ -3,24 +3,155 @@ import PencilKit
 
 // MARK: - App Theme
 
+/// Monochrome, square-cornered design system. Every surface is flat, every edge is a
+/// 1pt hairline, and hierarchy comes from contrast and type — never from color or depth.
 struct AppTheme {
-    static let background = Color(uiColor: .systemGroupedBackground)
-    static let surface = Color(uiColor: .systemBackground)
-    static let surfaceElevated = Color(uiColor: .secondarySystemBackground)
-    static let accent = Color.primary
-    static let action = Color.blue
-    static let danger = Color.red
-    
-    static let textPrimary = Color.primary
-    static let textSecondary = Color.secondary
-    static let textMuted = Color(uiColor: .tertiaryLabel)
-    
-    static let border = Color(uiColor: .separator)
-    static let borderHover = Color(uiColor: .opaqueSeparator)
-    static let borderActive = Color.primary
-    
-    static let shadowColor = Color.black.opacity(0.1)
-    static let link = Color.blue
+    static let background = Color(light: 0xFAFAFA, dark: 0x0A0A0A)
+    static let surface = Color(light: 0xFFFFFF, dark: 0x000000)
+    static let surfaceElevated = Color(light: 0xF2F2F2, dark: 0x141414)
+    static let accent = Color(light: 0x0A0A0A, dark: 0xFAFAFA)
+    /// Foreground drawn on top of `accent` (inverted fills).
+    static let onAccent = Color(light: 0xFFFFFF, dark: 0x000000)
+    static let action = accent
+    static let danger = accent
+
+    static let textPrimary = Color(light: 0x0A0A0A, dark: 0xFAFAFA)
+    static let textSecondary = Color(light: 0x6B6B6B, dark: 0x9A9A9A)
+    static let textMuted = Color(light: 0xA3A3A3, dark: 0x5C5C5C)
+
+    static let border = Color(light: 0xE3E3E3, dark: 0x262626)
+    static let borderHover = Color(light: 0xA3A3A3, dark: 0x525252)
+    static let borderActive = accent
+
+    static let shadowColor = Color.clear
+    static let link = accent
+
+    static let hairline: CGFloat = 1
+    static let motion = Animation.easeOut(duration: 0.18)
+
+    /// Small uppercase monospaced caption used for section headers and metadata.
+    static func label(_ size: CGFloat = 10) -> Font {
+        .system(size: size, weight: .medium, design: .monospaced)
+    }
+}
+
+extension Color {
+    init(light: UInt32, dark: UInt32) {
+        func rgb(_ hex: UInt32) -> UIColor {
+            UIColor(
+                red: CGFloat((hex >> 16) & 0xFF) / 255,
+                green: CGFloat((hex >> 8) & 0xFF) / 255,
+                blue: CGFloat(hex & 0xFF) / 255,
+                alpha: 1
+            )
+        }
+        self.init(uiColor: UIColor { $0.userInterfaceStyle == .dark ? rgb(dark) : rgb(light) })
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func colorInvert(_ active: Bool) -> some View {
+        if active { colorInvert() } else { self }
+    }
+
+    /// Square 1pt outline — the base edge treatment for every container.
+    func hairline(_ color: Color = AppTheme.border, width: CGFloat = AppTheme.hairline) -> some View {
+        overlay(Rectangle().strokeBorder(color, lineWidth: width))
+    }
+}
+
+/// `TRACKED MONO` caption.
+struct SectionLabel: View {
+    let text: String
+    var color: Color = AppTheme.textMuted
+    @ObservedObject private var localization = LocalizationManager.shared
+
+    init(_ text: String, color: Color = AppTheme.textMuted) {
+        self.text = text
+        self.color = color
+    }
+
+    var body: some View {
+        Text(text.localized.uppercased())
+            .font(AppTheme.label())
+            .tracking(1.2)
+            .foregroundStyle(color)
+    }
+}
+
+/// Flat, square button. `.primary` is an inverted solid block; `.secondary` is outlined;
+/// `.ghost` has no chrome until pressed. Pressing inverts briefly instead of scaling.
+struct MonoButtonStyle: ButtonStyle {
+    enum Kind { case primary, secondary, ghost }
+    var kind: Kind = .secondary
+    var fullWidth = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        MonoButtonBody(configuration: configuration, kind: kind, fullWidth: fullWidth)
+    }
+
+    private struct MonoButtonBody: View {
+        let configuration: Configuration
+        let kind: Kind
+        let fullWidth: Bool
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            let pressed = configuration.isPressed
+            configuration.label
+                .font(.system(size: 13, weight: .medium))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 11)
+                .frame(maxWidth: fullWidth ? .infinity : nil)
+                .foregroundStyle(foreground(pressed))
+                .background(background(pressed))
+                .hairline(kind == .ghost && !pressed ? .clear : (isEnabled ? AppTheme.accent : AppTheme.border))
+                .contentShape(Rectangle())
+                .opacity(isEnabled ? 1 : 0.5)
+        }
+
+        private func foreground(_ pressed: Bool) -> Color {
+            guard isEnabled else { return AppTheme.textMuted }
+            switch kind {
+            case .primary: return pressed ? AppTheme.textPrimary : AppTheme.onAccent
+            case .secondary, .ghost: return pressed ? AppTheme.onAccent : AppTheme.textPrimary
+            }
+        }
+
+        private func background(_ pressed: Bool) -> Color {
+            guard isEnabled else { return .clear }
+            switch kind {
+            case .primary: return pressed ? AppTheme.surface : AppTheme.accent
+            case .secondary, .ghost: return pressed ? AppTheme.accent : .clear
+            }
+        }
+    }
+}
+
+/// 32×32 square icon button used in toolbars and headers.
+struct SquareIconButton: View {
+    let icon: String
+    var isActive = false
+    var isDisabled = false
+    var size: CGFloat = 32
+    let action: () -> Void
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(isDisabled ? AppTheme.textMuted : (isActive ? AppTheme.onAccent : AppTheme.textPrimary))
+                .frame(width: size, height: size)
+                .background(isActive ? AppTheme.accent : (isHovered && !isDisabled ? AppTheme.surfaceElevated : AppTheme.surface))
+                .hairline(isActive || (isHovered && !isDisabled) ? AppTheme.accent : AppTheme.border)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .onHover { isHovered = $0 }
+    }
 }
 
 // MARK: - Content View (Canvas for a specific notebook)
@@ -93,7 +224,7 @@ struct ContentView: View {
                             },
                             onBack: {
                                 store.persistMetadata()
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                                withAnimation(AppTheme.motion) {
                                     selectedNotebook = nil
                                 }
                             },
@@ -135,7 +266,7 @@ struct ContentView: View {
                         ))
                     }
                 }
-                .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showAIPanel)
+                .animation(AppTheme.motion, value: showAIPanel)
             }
         }
         .onAppear {
@@ -220,85 +351,58 @@ struct CanvasToolbar: View {
     let onBack: () -> Void
     @Binding var showClearCanvasAlert: Bool
 
-    private var accentColor: Color { notebookSwiftColor(at: notebook.colorIndex) }
     private var isWhiteboard: Bool { notebook.type == .whiteboard }
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 0) {
             if !showSidebar {
-                Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                        showSidebar = true
-                    }
-                } label: {
-                    Image(systemName: "sidebar.left")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                SquareIconButton(icon: "sidebar.left") {
+                    withAnimation(AppTheme.motion) { showSidebar = true }
                 }
-                .buttonStyle(.plain)
+                .padding(.trailing, 8)
             }
-            
-            // Back button
+
+            // Back + breadcrumb
             Button(action: onBack) {
-                HStack(spacing: 6) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 12, weight: .bold))
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 12, weight: .regular))
                     Text(isWhiteboard ? "Quadros" : "Cadernos")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 13, weight: .regular))
                 }
                 .foregroundStyle(AppTheme.textSecondary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(AppTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                .frame(height: 32)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
 
-            // Notebook title
-            HStack(spacing: 8) {
-                NoteIcon(icon: notebook.emoji, size: 16)
+            Text("/")
+                .font(.system(size: 13, weight: .light))
+                .foregroundStyle(AppTheme.textMuted)
+                .padding(.horizontal, 10)
 
+            HStack(spacing: 8) {
+                NoteIcon(icon: notebook.emoji, size: 14)
                 Text(notebook.name)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
             }
 
             Spacer()
 
-            // Action buttons
-            HStack(spacing: 6) {
-                ToolButtonSimple(
-                    icon: "arrow.uturn.backward",
-                    isDisabled: !canvasManager.canUndo,
-                    color: AppTheme.textPrimary
-                ) {
+            // Action buttons — joined into a single segmented strip
+            HStack(spacing: -1) {
+                SquareIconButton(icon: "arrow.uturn.backward", isDisabled: !canvasManager.canUndo) {
                     canvasManager.undo()
                 }
-
-                ToolButtonSimple(
-                    icon: "arrow.uturn.forward",
-                    isDisabled: !canvasManager.canRedo,
-                    color: AppTheme.textPrimary
-                ) {
+                SquareIconButton(icon: "arrow.uturn.forward", isDisabled: !canvasManager.canRedo) {
                     canvasManager.redo()
                 }
-
-                ToolButtonSimple(
-                    icon: "trash",
-                    isDisabled: false,
-                    color: AppTheme.danger
-                ) {
+                SquareIconButton(icon: "trash") {
                     showClearCanvasAlert = true
                 }
 
-                // Linhas e grades Menu (apenas para cadernos)
                 if !isWhiteboard {
                     Menu {
                         ForEach(BackgroundPattern.allCases, id: \.self) { pattern in
@@ -314,24 +418,16 @@ struct CanvasToolbar: View {
                             }
                         }
                     } label: {
-                        Image(systemName: "square.grid.3x3")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(AppTheme.textSecondary)
+                        Image(systemName: "number")
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(AppTheme.textPrimary)
                             .frame(width: 32, height: 32)
-                            .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 6)
-                                    .stroke(AppTheme.border, lineWidth: 1)
-                            )
+                            .background(AppTheme.surface)
+                            .hairline()
                     }
                 }
 
-                ToolButtonSimple(
-                    icon: "square.and.arrow.up",
-                    isDisabled: false,
-                    color: AppTheme.action
-                ) {
+                SquareIconButton(icon: "square.and.arrow.up") {
                     canvasManager.exportDrawing(pattern: backgroundPattern)
                 }
             }
@@ -343,55 +439,50 @@ struct CanvasToolbar: View {
                 Button {
                     Task { await syncManager.syncNotebook(notebook) }
                 } label: {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 6) {
                         if isSyncingThis {
                             ProgressView()
-                                .scaleEffect(0.7)
-                                .frame(width: 14, height: 14)
+                                .scaleEffect(0.6)
+                                .frame(width: 12, height: 12)
                         } else {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                                .font(.system(size: 13, weight: .medium))
+                            Rectangle()
+                                .fill(AppTheme.accent)
+                                .frame(width: 5, height: 5)
                         }
-                        Text("Sync")
-                            .font(.system(size: 12, weight: .medium))
+                        Text("SYNC")
+                            .font(AppTheme.label(11))
+                            .tracking(1)
                     }
-                    .foregroundStyle(AppTheme.action)
+                    .foregroundStyle(AppTheme.textPrimary)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(AppTheme.action.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 7))
-                    .overlay(RoundedRectangle(cornerRadius: 7).stroke(AppTheme.action.opacity(0.3), lineWidth: 1))
+                    .frame(height: 32)
+                    .hairline()
                 }
                 .buttonStyle(.plain)
                 .disabled(isSyncingThis)
+                .padding(.leading, 8)
             }
 
             Rectangle()
                 .fill(AppTheme.border)
                 .frame(width: 1, height: 20)
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 12)
 
             // AI Panel Toggle
             Button {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                    showAIPanel.toggle()
-                }
+                withAnimation(AppTheme.motion) { showAIPanel.toggle() }
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: showAIPanel ? "sparkles.rectangle.stack.fill" : "sparkles.rectangle.stack")
-                        .font(.system(size: 14, weight: .medium))
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkle")
+                        .font(.system(size: 12, weight: .regular))
                     Text(showAIPanel ? "Fechar IA" : "Abrir IA")
                         .font(.system(size: 13, weight: .medium))
                 }
-                .foregroundStyle(showAIPanel ? .white : AppTheme.textPrimary)
+                .foregroundStyle(showAIPanel ? AppTheme.onAccent : AppTheme.textPrimary)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(showAIPanel ? AppTheme.accent : AppTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(showAIPanel ? Color.clear : AppTheme.border, lineWidth: 1)
-                )
+                .frame(height: 32)
+                .background(showAIPanel ? AppTheme.accent : AppTheme.surface)
+                .hairline(AppTheme.accent)
             }
             .buttonStyle(.plain)
         }
@@ -399,7 +490,6 @@ struct CanvasToolbar: View {
         .padding(.vertical, 10)
         .background(AppTheme.surface.ignoresSafeArea(edges: .top))
         .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
-        .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
     }
 }
 
@@ -410,26 +500,9 @@ struct ToolButtonSimple: View {
     let isDisabled: Bool
     let color: Color
     let action: () -> Void
-    @State private var isHovered = false
 
     var body: some View {
-        Button(action: action) {
-            Image(systemName: icon)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(isDisabled ? AppTheme.textMuted : (isHovered ? color : AppTheme.textSecondary))
-                .frame(width: 32, height: 32)
-                .background(isHovered && !isDisabled ? AppTheme.background : AppTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(isHovered && !isDisabled ? AppTheme.borderHover : AppTheme.border, lineWidth: 1)
-                )
-        }
-        .buttonStyle(.plain)
-        .disabled(isDisabled)
-        .onHover { hover in
-            withAnimation(.easeInOut(duration: 0.15)) { isHovered = hover }
-        }
+        SquareIconButton(icon: icon, isDisabled: isDisabled, action: action)
     }
 }
 

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Side panel with AI chat agent — Game Edition.
+/// Side panel with AI chat agent.
 struct AIChatPanelView: View {
     @ObservedObject var viewModel: ChatViewModel
     @ObservedObject var aiConfig: AIConfiguration
@@ -9,21 +9,18 @@ struct AIChatPanelView: View {
     @FocusState private var isInputFocused: Bool
     @State private var showModelSelection = false
     @State private var showPresetSelection = false
-    @State private var pulseGlow = false
     @State private var attachCanvas = false // toggle: send with canvas snapshot
 
     var body: some View {
         VStack(spacing: 0) {
             chatHeader
-            
+
             chatMessages
-            
-            currentModelIndicator
-            
+
             if let error = viewModel.errorMessage {
                 errorBanner(error)
             }
-            
+
             chatInput
         }
         .frame(width: 360)
@@ -52,50 +49,46 @@ struct AIChatPanelView: View {
 
     private var chatHeader: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                // AI Avatar
-                ZStack {
-                    Circle()
-                        .fill(AppTheme.accent)
-                        .frame(width: 36, height: 36)
-                    
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(AppTheme.surface)
-                }
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    SectionLabel("AI Assistant", color: AppTheme.textPrimary)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("AI Assistant")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(AppTheme.action)
-                            .frame(width: 6, height: 6)
-                        Text("Online")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(AppTheme.textSecondary)
+                    // Current model — tap to switch
+                    Button {
+                        showModelSelection = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            ProviderLogoView(provider: aiConfig.selectedModel.provider, size: 14, cornerRadius: 0)
+                            Text(aiConfig.selectedModel.name)
+                                .font(.system(size: 12))
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .lineLimit(1)
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 8, weight: .medium))
+                                .foregroundStyle(AppTheme.textMuted)
+                        }
                     }
+                    .buttonStyle(.plain)
                 }
 
                 Spacer()
 
-                HStack(spacing: 4) {
+                HStack(spacing: -1) {
                     Menu {
                         Button {
                             showPresetSelection = true
                         } label: {
                             Label("Escolher preset", systemImage: "sparkles")
                         }
-                        
+
                         Button {
                             showModelSelection = true
                         } label: {
                             Label("Trocar modelo", systemImage: "brain.head.profile")
                         }
-                        
+
                         Divider()
-                        
+
                         Button(role: .destructive) {
                             viewModel.clearChat()
                         } label: {
@@ -110,34 +103,21 @@ struct AIChatPanelView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(AppTheme.textSecondary)
+                            .font(.system(size: 13))
+                            .foregroundStyle(AppTheme.textPrimary)
                             .frame(width: 32, height: 32)
-                            .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppTheme.border, lineWidth: 1))
+                            .background(AppTheme.surface)
+                            .hairline()
                     }
 
-                    Button {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            isVisible = false
-                        }
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .frame(width: 32, height: 32)
-                            .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                            .overlay(RoundedRectangle(cornerRadius: 6).stroke(AppTheme.border, lineWidth: 1))
+                    SquareIconButton(icon: "xmark") {
+                        withAnimation(AppTheme.motion) { isVisible = false }
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
-            
-            // Divider
+
             Rectangle()
                 .fill(AppTheme.border)
                 .frame(height: 1)
@@ -152,7 +132,7 @@ struct AIChatPanelView: View {
                 if viewModel.messages.isEmpty {
                     emptyState
                 } else {
-                    LazyVStack(alignment: .leading, spacing: 16) {
+                    LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(viewModel.messages) { message in
                             MessageBubble(message: message)
                                 .id(message.id)
@@ -163,11 +143,11 @@ struct AIChatPanelView: View {
                                 .id("typing")
                         }
                     }
-                    .padding(16)
+                    .padding(.vertical, 8)
                 }
             }
             .onChange(of: viewModel.messages.count) { _, _ in
-                withAnimation(.spring(response: 0.3)) {
+                withAnimation(AppTheme.motion) {
                     if let lastMessage = viewModel.messages.last {
                         proxy.scrollTo(lastMessage.id, anchor: .bottom)
                     } else if viewModel.isLoading {
@@ -179,139 +159,76 @@ struct AIChatPanelView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 20) {
-            Spacer()
-
-            // Animated icon
-            ZStack {
-                Circle()
-                    .fill(AppTheme.surfaceElevated)
-                    .frame(width: 80, height: 80)
-                    .overlay(
-                        Circle()
-                            .stroke(AppTheme.border, lineWidth: 1)
-                    )
-                
-                Image(systemName: "sparkles")
-                    .font(.system(size: 28))
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
-
-            VStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Pronto para criar!")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 22, weight: .semibold))
+                    .tracking(-0.5)
                     .foregroundStyle(AppTheme.textPrimary)
 
                 Text("Peça ideias, analise seu canvas\nou resolva cálculos desenhados.")
                     .font(.system(size: 13))
                     .foregroundStyle(AppTheme.textSecondary)
-                    .multilineTextAlignment(.center)
+                    .lineSpacing(3)
             }
-            
+
             // One-tap canvas analysis
             Button {
                 viewModel.analyzeCanvas()
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "eye.fill")
-                        .font(.system(size: 13))
+                    Image(systemName: "eye")
                     Text("Analisar meu canvas agora")
-                        .font(.system(size: 13, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "arrow.right")
                 }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 18)
-                .padding(.vertical, 11)
-                .background(AppTheme.action)
-                .clipShape(Capsule())
             }
-            .buttonStyle(.plain)
-            
+            .buttonStyle(MonoButtonStyle(kind: .primary, fullWidth: true))
+
             // Quick prompts
             let quickPrompts = QuickPromptManager.shared.getPromptsForPreset(aiConfig.selectedPreset)
-            
+
             if !quickPrompts.isEmpty {
-                VStack(spacing: 8) {
-                    ForEach(quickPrompts.prefix(3)) { prompt in
-                        QuickPromptChip(
-                            text: prompt.text,
-                            viewModel: viewModel,
-                            withCanvas: prompt.withCanvas
-                        )
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionLabel("Sugestões")
+                    VStack(spacing: -1) {
+                        ForEach(quickPrompts.prefix(3)) { prompt in
+                            QuickPromptChip(
+                                text: prompt.text,
+                                viewModel: viewModel,
+                                withCanvas: prompt.withCanvas
+                            )
+                        }
                     }
                 }
             }
-            
+
             Spacer()
         }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 40)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 32)
         .padding(.horizontal, 20)
-    }
-
-    // MARK: - Current Model
-
-    private var currentModelIndicator: some View {
-        Button {
-            showModelSelection = true
-        } label: {
-            HStack(spacing: 10) {
-                ProviderLogoView(provider: aiConfig.selectedModel.provider, size: 26, cornerRadius: 7)
-
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(aiConfig.selectedModel.name)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Text(aiConfig.selectedModel.provider.displayName)
-                        .font(.system(size: 10))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-
-                Spacer()
-
-                HStack(spacing: 4) {
-                    Text("Trocar")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(aiConfig.selectedModel.provider.brandColor)
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 9))
-                        .foregroundStyle(AppTheme.textMuted)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(AppTheme.borderHover, lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 
     // MARK: - Error
 
     private func errorBanner(_ message: String) -> some View {
-        HStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(AppTheme.danger)
-                .font(.system(size: 13))
+        HStack(alignment: .top, spacing: 10) {
+            Text("ERR")
+                .font(AppTheme.label())
+                .tracking(1.2)
+                .foregroundStyle(AppTheme.onAccent)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .background(AppTheme.accent)
             Text(message)
                 .font(.system(size: 12))
-                .foregroundStyle(AppTheme.danger)
-                .lineLimit(2)
+                .foregroundStyle(AppTheme.textPrimary)
+                .lineLimit(3)
+            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(AppTheme.danger.opacity(0.1))
-        .overlay(
-            Rectangle()
-                .fill(AppTheme.danger)
-                .frame(width: 3),
-            alignment: .leading
-        )
+        .padding(12)
+        .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .top)
     }
 
     // MARK: - Input
@@ -323,23 +240,21 @@ struct AIChatPanelView: View {
                 .frame(height: 1)
 
             // Canvas attachment toggle bar
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 let hasSelection = viewModel.canvasManager?.selectionRect != nil
                 Button {
                     viewModel.analyzeCanvas()
                 } label: {
                     HStack(spacing: 5) {
-                        Image(systemName: hasSelection ? "viewfinder" : "eye.fill")
-                            .font(.system(size: 11, weight: .semibold))
+                        Image(systemName: hasSelection ? "viewfinder" : "eye")
+                            .font(.system(size: 10))
                         Text(hasSelection ? "Analisar Seleção" : "Analisar Canvas")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 11, weight: .medium))
                     }
-                    .foregroundStyle(AppTheme.action)
+                    .foregroundStyle(AppTheme.textPrimary)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(AppTheme.action.opacity(0.08))
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(AppTheme.action.opacity(0.25), lineWidth: 1))
+                    .frame(height: 26)
+                    .hairline()
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.isLoading)
@@ -349,32 +264,32 @@ struct AIChatPanelView: View {
                 } label: {
                     HStack(spacing: 5) {
                         Image(systemName: attachCanvas ? (hasSelection ? "viewfinder" : "photo.fill") : "photo")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 10))
                         Text(attachCanvas ? (hasSelection ? "Seleção anexada" : "Canvas anexado") : "Anexar imagem")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 11, weight: .medium))
                     }
-                    .foregroundStyle(attachCanvas ? .white : AppTheme.textSecondary)
+                    .foregroundStyle(attachCanvas ? AppTheme.onAccent : AppTheme.textSecondary)
                     .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(attachCanvas ? AppTheme.accent : AppTheme.surfaceElevated)
-                    .clipShape(Capsule())
-                    .overlay(Capsule().stroke(attachCanvas ? Color.clear : AppTheme.border, lineWidth: 1))
+                    .frame(height: 26)
+                    .background(attachCanvas ? AppTheme.accent : Color.clear)
+                    .hairline(attachCanvas ? AppTheme.accent : AppTheme.border)
                 }
                 .buttonStyle(.plain)
 
                 Spacer()
             }
             .padding(.horizontal, 12)
-            .padding(.top, 10)
-            .padding(.bottom, 6)
+            .padding(.top, 12)
 
-            HStack(alignment: .bottom, spacing: 10) {
+            HStack(alignment: .bottom, spacing: 0) {
                 TextField("Mensagem...", text: $viewModel.inputText, axis: .vertical)
                     .textFieldStyle(.plain)
                     .lineLimit(1...5)
                     .focused($isInputFocused)
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 11)
                     .onSubmit {
                         if attachCanvas {
                             viewModel.sendMessageWithCanvas()
@@ -383,6 +298,8 @@ struct AIChatPanelView: View {
                         }
                     }
 
+                let isEmpty = viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty
+                let canSend = !isEmpty && !viewModel.isLoading
                 Button {
                     if attachCanvas {
                         viewModel.sendMessageWithCanvas()
@@ -391,42 +308,20 @@ struct AIChatPanelView: View {
                         viewModel.sendMessage()
                     }
                 } label: {
-                    ZStack {
-                        let isEmpty = viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty
-                        if isEmpty || viewModel.isLoading {
-                            Circle()
-                                .fill(AppTheme.surfaceElevated)
-                                .frame(width: 32, height: 32)
-                                .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
-                            Image(systemName: attachCanvas ? "camera.fill" : "arrow.up")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(AppTheme.textMuted)
-                        } else {
-                            Circle()
-                                .fill(attachCanvas ? AppTheme.action : AppTheme.accent)
-                                .frame(width: 32, height: 32)
-                            Image(systemName: attachCanvas ? "camera.fill" : "arrow.up")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(AppTheme.surface)
-                        }
-                    }
+                    Image(systemName: attachCanvas ? "camera" : "arrow.up")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(canSend ? AppTheme.onAccent : AppTheme.textMuted)
+                        .frame(width: 40, height: 40)
+                        .background(canSend ? AppTheme.accent : Color.clear)
+                        .overlay(Rectangle().fill(AppTheme.border).frame(width: 1), alignment: .leading)
                 }
                 .buttonStyle(.plain)
-                .disabled(viewModel.inputText.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isLoading)
-                .animation(.spring(response: 0.3), value: viewModel.inputText.isEmpty)
-                .animation(.spring(response: 0.3), value: attachCanvas)
+                .disabled(!canSend)
+                .animation(AppTheme.motion, value: canSend)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .background(AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(isInputFocused ? AppTheme.borderActive : AppTheme.borderHover, lineWidth: 1)
-            )
-            .animation(.easeInOut(duration: 0.2), value: isInputFocused)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 12)
+            .hairline(isInputFocused ? AppTheme.borderActive : AppTheme.border)
+            .animation(AppTheme.motion, value: isInputFocused)
+            .padding(12)
         }
     }
 }
@@ -448,155 +343,101 @@ struct QuickPromptChip: View {
                 viewModel.sendMessage()
             }
         } label: {
-            HStack(spacing: 6) {
-                if withCanvas {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(AppTheme.action.opacity(0.7))
-                }
+            HStack(spacing: 8) {
                 Text(text)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(isHovered ? AppTheme.textPrimary : AppTheme.textSecondary)
+                    .font(.system(size: 12))
+                    .foregroundStyle(isHovered ? AppTheme.onAccent : AppTheme.textPrimary)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 4)
+                Image(systemName: withCanvas ? "camera" : "arrow.right")
+                    .font(.system(size: 10))
+                    .foregroundStyle(isHovered ? AppTheme.onAccent : AppTheme.textMuted)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                isHovered
-                ? AppTheme.border
-                : AppTheme.surfaceElevated
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(withCanvas ? AppTheme.action.opacity(0.3) : AppTheme.border, lineWidth: 1)
-            )
+            .padding(.vertical, 10)
+            .background(isHovered ? AppTheme.accent : AppTheme.surface)
+            .hairline()
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .onHover { hover in
-            withAnimation(.easeInOut(duration: 0.15)) { isHovered = hover }
+            withAnimation(AppTheme.motion) { isHovered = hover }
         }
     }
 }
 
 // MARK: - Message Bubble
 
+/// Transcript-style message: mono role label above the text. User turns carry a
+/// solid left rule; assistant turns are plain text on the panel.
 struct MessageBubble: View {
     let message: ChatMessage
     @State private var appeared = false
 
-    // Determine if the message is from the user
     private var isUser: Bool {
         message.role == .user
     }
 
-    private var attributedContent: AttributedString {
-        do {
-            var options = AttributedString.MarkdownParsingOptions()
-            options.interpretedSyntax = .full
-            options.failurePolicy = .returnPartiallyParsedIfPossible
-            return try AttributedString(markdown: message.content, options: options)
-        } catch {
-            return AttributedString(message.content)
-        }
+    /// Markdown is parsed per paragraph: full-syntax parsing drops the blank
+    /// lines between blocks, which would run paragraphs together in a `Text`.
+    private var paragraphs: [AttributedString] {
+        message.content
+            .components(separatedBy: "\n\n")
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map { block in
+                var options = AttributedString.MarkdownParsingOptions()
+                options.interpretedSyntax = .inlineOnlyPreservingWhitespace
+                options.failurePolicy = .returnPartiallyParsedIfPossible
+                return (try? AttributedString(markdown: block, options: options)) ?? AttributedString(block)
+            }
     }
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            if isUser {
-                Spacer(minLength: 48)
-            } else {
-                // AI Avatar
-                ZStack {
-                    Circle()
-                        .fill(AppTheme.accent)
-                        .frame(width: 24, height: 24)
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(AppTheme.surface)
-                }
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel(isUser ? "Você" : "IA", color: isUser ? AppTheme.textSecondary : AppTheme.textPrimary)
 
-            VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
-                // Canvas thumbnail (if attached)
-                if isUser, let img = message.attachedImage {
-                    Image(uiImage: img)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: 200, maxHeight: 120)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(AppTheme.border, lineWidth: 1)
-                        )
-                        .overlay(
-                            HStack(spacing: 3) {
-                                Image(systemName: "photo.fill")
-                                    .font(.system(size: 9))
-                                    .foregroundStyle(.white)
-                                Text("canvas")
-                                    .font(.system(size: 9, weight: .semibold))
-                                    .foregroundStyle(.white)
-                            }
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
-                            .background(Color.black.opacity(0.45))
-                            .clipShape(Capsule())
-                            .padding(6),
-                            alignment: .bottomLeading
-                        )
-                }
-
-                Text(attributedContent)
-                    .font(.system(size: 14))
-                    .lineSpacing(4)
-                    .textSelection(.enabled)
-                    .foregroundStyle(isUser ? AppTheme.surface : AppTheme.textPrimary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(
-                        Group {
-                            if isUser {
-                                AnyView(AppTheme.accent)
-                            } else {
-                                AnyView(AppTheme.surfaceElevated)
-                            }
-                        }
-                    )
-                    .clipShape(
-                        RoundedRectangle(cornerRadius: 12)
-                    )
+            // Canvas thumbnail (if attached)
+            if isUser, let img = message.attachedImage {
+                Image(uiImage: img)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: 200, maxHeight: 120)
+                    .clipped()
+                    .hairline()
                     .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(
-                                isUser
-                                ? Color.clear
-                                : AppTheme.border,
-                                lineWidth: 1
-                            )
+                        Text("CANVAS")
+                            .font(AppTheme.label(9))
+                            .tracking(1)
+                            .foregroundStyle(AppTheme.onAccent)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(AppTheme.accent),
+                        alignment: .bottomLeading
                     )
             }
-            .scaleEffect(appeared ? 1 : 0.85, anchor: isUser ? .bottomTrailing : .bottomLeading)
-            .opacity(appeared ? 1 : 0)
-            .onAppear {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-                    appeared = true
-                }
-            }
 
-            if !isUser {
-                Spacer(minLength: 48)
-            } else {
-                // User avatar
-                ZStack {
-                    Circle()
-                        .fill(AppTheme.surfaceElevated)
-                        .frame(width: 24, height: 24)
-                        .overlay(Circle().stroke(AppTheme.borderActive, lineWidth: 1))
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(AppTheme.textPrimary)
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, paragraph in
+                    Text(paragraph)
+                        .font(.system(size: 14))
+                        .lineSpacing(4)
+                        .textSelection(.enabled)
                 }
             }
+            .foregroundStyle(isUser ? AppTheme.textSecondary : AppTheme.textPrimary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.leading, 14)
+        .overlay(
+            Rectangle().fill(isUser ? AppTheme.accent : .clear).frame(width: 2),
+            alignment: .leading
+        )
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
+        .opacity(appeared ? 1 : 0)
+        .onAppear {
+            withAnimation(AppTheme.motion) { appeared = true }
         }
     }
 }
@@ -607,21 +448,15 @@ struct TypingIndicator: View {
     @State private var animate = false
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(AppTheme.accent)
-                    .frame(width: 24, height: 24)
-                Image(systemName: "sparkles")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(AppTheme.surface)
-            }
-            
+        VStack(alignment: .leading, spacing: 8) {
+            SectionLabel("IA", color: AppTheme.textPrimary)
+
             HStack(spacing: 4) {
                 ForEach(0..<3, id: \.self) { index in
-                    Circle()
-                        .fill(AppTheme.textMuted)
-                        .frame(width: 5, height: animate ? 8 : 5)
+                    Rectangle()
+                        .fill(AppTheme.accent)
+                        .frame(width: 6, height: 6)
+                        .opacity(animate ? 1 : 0.15)
                         .animation(
                             .easeInOut(duration: 0.45)
                                 .repeatForever(autoreverses: true)
@@ -630,15 +465,12 @@ struct TypingIndicator: View {
                         )
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 14)
-            .background(AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+            .padding(.vertical, 4)
             .onAppear { animate = true }
-            
-            Spacer(minLength: 48)
         }
+        .padding(.leading, 14)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
     }
 }
 

@@ -18,6 +18,7 @@ struct SidebarView: View {
     @State private var showSyncSettings = false
     @State private var showSettings = false
     @State private var creatingInFolderId: UUID? = nil
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -26,33 +27,32 @@ struct SidebarView: View {
                 Image("AppImage")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 28, height: 28)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .shadow(color: AppTheme.shadowColor, radius: 2, y: 1)
-                
+                    .frame(width: 22, height: 22)
+                    .colorInvert(colorScheme == .dark)
+
                 Text("Meu Workspace")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary)
                 
                 Spacer()
                 
                 Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                    withAnimation(AppTheme.motion) {
                         showSidebar = false
                     }
                 } label: {
                     Image(systemName: "sidebar.left")
-                        .font(.system(size: 16))
+                        .font(.system(size: 13))
                         .foregroundStyle(AppTheme.textSecondary)
-                        .padding(6)
-                        .background(Color.clear)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            
+            .padding(.vertical, 14)
+            .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
+
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     
@@ -70,11 +70,9 @@ struct SidebarView: View {
                     
                     let rootFolders = store.folders.filter { $0.parentFolderId == nil }
                     if !rootFolders.isEmpty {
-                        Text("PASTAS")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(AppTheme.textMuted)
-                            .padding(.top, 16)
-                            .padding(.bottom, 4)
+                        SectionLabel("PASTAS")
+                            .padding(.top, 20)
+                            .padding(.bottom, 6)
                             .padding(.horizontal, 16)
 
                         // Folders
@@ -87,7 +85,7 @@ struct SidebarView: View {
                                 selectedNotebook: $selectedNotebook,
                                 folderPath: $folderPath,
                                 onToggle: {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    withAnimation(AppTheme.motion) {
                                         if expandedFolders.contains(folder.id) {
                                             expandedFolders.remove(folder.id)
                                         } else {
@@ -112,11 +110,9 @@ struct SidebarView: View {
                     // Notebooks sem pasta
                     let rootNotebooks = store.notebooks.filter { $0.folderId == nil }
                     if !rootNotebooks.isEmpty {
-                        Text("CADERNOS")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(AppTheme.textMuted)
-                            .padding(.top, 16)
-                            .padding(.bottom, 4)
+                        SectionLabel("CADERNOS")
+                            .padding(.top, 20)
+                            .padding(.bottom, 6)
                             .padding(.horizontal, 16)
                         
                         ForEach(rootNotebooks) { notebook in
@@ -137,8 +133,8 @@ struct SidebarView: View {
             
             // Bottom actions
             VStack(spacing: 0) {
-                Divider()
-                    .foregroundStyle(AppTheme.border.opacity(0.5))
+                Rectangle().fill(AppTheme.border).frame(height: 1)
+                    .padding(.bottom, 4)
                 
                 Button {
                     showCreateFolder = true
@@ -149,10 +145,10 @@ struct SidebarView: View {
                         Text("Nova Pasta")
                         Spacer()
                     }
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 13))
                     .foregroundStyle(AppTheme.textSecondary)
                     .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
+                    .padding(.vertical, 10)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -167,10 +163,10 @@ struct SidebarView: View {
                         Text("Novo Caderno")
                         Spacer()
                     }
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 13))
                     .foregroundStyle(AppTheme.textSecondary)
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 16)
+                    .padding(.vertical, 10)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -184,16 +180,16 @@ struct SidebarView: View {
                         Text("Importar PDF")
                         Spacer()
                     }
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 13))
                     .foregroundStyle(AppTheme.textSecondary)
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 8)
+                    .padding(.vertical, 10)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
 
-                Divider()
-                    .foregroundStyle(AppTheme.border.opacity(0.3))
+                Rectangle().fill(AppTheme.border).frame(height: 1)
+                    .padding(.top, 4)
 
                 HStack(spacing: 0) {
                     Button {
@@ -215,12 +211,12 @@ struct SidebarView: View {
                             Text(syncManager.isSyncing ? "Sincronizando…" : "Sincronizar")
                             Spacer()
                             if !SyncSettings.load().isConfigured {
-                                Image(systemName: "exclamationmark.circle")
-                                    .foregroundStyle(.orange)
-                                    .font(.system(size: 12))
+                                Rectangle()
+                                    .fill(AppTheme.accent)
+                                    .frame(width: 5, height: 5)
                             }
                         }
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 13))
                         .foregroundStyle(AppTheme.textSecondary)
                         .padding(.leading, 16)
                         .padding(.vertical, 10)
@@ -243,7 +239,7 @@ struct SidebarView: View {
                 }
             }
         }
-        .background(AppTheme.background.ignoresSafeArea()) // Lighter sidebar background like Notion
+        .background(AppTheme.surface.ignoresSafeArea())
         .sheet(isPresented: $showCreateFolder) {
             ItemEditorSheet(store: store, mode: .createFolder(parentFolderId: selectedFolder?.id), isPresented: $showCreateFolder)
         }
@@ -293,14 +289,14 @@ struct SidebarItemButton: View {
                     .font(.system(size: 14))
                     .frame(width: 20)
                 Text(title.localized)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                 Spacer()
             }
             .foregroundStyle(isSelected ? AppTheme.textPrimary : AppTheme.textSecondary)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isSelected ? AppTheme.border.opacity(0.5) : (isHovered ? AppTheme.border.opacity(0.3) : Color.clear))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .background(isSelected || isHovered ? AppTheme.surfaceElevated : Color.clear)
+            .overlay(Rectangle().fill(isSelected ? AppTheme.accent : .clear).frame(width: 2), alignment: .leading)
             .padding(.horizontal, 8)
             .contentShape(Rectangle())
         }
@@ -338,7 +334,7 @@ struct FolderSidebarRow: View {
                     
                     NoteIcon(icon: folder.emoji, size: 14)
                     Text(folder.name)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                         .lineLimit(1)
                     
                     Spacer()
@@ -352,15 +348,14 @@ struct FolderSidebarRow: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .background(AppTheme.textPrimary.opacity(0.05))
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                        .hairline()
                     }
                 }
                 .foregroundStyle(isSelected ? AppTheme.textPrimary : AppTheme.textSecondary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
-                .background(isSelected ? AppTheme.border.opacity(0.5) : (isHovered ? AppTheme.border.opacity(0.3) : Color.clear))
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .background(isSelected || isHovered ? AppTheme.surfaceElevated : Color.clear)
+                .overlay(Rectangle().fill(isSelected ? AppTheme.accent : .clear).frame(width: 2), alignment: .leading)
                 .padding(.horizontal, 8)
                 .contentShape(Rectangle())
             }
@@ -409,15 +404,15 @@ struct NotebookSidebarRow: View {
                     .frame(width: 16)
                 
                 Text(notebook.name)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                     .lineLimit(1)
                 Spacer()
             }
             .foregroundStyle(isSelected ? AppTheme.textPrimary : AppTheme.textSecondary)
             .padding(.horizontal, 8)
             .padding(.vertical, 6)
-            .background(isSelected ? AppTheme.border.opacity(0.5) : (isHovered ? AppTheme.border.opacity(0.3) : Color.clear))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .background(isSelected || isHovered ? AppTheme.surfaceElevated : Color.clear)
+            .overlay(Rectangle().fill(isSelected ? AppTheme.accent : .clear).frame(width: 2), alignment: .leading)
             .padding(.horizontal, 8)
             .contentShape(Rectangle())
         }

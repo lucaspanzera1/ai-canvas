@@ -1,26 +1,10 @@
 import SwiftUI
 
-private extension PomodoroMode {
-    var color: Color {
-        switch self {
-        case .work: return Color(red: 0.95, green: 0.36, blue: 0.29)
-        case .shortBreak: return Color(red: 0.22, green: 0.74, blue: 0.55)
-        case .longBreak: return Color(red: 0.30, green: 0.56, blue: 0.95)
-        }
-    }
-    var icon: String {
-        switch self {
-        case .work: return "flame.fill"
-        case .shortBreak: return "cup.and.saucer.fill"
-        case .longBreak: return "leaf.fill"
-        }
-    }
-}
-
-/// Floating, always-on-top Pomodoro widget. Collapses to a small progress bubble
+/// Floating, always-on-top Pomodoro widget. Collapses to a small square tile
 /// and expands into a full control card without leaving the current screen.
 struct PomodoroWidgetView: View {
     @ObservedObject var manager: PomodoroManager
+    @ObservedObject private var localization = LocalizationManager.shared
     @State private var isExpanded = false
     @State private var showSettings = false
 
@@ -28,53 +12,41 @@ struct PomodoroWidgetView: View {
         Group {
             if isExpanded {
                 expandedCard
-                    .transition(.asymmetric(
-                        insertion: .scale(scale: 0.85, anchor: .bottomTrailing).combined(with: .opacity),
-                        removal: .scale(scale: 0.85, anchor: .bottomTrailing).combined(with: .opacity)
-                    ))
+                    .transition(.opacity.combined(with: .offset(y: 8)))
             } else {
-                collapsedBubble
-                    .transition(.scale.combined(with: .opacity))
+                collapsedTile
+                    .transition(.opacity)
             }
         }
         .padding(20)
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isExpanded)
+        .animation(AppTheme.motion, value: isExpanded)
     }
 
     // MARK: Collapsed
 
-    private var collapsedBubble: some View {
+    private var collapsedTile: some View {
         Button {
-            withAnimation { isExpanded = true }
+            withAnimation(AppTheme.motion) { isExpanded = true }
         } label: {
-            ZStack {
-                Circle()
-                    .fill(.ultraThinMaterial)
-                    .frame(width: 60, height: 60)
-                    .shadow(color: manager.mode.color.opacity(0.35), radius: 10, y: 4)
-
-                Circle()
-                    .stroke(manager.mode.color.opacity(0.15), lineWidth: 4)
-                    .frame(width: 52, height: 52)
-
-                Circle()
-                    .trim(from: 0, to: manager.progress)
-                    .stroke(manager.mode.color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
-                    .frame(width: 52, height: 52)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: manager.progress)
-
-                if manager.isRunning {
-                    Text(manager.formattedRemaining)
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(AppTheme.textPrimary)
-                } else {
-                    Image(systemName: manager.mode.icon)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(manager.mode.color)
+            VStack(spacing: 0) {
+                Group {
+                    if manager.isRunning {
+                        Text(manager.formattedRemaining)
+                            .font(.system(size: 12, weight: .medium, design: .monospaced))
+                            .monospacedDigit()
+                    } else {
+                        Image(systemName: "timer")
+                            .font(.system(size: 15, weight: .light))
+                    }
                 }
+                .foregroundStyle(AppTheme.textPrimary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                progressBar(height: 2)
             }
+            .frame(width: 56, height: 56)
+            .background(AppTheme.surface)
+            .hairline(AppTheme.accent)
         }
         .buttonStyle(.plain)
     }
@@ -82,22 +54,25 @@ struct PomodoroWidgetView: View {
     // MARK: Expanded
 
     private var expandedCard: some View {
-        VStack(spacing: 18) {
-            HStack {
-                HStack(spacing: 6) {
-                    Circle().fill(manager.mode.color).frame(width: 7, height: 7)
-                    Text(manager.mode.label.uppercased())
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .tracking(0.5)
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            HStack(spacing: 8) {
+                Rectangle()
+                    .fill(manager.isRunning ? AppTheme.accent : AppTheme.textMuted)
+                    .frame(width: 6, height: 6)
+                Text(manager.mode.label.localized.uppercased())
+                    .font(AppTheme.label(11))
+                    .tracking(1.4)
+                    .foregroundStyle(AppTheme.textPrimary)
 
                 Spacer()
 
                 Button { showSettings = true } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 13))
-                        .foregroundStyle(AppTheme.textMuted)
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 12))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: $showSettings) {
@@ -105,89 +80,101 @@ struct PomodoroWidgetView: View {
                 }
 
                 Button {
-                    withAnimation { isExpanded = false }
+                    withAnimation(AppTheme.motion) { isExpanded = false }
                 } label: {
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppTheme.textMuted)
+                    Image(systemName: "minus")
+                        .font(.system(size: 12))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
 
-            ZStack {
-                Circle()
-                    .stroke(manager.mode.color.opacity(0.12), lineWidth: 10)
-                Circle()
-                    .trim(from: 0, to: manager.progress)
-                    .stroke(
-                        AngularGradient(colors: [manager.mode.color.opacity(0.5), manager.mode.color], center: .center),
-                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                    )
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: manager.progress)
+            Rectangle().fill(AppTheme.border).frame(height: 1)
 
-                VStack(spacing: 4) {
-                    Text(manager.formattedRemaining)
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Text("Sessão \(manager.completedWorkSessions + 1)")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(AppTheme.textMuted)
+            // Time
+            VStack(alignment: .leading, spacing: 14) {
+                Text(manager.formattedRemaining)
+                    .font(.system(size: 52, weight: .light, design: .monospaced))
+                    .monospacedDigit()
+                    .tracking(-2)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .contentTransition(.numericText())
+
+                progressBar(height: 2)
+
+                HStack {
+                    Text(String(format: "%@ %02d", "Sessão".localized.uppercased(), manager.completedWorkSessions + 1))
+                        .font(AppTheme.label())
+                        .tracking(1.2)
+                        .foregroundStyle(AppTheme.textSecondary)
+                    Spacer()
+                    sessionMarks
                 }
             }
-            .frame(width: 150, height: 150)
+            .padding(16)
 
-            sessionDots
+            Rectangle().fill(AppTheme.border).frame(height: 1)
 
-            HStack(spacing: 20) {
-                controlButton(icon: "arrow.counterclockwise", size: 16) { manager.reset() }
-
+            // Controls — three joined cells
+            HStack(spacing: 0) {
+                controlCell(icon: "arrow.counterclockwise") { manager.reset() }
+                Rectangle().fill(AppTheme.border).frame(width: 1)
                 Button {
                     manager.toggle()
                 } label: {
-                    ZStack {
-                        Circle()
-                            .fill(manager.mode.color)
-                            .frame(width: 56, height: 56)
-                            .shadow(color: manager.mode.color.opacity(0.4), radius: 8, y: 3)
-                        Image(systemName: manager.isRunning ? "pause.fill" : "play.fill")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundStyle(.white)
-                            .offset(x: manager.isRunning ? 0 : 2)
-                    }
+                    Image(systemName: manager.isRunning ? "pause.fill" : "play.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(AppTheme.onAccent)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(AppTheme.accent)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-
-                controlButton(icon: "forward.end.fill", size: 15) { manager.skip() }
+                Rectangle().fill(AppTheme.border).frame(width: 1)
+                controlCell(icon: "forward.end") { manager.skip() }
             }
+            .frame(height: 48)
         }
-        .padding(20)
-        .frame(width: 230)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .overlay(RoundedRectangle(cornerRadius: 24).stroke(AppTheme.border, lineWidth: 1))
-        .shadow(color: AppTheme.shadowColor, radius: 20, y: 8)
+        .frame(width: 248)
+        .background(AppTheme.surface)
+        .hairline(AppTheme.accent)
     }
 
-    private var sessionDots: some View {
-        HStack(spacing: 6) {
+    private func progressBar(height: CGFloat) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Rectangle().fill(AppTheme.border)
+                Rectangle()
+                    .fill(AppTheme.accent)
+                    .frame(width: geo.size.width * manager.progress)
+                    .animation(.linear(duration: 1), value: manager.progress)
+            }
+        }
+        .frame(height: height)
+    }
+
+    private var sessionMarks: some View {
+        HStack(spacing: 3) {
             ForEach(0..<manager.sessionsUntilLongBreak, id: \.self) { index in
-                Circle()
-                    .fill(index < manager.sessionsCompletedInCycle ? manager.mode.color : manager.mode.color.opacity(0.15))
-                    .frame(width: 6, height: 6)
+                Rectangle()
+                    .fill(index < manager.sessionsCompletedInCycle ? AppTheme.accent : Color.clear)
+                    .frame(width: 8, height: 8)
+                    .hairline(AppTheme.accent)
             }
         }
     }
 
-    private func controlButton(icon: String, size: CGFloat, action: @escaping () -> Void) -> some View {
+    private func controlCell(icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: size, weight: .semibold))
-                .foregroundStyle(AppTheme.textSecondary)
-                .frame(width: 40, height: 40)
-                .background(AppTheme.surfaceElevated)
-                .clipShape(Circle())
+                .font(.system(size: 13))
+                .foregroundStyle(AppTheme.textPrimary)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -200,18 +187,22 @@ struct PomodoroSettingsView: View {
     @ObservedObject private var localization = LocalizationManager.shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Configurações do Pomodoro")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(AppTheme.textPrimary)
+        VStack(alignment: .leading, spacing: 0) {
+            SectionLabel("Configurações do Pomodoro", color: AppTheme.textPrimary)
+                .padding(16)
 
-            settingRow(title: "Foco (min)", value: $manager.workMinutes, range: 5...60)
-            settingRow(title: "Pausa curta (min)", value: $manager.shortBreakMinutes, range: 1...30)
-            settingRow(title: "Pausa longa (min)", value: $manager.longBreakMinutes, range: 5...45)
-            settingRow(title: "Sessões até pausa longa", value: $manager.sessionsUntilLongBreak, range: 2...8)
+            Rectangle().fill(AppTheme.border).frame(height: 1)
+
+            VStack(spacing: 14) {
+                settingRow(title: "Foco (min)", value: $manager.workMinutes, range: 5...60)
+                settingRow(title: "Pausa curta (min)", value: $manager.shortBreakMinutes, range: 1...30)
+                settingRow(title: "Pausa longa (min)", value: $manager.longBreakMinutes, range: 5...45)
+                settingRow(title: "Sessões até pausa longa", value: $manager.sessionsUntilLongBreak, range: 2...8)
+            }
+            .padding(16)
         }
-        .padding(20)
-        .frame(width: 260)
+        .frame(width: 280)
+        .background(AppTheme.surface)
     }
 
     private func settingRow(title: String, value: Binding<Int>, range: ClosedRange<Int>) -> some View {
@@ -220,9 +211,32 @@ struct PomodoroSettingsView: View {
                 .font(.system(size: 13))
                 .foregroundStyle(AppTheme.textSecondary)
             Spacer()
-            Stepper("\(value.wrappedValue)", value: value, in: range)
-                .fixedSize()
-                .font(.system(size: 13, weight: .medium))
+            HStack(spacing: -1) {
+                stepButton("minus", enabled: value.wrappedValue > range.lowerBound) {
+                    value.wrappedValue -= 1
+                }
+                Text(String(format: "%02d", value.wrappedValue))
+                    .font(.system(size: 13, weight: .medium, design: .monospaced))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .frame(width: 36, height: 28)
+                    .hairline()
+                stepButton("plus", enabled: value.wrappedValue < range.upperBound) {
+                    value.wrappedValue += 1
+                }
+            }
         }
+    }
+
+    private func stepButton(_ icon: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(enabled ? AppTheme.textPrimary : AppTheme.textMuted)
+                .frame(width: 28, height: 28)
+                .hairline()
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 }

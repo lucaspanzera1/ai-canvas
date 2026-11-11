@@ -1,51 +1,68 @@
 <div align="center">
-  <img src="./.github/src/cat.png" width="150" alt="AI Canvas Logo">
-   <h1>AI Canvas </h1>
- </div>
-
----
-
-## 💡 About the Project
-**AI Canvas** is an open-source digital notebook ecosystem built specifically for the **iPad**, bridging the gap between the natural Apple Pencil handwriting experience and the power of Artificial Intelligence.
-
-The core idea is to provide a minimalist, distraction-free environment where you can organize multiple notebooks, write using Apple's native ink aesthetics on infinite A4-segmented canvases, and leverage multiple Multimodal AI providers to enhance your learning process and problem-solving. This tool acts as your intelligent study companion, capable of understanding both your handwritten notes and complex diagrams.
-
-<div align="center">
-<img src="./.github/src/mockup.PNG" width="700" alt="AI Canvas Logo">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./.github/src/logo-dark.png">
+    <img src="./.github/src/logo.png" width="96" alt="AI Canvas logo">
+  </picture>
+  <h1>AI Canvas</h1>
+  <p><code>HANDWRITING × AI — FOR IPAD</code></p>
 </div>
 
-## ✨ Key Features
-* **Native Apple Aesthetics:** Low-latency, highly optimized handwriting experience using PencilKit for iPad and Apple Pencil.
-* **Graph View & Visual Knowledge Network:** Visualize connections and relationships between your folders, notebooks, and individual pages in an interactive node graph.
-* **Integrated Pomodoro Timer:** Stay focused and boost productivity with an inline Pomodoro timer designed for structured study sessions.
-* **Infinite Workspace:** An infinite, scrollable canvas segmented into A4 pages, complete with customizable line and grid backgrounds.
-* **PDF Export:** Export your infinite canvas to PDF effortlessly, perfectly capturing your handwriting alongside chosen background patterns (lines/grids) for seamless sharing.
-* **Dark Mode Support:** Fully optimized for both light and dark modes, ensuring a comfortable note-taking experience in any environment.
-* **Smart Notebook Management:** Manage multiple notebooks and folders for different subjects with a delightful, gamified grid interface and auto-saving.
-* **Multimodal AI Integration:** A built-in AI chat panel that can "see" your canvas and help you:
-    * Perform complex mathematical and engineering calculations based on your hand-drawn formulas.
+---
+
+## About
+
+**AI Canvas** is an open-source digital notebook for the **iPad** that bridges the natural Apple Pencil handwriting experience with the power of multimodal AI.
+
+The interface is deliberately quiet: square edges, 1pt hairlines, a strictly monochrome palette and monospaced labels. No gradients, no shadows, no color competing with your notes — the only color on screen is the ink you choose. Organize notebooks into folders, write on infinite A4-segmented canvases, and ask an AI that can actually *see* what you drew.
+
+<div align="center">
+  <img src="./.github/src/showcase-home.png" width="860" alt="AI Canvas home screen in light and dark mode">
+</div>
+
+## Key Features
+
+* **Native handwriting:** Low-latency PencilKit canvas tuned for iPad and Apple Pencil, with pens, pencil, marker, fountain pen, watercolor, crayon, lasso, ruler and palm rejection.
+* **Monochrome design system:** A flat, square, black-and-white interface that adapts to light and dark mode and keeps the focus on your content.
+* **Multimodal AI panel:** A side panel that reads your canvas (or just a selection) and helps you:
+    * Solve math and engineering problems from hand-drawn formulas.
     * Summarize handwritten or typed notes.
-    * Explain difficult concepts and provide additional context directly from your sketches.
-* **Bring Your Own AI:** Securely add your own API keys via Keychain for multiple leading AI providers, featuring a highly-polished API key management experience. Integrated providers include:
-    * **Google Gemini** (Vision capabilities)
-    * **OpenAI (ChatGPT)** (Vision capabilities)
-    * **Anthropic Claude** (Vision capabilities)
-    * **Groq** (Fast text inference)
+    * Explain concepts and add context directly from your sketches.
+* **Bring your own AI:** API keys stored securely in the Keychain. Supported providers:
+    * **Google Gemini** (vision)
+    * **OpenAI** (vision)
+    * **Anthropic Claude** (vision)
+    * **Groq** (fast text inference)
+* **Infinite workspace:** A scrollable canvas split into A4 pages, with blank, lined or grid backgrounds.
+* **PDF import & annotation:** Bring in PDFs, highlight and draw on top of them.
+* **PDF export:** Export the canvas with its background pattern for easy sharing.
+* **Folders & graph view:** Nest notebooks in folders and explore how everything connects in an interactive node graph.
+* **Pomodoro timer:** A floating focus timer that stays on top of every screen.
+* **Home Screen widgets:** Recent notebooks, quick new notebook and Pomodoro status.
+* **Self-hosted sync:** Optional sync to your own server, with Markdown export to Obsidian and Notion — see [SYNC.md](./SYNC.md).
+* **Português & English:** In-app language switch, independent of the system language.
 
-## 🛠 Tech Stack
-* **Frontend:** Swift, SwiftUI, PencilKit
-* **AI Engine/Providers:** Gemini, OpenAI, Claude, Groq APIs
-* **Database/Persistence:** Local File System (JSON) for notebooks, Apple Keychain for secure API key storage.
-* **Architecture:** Modern Swift concurrency with a modular design pattern.
+<div align="center">
+  <img src="./.github/src/showcase-canvas.png" width="860" alt="Notebook canvas with the AI panel open, in light and dark mode">
+</div>
 
-## 🚀 Getting Started
-1. Clone the repository: `git clone https://github.com/lucaspanzera/ai-canvas.git`
-2. Open the project in Xcode (requires Xcode 15+ and iOS/iPadOS 17+).
-3. Build and run on your iPad Simulator or physical iPad.
-4. On first launch, follow the onboarding process to add your preferred AI API Keys.
+## Tech Stack
 
-## 🤝 Contributing
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Feel free to open issues or pull requests! 
+* **Frontend:** Swift, SwiftUI, PencilKit, WidgetKit
+* **AI providers:** Gemini, OpenAI, Claude and Groq APIs
+* **Persistence:** Local file system (JSON) for notebooks, Apple Keychain for API keys
+* **Architecture:** Modern Swift concurrency with a modular design
+
+## Getting Started
+
+1. Clone the repository: `git clone https://github.com/lucaspanzera1/ai-canvas.git`
+2. Open `AICanvas.xcodeproj` in Xcode (requires Xcode 15+ and iPadOS 17+).
+3. Build and run on an iPad simulator or a physical iPad.
+4. On first launch, follow the onboarding to add your preferred AI API keys.
+
+## Contributing
+
+Contributions are welcome — feel free to open issues or pull requests.
 
 ---
-Built with ❤️ by [Lucas Panzera](https://github.com/lucaspanzera)
+
+Built by [Lucas Panzera](https://github.com/lucaspanzera1)

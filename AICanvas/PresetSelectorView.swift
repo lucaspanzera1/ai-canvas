@@ -23,7 +23,7 @@ struct PresetSelectorView: View {
                                 preset: preset,
                                 isSelected: preset.id == aiConfig.selectedPreset.id,
                                 onSelect: {
-                                    withAnimation(.spring(response: 0.3)) {
+                                    withAnimation(AppTheme.motion) {
                                         aiConfig.setSelectedPreset(preset)
                                     }
                                 }
@@ -59,13 +59,13 @@ struct PresetSelectorView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(12)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                     
                     Button {
-                        withAnimation(.spring(response: 0.3)) {
+                        withAnimation(AppTheme.motion) {
                             isPresented = false
                         }
                     } label: {
@@ -75,7 +75,7 @@ struct PresetSelectorView: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                             .background(AppTheme.action)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .clipShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -97,7 +97,7 @@ struct PresetSelectorView: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 34, height: 34)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(Rectangle())
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Presets de IA")
@@ -111,7 +111,7 @@ struct PresetSelectorView: View {
                 Spacer()
                 
                 Button {
-                    withAnimation(.spring(response: 0.4)) {
+                    withAnimation(AppTheme.motion) {
                         isPresented = false
                     }
                 } label: {
@@ -120,8 +120,8 @@ struct PresetSelectorView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                         .frame(width: 32, height: 32)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -163,8 +163,8 @@ struct PresetCard: View {
                     
                     if isSelected {
                         ZStack {
-                            Circle()
-                                .fill(Color(hex: preset.color))
+                            Rectangle()
+                                .fill(AppTheme.accent)
                                 .frame(width: 28, height: 28)
                             
                             Image(systemName: "checkmark")
@@ -172,7 +172,7 @@ struct PresetCard: View {
                                 .foregroundStyle(AppTheme.surface)
                         }
                     } else {
-                        Circle()
+                        Rectangle()
                             .stroke(AppTheme.border, lineWidth: 2)
                             .frame(width: 28, height: 28)
                     }
@@ -183,28 +183,28 @@ struct PresetCard: View {
                     ForEach(preset.features, id: \.self) { feature in
                         Text(feature.localized)
                             .font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color(hex: preset.color))
+                            .foregroundStyle(AppTheme.accent)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color(hex: preset.color).opacity(0.1))
-                            .clipShape(Capsule())
+                            .background(AppTheme.accent.opacity(0.1))
+                            .clipShape(Rectangle())
                     }
                     Spacer()
                 }
             }
             .padding(14)
-            .background(isSelected ? Color(hex: preset.color).opacity(0.08) : AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .background(isSelected ? AppTheme.accent.opacity(0.08) : AppTheme.surfaceElevated)
+            .clipShape(Rectangle())
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                Rectangle()
                     .stroke(
-                        isSelected ? Color(hex: preset.color).opacity(0.4) : AppTheme.border,
+                        isSelected ? AppTheme.accent.opacity(0.4) : AppTheme.border,
                         lineWidth: isSelected ? 2 : 1
                     )
             )
         }
         .buttonStyle(.plain)
-        .animation(.spring(response: 0.3), value: isSelected)
+        .animation(AppTheme.motion, value: isSelected)
     }
 }
 
@@ -242,8 +242,8 @@ struct CustomPromptEditorView: View {
                             .foregroundStyle(AppTheme.textSecondary)
                             .frame(width: 32, height: 32)
                             .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                            .clipShape(Rectangle())
+                            .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -264,8 +264,8 @@ struct CustomPromptEditorView: View {
                     TextEditor(text: $editingPrompt)
                         .scrollContentBackground(.hidden)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                         .font(.system(size: 13, design: .monospaced))
                         .foregroundColor(AppTheme.textPrimary)
                         .onChange(of: editingPrompt) { _ in
@@ -284,8 +284,8 @@ struct CustomPromptEditorView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 11)
                                     .background(AppTheme.surfaceElevated)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                                    .clipShape(Rectangle())
+                                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                             }
                             .buttonStyle(.plain)
                         }
@@ -301,7 +301,7 @@ struct CustomPromptEditorView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 11)
                                 .background(AppTheme.action)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         .opacity(hasChanges ? 1 : 0.5)

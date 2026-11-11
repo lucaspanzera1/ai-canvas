@@ -34,7 +34,7 @@ struct PresetSelectorView: View {
                         // Preset list
                         VStack(alignment: .leading, spacing: 10) {
                             Text("PRESETS DISPONÍVEIS")
-                                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                                .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(AppTheme.textMuted)
                                 .padding(.horizontal, 4)
                             
@@ -63,8 +63,8 @@ struct PresetSelectorView: View {
                     .foregroundStyle(AppTheme.textSecondary)
                     .frame(width: 34, height: 34)
                     .background(AppTheme.surfaceElevated)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                    .clipShape(Rectangle())
+                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Presets de IA")
@@ -85,8 +85,8 @@ struct PresetSelectorView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                         .frame(width: 32, height: 32)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -106,7 +106,7 @@ struct PresetSelectorView: View {
         let current = aiConfig.selectedPreset
         return HStack(spacing: 12) {
             ZStack {
-                Circle()
+                Rectangle()
                     .fill(color(fromHex: current.color).opacity(0.12))
                     .frame(width: 44, height: 44)
                 Text(current.emoji)
@@ -115,7 +115,7 @@ struct PresetSelectorView: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("PRESET ATIVO")
-                    .font(.system(size: 9, weight: .semibold, design: .rounded))
+                    .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(color(fromHex: current.color))
                 Text(current.name.localized)
                     .font(.system(size: 15, weight: .semibold))
@@ -129,7 +129,7 @@ struct PresetSelectorView: View {
             Spacer()
             
             ZStack {
-                Circle()
+                Rectangle()
                     .fill(color(fromHex: current.color).opacity(0.12))
                     .frame(width: 28, height: 28)
                 Image(systemName: "checkmark")
@@ -139,8 +139,8 @@ struct PresetSelectorView: View {
         }
         .padding(16)
         .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.border, lineWidth: 1))
+        .clipShape(Rectangle())
+        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
         .padding(.horizontal, 16)
     }
     
@@ -150,7 +150,7 @@ struct PresetSelectorView: View {
         let isSelected = preset.id == selectedPresetId
         
         return Button {
-            withAnimation(.spring(response: 0.3)) {
+            withAnimation(AppTheme.motion) {
                 selectedPresetId = preset.id
                 aiConfig.setSelectedPreset(preset)
                 
@@ -175,7 +175,7 @@ struct PresetSelectorView: View {
         } label: {
             HStack(spacing: 12) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8)
+                    Rectangle()
                         .fill(color(fromHex: preset.color).opacity(0.12))
                         .frame(width: 36, height: 36)
                     Text(preset.emoji)
@@ -196,24 +196,24 @@ struct PresetSelectorView: View {
                 
                 if isSelected {
                     Text("EM USO")
-                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(color(fromHex: preset.color))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(color(fromHex: preset.color).opacity(0.12))
-                        .clipShape(Capsule())
+                        .clipShape(Rectangle())
                 }
             }
             .padding(12)
             .background(isSelected ? color(fromHex: preset.color).opacity(0.08) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(Rectangle())
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                Rectangle()
                     .stroke(isSelected ? color(fromHex: preset.color).opacity(0.4) : AppTheme.border, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
-        .animation(.spring(response: 0.3), value: isSelected)
+        .animation(AppTheme.motion, value: isSelected)
     }
     
     // MARK: - Custom Prompt
@@ -247,8 +247,8 @@ struct PresetSelectorView: View {
                         .frame(minHeight: 140)
                         .padding(10)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                     
                     HStack(spacing: 10) {
                         Button(role: .destructive) {
@@ -265,7 +265,7 @@ struct PresetSelectorView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
                             .background(AppTheme.danger.opacity(0.08))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                         
@@ -285,7 +285,7 @@ struct PresetSelectorView: View {
                             .padding(.horizontal, 14)
                             .padding(.vertical, 10)
                             .background(AppTheme.accent)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
@@ -295,10 +295,10 @@ struct PresetSelectorView: View {
         }
         .padding(16)
         .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+        .clipShape(Rectangle())
+        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
         .padding(.horizontal, 16)
-        .animation(.spring(response: 0.35, dampingFraction: 0.85), value: showCustomPromptEditor)
+        .animation(AppTheme.motion, value: showCustomPromptEditor)
     }
     
     // MARK: - Helpers

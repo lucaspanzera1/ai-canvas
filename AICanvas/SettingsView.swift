@@ -33,7 +33,7 @@ struct SettingsView: View {
                             Spacer()
                             if !SyncSettings.load().isConfigured {
                                 Image(systemName: "exclamationmark.circle")
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(AppTheme.textPrimary)
                                     .font(.system(size: 12))
                             }
                             Image(systemName: "chevron.right")

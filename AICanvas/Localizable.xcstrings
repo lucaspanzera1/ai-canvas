@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "pt-BR",
   "strings" : {
+    "/" : {
+
+    },
     "# %@\n\n> Caderno sem texto identificável via OCR.\n> Última modificação: %@\n" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -8,19 +11,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "# %@\n\n> Notebook has no OCR-recognizable text.\n> Last modified: %@\n"
-          }
-        }
-      }
-    },
-    "%lld" : {
-
-    },
-    "%lld %@" : {
-      "localizations" : {
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld %2$@"
           }
         }
       }
@@ -91,9 +81,6 @@
           }
         }
       }
-    },
-    "✨" : {
-
     },
     "🌐 Cultura" : {
       "extractionState" : "stale",
@@ -315,6 +302,17 @@
         }
       }
     },
+    "00 itens" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "00 items"
+          }
+        }
+      }
+    },
     "A API Key do %@ será removida. Você poderá reconfigurá-la depois." : {
       "localizations" : {
         "en" : {
@@ -356,6 +354,7 @@
       }
     },
     "Agora mesmo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -366,6 +365,7 @@
       }
     },
     "AI Assistant" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -747,6 +747,7 @@
       }
     },
     "BANNER PERSONALIZADO (IMAGEM)" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -840,6 +841,7 @@
       }
     },
     "CADERNOS" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -881,6 +883,7 @@
       }
     },
     "canvas" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -889,6 +892,9 @@
           }
         }
       }
+    },
+    "CANVAS" : {
+
     },
     "Canvas anexado" : {
       "localizations" : {
@@ -994,6 +1000,7 @@
       }
     },
     "Configurações do Pomodoro" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1108,6 +1115,7 @@
       }
     },
     "COR DO TEMA" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1411,6 +1419,9 @@
         }
       }
     },
+    "ERR" : {
+
+    },
     "Erro" : {
       "localizations" : {
         "en" : {
@@ -1507,6 +1518,7 @@
       }
     },
     "Escolher Ícone" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1560,6 +1572,7 @@
       }
     },
     "ESPAÇO CRIATIVO" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1728,6 +1741,7 @@
       }
     },
     "FERRAMENTAS" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1753,6 +1767,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FetchFlow API Key (optional)"
+          }
+        }
+      }
+    },
+    "Foco" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus"
           }
         }
       }
@@ -1844,6 +1869,7 @@
       }
     },
     "Grifar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1905,6 +1931,17 @@
         }
       }
     },
+    "IA" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI"
+          }
+        }
+      }
+    },
     "IA do Google" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -1917,6 +1954,7 @@
       }
     },
     "ÍCONE" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1958,6 +1996,7 @@
       }
     },
     "Imagem" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2229,6 +2268,7 @@
       }
     },
     "Meus Cadernos" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2291,6 +2331,7 @@
       }
     },
     "Modo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2470,6 +2511,7 @@
       }
     },
     "NOME" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2563,6 +2605,7 @@
       }
     },
     "Online" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2573,6 +2616,7 @@
       }
     },
     "OPACIDADE" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2604,6 +2648,17 @@
         }
       }
     },
+    "Pasta" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder"
+          }
+        }
+      }
+    },
     "Pasta vazia" : {
       "localizations" : {
         "en" : {
@@ -2615,6 +2670,7 @@
       }
     },
     "PASTAS" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2635,6 +2691,17 @@
         }
       }
     },
+    "Pausa Curta" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Short Break"
+          }
+        }
+      }
+    },
     "Pausa curta (min)" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2642,6 +2709,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Short break (min)"
+          }
+        }
+      }
+    },
+    "Pausa Longa" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Long Break"
           }
         }
       }
@@ -3144,7 +3222,19 @@
         }
       }
     },
+    "Sessão" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Session"
+          }
+        }
+      }
+    },
     "Sessão %lld" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3239,6 +3329,17 @@
         }
       }
     },
+    "Sugestões" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggestions"
+          }
+        }
+      }
+    },
     "Sugira próximos passos" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3284,6 +3385,7 @@
       }
     },
     "Sync" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3292,6 +3394,9 @@
           }
         }
       }
+    },
+    "SYNC" : {
+
     },
     "Sync concluído! Enviados: %d | Baixados: %d" : {
       "extractionState" : "stale",
@@ -3327,6 +3432,7 @@
       }
     },
     "TAMANHO" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3422,6 +3528,7 @@
       }
     },
     "Trocar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3587,6 +3694,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Advanced vision"
+          }
+        }
+      }
+    },
+    "Você" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You"
           }
         }
       }

@@ -13,7 +13,7 @@ struct MultiProviderOnboardingView: View {
                 .ignoresSafeArea()
             
             // Subtle brand-colored glow that changes with selected provider
-            Circle()
+            Rectangle()
                 .fill(currentProvider.brandColor.opacity(0.06))
                 .blur(radius: 80)
                 .frame(width: 400, height: 400)
@@ -62,13 +62,12 @@ struct MultiProviderOnboardingView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 80, height: 80)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-                .shadow(color: AppTheme.accent.opacity(0.3), radius: 10, y: 5)
+                .clipShape(Rectangle())
             
             VStack(spacing: 8) {
                 // Title
                 Text("AI Canvas")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.system(size: 32, weight: .bold))
                     .foregroundStyle(AppTheme.textPrimary)
                 
                 Text("Configure seu arsenal de IA")
@@ -80,7 +79,7 @@ struct MultiProviderOnboardingView: View {
             HStack(spacing: 12) {
                 ForEach(Array(AIProvider.allCases.enumerated()), id: \.element.id) { index, provider in
                     Button {
-                        withAnimation(.spring(response: 0.35)) {
+                        withAnimation(AppTheme.motion) {
                             selectedTab = index
                         }
                     } label: {
@@ -100,23 +99,23 @@ struct MultiProviderOnboardingView: View {
                             selectedTab == index
                             ? provider.brandColorLight
                             : (KeychainManager.shared.hasAPIKey(for: provider)
-                               ? Color.green.opacity(0.1)
+                               ? AppTheme.surfaceElevated
                                : AppTheme.surfaceElevated)
                         )
-                        .clipShape(Capsule())
+                        .clipShape(Rectangle())
                         .overlay(
-                            Capsule().stroke(
+                            Rectangle().stroke(
                                 selectedTab == index
                                 ? provider.brandColor.opacity(0.4)
                                 : (KeychainManager.shared.hasAPIKey(for: provider)
-                                   ? Color.green.opacity(0.3)
+                                   ? AppTheme.surfaceElevated
                                    : AppTheme.border),
                                 lineWidth: 1
                             )
                         )
                     }
                     .buttonStyle(.plain)
-                    .animation(.spring(response: 0.3), value: selectedTab)
+                    .animation(AppTheme.motion, value: selectedTab)
                 }
             }
         }
@@ -129,7 +128,7 @@ struct MultiProviderOnboardingView: View {
         HStack(spacing: 16) {
             if selectedTab > 0 {
                 Button {
-                    withAnimation(.spring(response: 0.35)) {
+                    withAnimation(AppTheme.motion) {
                         selectedTab -= 1
                     }
                 } label: {
@@ -143,8 +142,8 @@ struct MultiProviderOnboardingView: View {
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
                     .background(AppTheme.surfaceElevated)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                    .clipShape(Rectangle())
+                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -153,7 +152,7 @@ struct MultiProviderOnboardingView: View {
             
             if selectedTab < AIProvider.allCases.count - 1 {
                 Button {
-                    withAnimation(.spring(response: 0.35)) {
+                    withAnimation(AppTheme.motion) {
                         selectedTab += 1
                     }
                 } label: {
@@ -163,18 +162,17 @@ struct MultiProviderOnboardingView: View {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .semibold))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.onAccent)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
                     .background(currentProvider.brandColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .shadow(color: currentProvider.brandColor.opacity(0.3), radius: 6, y: 3)
+                    .clipShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             } else if hasConfiguredAny || KeychainManager.shared.hasAnyAPIKey {
                 Button {
                     aiConfig.updateAvailableModels()
-                    withAnimation(.spring(response: 0.4)) {
+                    withAnimation(AppTheme.motion) {
                         isPresented = false
                     }
                 } label: {
@@ -184,18 +182,11 @@ struct MultiProviderOnboardingView: View {
                         Text("Concluir")
                             .font(.system(size: 15, weight: .semibold))
                     }
-                    .foregroundStyle(.white)
+                    .foregroundStyle(AppTheme.onAccent)
                     .padding(.horizontal, 28)
                     .padding(.vertical, 14)
-                    .background(
-                        LinearGradient(
-                            colors: [Color.green, Color.green.opacity(0.85)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                    .shadow(color: Color.green.opacity(0.3), radius: 6, y: 3)
+                    .background(AppTheme.accent)
+                    .clipShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -227,13 +218,12 @@ struct ProviderOnboardingCard: View {
                 
                 // Provider logo with branded glow
                 ZStack {
-                    Circle()
+                    Rectangle()
                         .fill(provider.brandColor.opacity(0.08))
                         .frame(width: 120, height: 120)
                         .blur(radius: 20)
                     
                     ProviderLogoView(provider: provider, size: 80, cornerRadius: 20)
-                        .shadow(color: provider.brandColor.opacity(0.4), radius: 16, y: 8)
                 }
                 .scaleEffect(cardAppear ? 1 : 0.6)
                 .opacity(cardAppear ? 1 : 0)
@@ -241,7 +231,7 @@ struct ProviderOnboardingCard: View {
                 // Title
                 VStack(spacing: 8) {
                     Text(provider.displayName)
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .font(.system(size: 26, weight: .bold))
                         .foregroundStyle(AppTheme.textPrimary)
                     
                     Text(provider.tagline)
@@ -271,7 +261,7 @@ struct ProviderOnboardingCard: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     .background(provider.brandColorLight)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(Rectangle())
                     
                     Text("Configure sua API Key para\ndesbloquear os modelos do \(provider.displayName).")
                         .font(.system(size: 14))
@@ -317,7 +307,7 @@ struct ProviderOnboardingCard: View {
         .scrollBounceBehavior(.basedOnSize)
         .onAppear {
             isConfigured = KeychainManager.shared.hasAPIKey(for: provider)
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.75).delay(0.1)) {
+            withAnimation(AppTheme.motion.delay(0.1)) {
                 cardAppear = true
             }
         }
@@ -329,13 +319,13 @@ struct ProviderOnboardingCard: View {
     private var modelsPreview: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("MODELOS DISPONÍVEIS")
-                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(AppTheme.textMuted)
             
             VStack(spacing: 4) {
                 ForEach(provider.defaultModels) { model in
                     HStack(spacing: 8) {
-                        Circle()
+                        Rectangle()
                             .fill(provider.brandColor.opacity(0.5))
                             .frame(width: 5, height: 5)
                         Text(model.name)
@@ -348,9 +338,9 @@ struct ProviderOnboardingCard: View {
                 }
             }
             .background(AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(Rectangle())
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                Rectangle()
                     .stroke(AppTheme.border.opacity(0.5), lineWidth: 1)
             )
         }
@@ -362,20 +352,20 @@ struct ProviderOnboardingCard: View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {
                 ZStack {
-                    Circle()
-                        .fill(Color.green.opacity(0.1))
+                    Rectangle()
+                        .fill(AppTheme.surfaceElevated)
                         .frame(width: 44, height: 44)
-                        .overlay(Circle().stroke(Color.green.opacity(0.3), lineWidth: 1))
+                        .overlay(Rectangle().stroke(AppTheme.surfaceElevated, lineWidth: 1))
                     
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 22))
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(AppTheme.accent)
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Configurado!")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Color.green)
+                        .foregroundStyle(AppTheme.accent)
                     Text("API Key salva com sucesso")
                         .font(.system(size: 12))
                         .foregroundStyle(AppTheme.textSecondary)
@@ -387,9 +377,9 @@ struct ProviderOnboardingCard: View {
                     .opacity(0.5)
             }
             .padding(16)
-            .background(Color.green.opacity(0.05))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.green.opacity(0.2), lineWidth: 1))
+            .background(AppTheme.surfaceElevated)
+            .clipShape(Rectangle())
+            .overlay(Rectangle().stroke(AppTheme.surfaceElevated, lineWidth: 1))
             
             Button(role: .destructive) {
                 KeychainManager.shared.deleteKey(for: provider)
@@ -416,7 +406,7 @@ struct ProviderOnboardingCard: View {
             // Key input
             VStack(alignment: .leading, spacing: 8) {
                 Text("API KEY")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(AppTheme.textMuted)
                 
                 HStack {
@@ -447,9 +437,9 @@ struct ProviderOnboardingCard: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 14)
                 .background(AppTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(Rectangle())
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    Rectangle()
                         .stroke(
                             errorMessage != nil
                             ? AppTheme.danger
@@ -478,7 +468,7 @@ struct ProviderOnboardingCard: View {
                 HStack(spacing: 8) {
                     if isValidating {
                         ProgressView()
-                            .tint(.white)
+                            .tint(AppTheme.onAccent)
                             .scaleEffect(0.8)
                     } else {
                         Image(systemName: "key.fill")
@@ -487,7 +477,7 @@ struct ProviderOnboardingCard: View {
                     Text(isValidating ? "Validando..." : "Salvar \(provider.displayName)")
                         .font(.system(size: 15, weight: .semibold))
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(AppTheme.onAccent)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
                 .background(
@@ -495,8 +485,7 @@ struct ProviderOnboardingCard: View {
                     ? AppTheme.borderHover
                     : provider.brandColor
                 )
-                .clipShape(Capsule())
-                .shadow(color: apiKey.isEmpty ? .clear : provider.brandColor.opacity(0.3), radius: 8, y: 4)
+                .clipShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(apiKey.isEmpty || isValidating)
@@ -532,7 +521,7 @@ struct ProviderOnboardingCard: View {
                 isValidating = false
                 if isValid {
                     KeychainManager.shared.saveKey(trimmed, for: provider)
-                    withAnimation(.spring(response: 0.4)) {
+                    withAnimation(AppTheme.motion) {
                         isConfigured = true
                     }
                     onConfigured()

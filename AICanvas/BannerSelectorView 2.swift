@@ -44,7 +44,7 @@ struct BannerSelectorView: View {
         }
         .onAppear {
             banners = store.getAvailableBanners(for: itemId)
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { appear = true }
+            withAnimation(AppTheme.motion) { appear = true }
         }
     }
     
@@ -56,8 +56,8 @@ struct BannerSelectorView: View {
                     .foregroundStyle(AppTheme.textSecondary)
                     .frame(width: 34, height: 34)
                     .background(AppTheme.surfaceElevated)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                    .clipShape(Rectangle())
+                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Banners Pré-definidos")
@@ -86,7 +86,7 @@ struct BannerSelectorView: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
                         .background(AppTheme.danger.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -99,8 +99,8 @@ struct BannerSelectorView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                         .frame(width: 32, height: 32)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -117,10 +117,10 @@ struct BannerSelectorView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             ZStack {
-                Circle()
+                Rectangle()
                     .fill(AppTheme.surfaceElevated)
                     .frame(width: 80, height: 80)
-                    .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
+                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 Image(systemName: "photo.on.rectangle.angled")
                     .font(.system(size: 28))
                     .foregroundStyle(AppTheme.textSecondary)
@@ -174,14 +174,14 @@ private struct BannerThumbCard: View {
                 .padding(.vertical, 6)
                 .background(Color.black.opacity(0.35))
                 .foregroundStyle(.white)
-                .clipShape(Capsule())
+                .clipShape(Rectangle())
                 .padding(8)
             }
             .frame(maxWidth: .infinity)
             .background(AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(Rectangle())
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                Rectangle()
                     .stroke(hovered ? AppTheme.borderActive : AppTheme.border, lineWidth: hovered ? 2 : 1)
             )
         }

@@ -31,22 +31,6 @@ struct RecentNotebooksProvider: TimelineProvider {
     ]
 }
 
-// Duplicated from NotebookListView.notebookSwiftColor(at:) — this target can't
-// import the app's UIKit/PencilKit-heavy files, so the palette is kept in sync by hand.
-private let widgetNotebookColors: [Color] = [
-    Color(red: 0.44, green: 0.58, blue: 0.88),
-    Color(red: 0.55, green: 0.85, blue: 0.76),
-    Color(red: 0.98, green: 0.70, blue: 0.58),
-    Color(red: 0.88, green: 0.56, blue: 0.56),
-    Color(red: 0.90, green: 0.85, blue: 0.55),
-    Color(red: 0.75, green: 0.65, blue: 0.85),
-    Color(red: 0.60, green: 0.60, blue: 0.60),
-    Color(red: 0.20, green: 0.25, blue: 0.35),
-]
-
-private func widgetColor(at index: Int) -> Color {
-    widgetNotebookColors[index % widgetNotebookColors.count]
-}
 
 private let relativeFormatter: RelativeDateTimeFormatter = {
     let formatter = RelativeDateTimeFormatter()
@@ -100,10 +84,10 @@ private struct NotebookRow: View {
     var body: some View {
         HStack(spacing: 10) {
             Text(notebook.emoji)
-                .font(.system(size: 20))
+                .font(.system(size: 17))
+                .grayscale(1)
                 .frame(width: 32, height: 32)
-                .background(widgetColor(at: notebook.colorIndex).opacity(0.25))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(Rectangle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 1))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(notebook.name)

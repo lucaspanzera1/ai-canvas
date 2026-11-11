@@ -320,14 +320,14 @@ struct ModelDetailsCard: View {
                     Spacer()
                     Text(modelInfo.supportsVision ? "Suportada" : "Não suportada")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(modelInfo.supportsVision ? Color.green : AppTheme.textMuted)
+                        .foregroundStyle(modelInfo.supportsVision ? AppTheme.accent : AppTheme.textMuted)
                 }
             }
         }
         .padding(12)
         .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+        .clipShape(Rectangle())
+        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
     }
 }
 
@@ -363,8 +363,8 @@ struct ModelComparisonView: View {
                             .foregroundStyle(AppTheme.textSecondary)
                             .frame(width: 32, height: 32)
                             .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                            .clipShape(Rectangle())
+                            .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }

@@ -193,7 +193,7 @@ struct PDFNotebookView: View {
                     ))
             }
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showAIPanel)
+        .animation(AppTheme.motion, value: showAIPanel)
         .background(AppTheme.background)
         .onDisappear { controller.flushSave() }
         .fullScreenCover(isPresented: $showOnboarding) {
@@ -228,68 +228,62 @@ struct PDFCanvasToolbar: View {
     var body: some View {
         HStack(spacing: 6) {
             if !showSidebar {
-                Button {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showSidebar = true }
-                } label: {
-                    Image(systemName: "sidebar.left")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                SquareIconButton(icon: "sidebar.left") {
+                    withAnimation(AppTheme.motion) { showSidebar = true }
                 }
-                .buttonStyle(.plain)
+                .padding(.trailing, 8)
             }
 
             Button(action: onBack) {
-                HStack(spacing: 6) {
-                    Image(systemName: "chevron.left").font(.system(size: 12, weight: .bold))
-                    Text("Cadernos").font(.system(size: 13, weight: .semibold))
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.left").font(.system(size: 12))
+                    Text("Cadernos").font(.system(size: 13))
                 }
                 .foregroundStyle(AppTheme.textSecondary)
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(AppTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                .frame(height: 32)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
 
+            Text("/")
+                .font(.system(size: 13, weight: .light))
+                .foregroundStyle(AppTheme.textMuted)
+                .padding(.horizontal, 10)
+
             HStack(spacing: 8) {
-                NoteIcon(icon: notebook.emoji, size: 16)
+                NoteIcon(icon: notebook.emoji, size: 14)
                 Text(notebook.name)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
             }
 
             Spacer()
 
-            ToolButtonSimple(icon: "square.and.arrow.up", isDisabled: false, color: AppTheme.action, action: onExport)
+            SquareIconButton(icon: "square.and.arrow.up", action: onExport)
 
-            Rectangle().fill(AppTheme.border).frame(width: 1, height: 20).padding(.horizontal, 8)
+            Rectangle().fill(AppTheme.border).frame(width: 1, height: 20).padding(.horizontal, 12)
 
             Button {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { showAIPanel.toggle() }
+                withAnimation(AppTheme.motion) { showAIPanel.toggle() }
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: showAIPanel ? "sparkles.rectangle.stack.fill" : "sparkles.rectangle.stack")
-                        .font(.system(size: 14, weight: .medium))
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkle")
+                        .font(.system(size: 12))
                     Text(showAIPanel ? "Fechar IA" : "Abrir IA")
                         .font(.system(size: 13, weight: .medium))
                 }
-                .foregroundStyle(showAIPanel ? .white : AppTheme.textPrimary)
-                .padding(.horizontal, 14).padding(.vertical, 8)
-                .background(showAIPanel ? AppTheme.accent : AppTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .overlay(RoundedRectangle(cornerRadius: 8).stroke(showAIPanel ? Color.clear : AppTheme.border, lineWidth: 1))
+                .foregroundStyle(showAIPanel ? AppTheme.onAccent : AppTheme.textPrimary)
+                .padding(.horizontal, 14)
+                .frame(height: 32)
+                .background(showAIPanel ? AppTheme.accent : AppTheme.surface)
+                .hairline(AppTheme.accent)
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 16).padding(.vertical, 10)
         .background(AppTheme.surface.ignoresSafeArea(edges: .top))
         .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
-        .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
     }
 }
 
@@ -321,14 +315,14 @@ struct PDFDrawingToolkit: View {
                         pdfWidthPanel.transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
-                .animation(.spring(response: 0.3, dampingFraction: 0.82), value: activePanel)
+                .animation(AppTheme.motion, value: activePanel)
 
                 mainBar.transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
                 collapsedPill
             }
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: expanded)
+        .animation(AppTheme.motion, value: expanded)
     }
 
     // MARK: Main Bar
@@ -336,7 +330,7 @@ struct PDFDrawingToolkit: View {
     private var mainBar: some View {
         HStack(spacing: 0) {
             barButton(icon: "chevron.down", tint: AppTheme.textMuted) {
-                withAnimation(.spring(response: 0.3)) { expanded = false }
+                withAnimation(AppTheme.motion) { expanded = false }
             }
 
             pdfDivider
@@ -345,11 +339,12 @@ struct PDFDrawingToolkit: View {
                 VStack(spacing: 2) {
                     Image(systemName: "highlighter")
                         .font(.system(size: 14, weight: .regular))
-                        .foregroundStyle(Color(red: 0.98, green: 0.80, blue: 0.10))
+                        .foregroundStyle(AppTheme.textPrimary)
                         .frame(height: 18)
-                    Text("Grifar")
-                        .font(.system(size: 8, weight: .regular, design: .rounded))
-                        .foregroundStyle(AppTheme.textMuted)
+                    Text("Grifar".localized.uppercased())
+                        .font(.system(size: 7, weight: .medium, design: .monospaced))
+                        .tracking(0.6)
+                        .foregroundStyle(AppTheme.textSecondary)
                 }
                 .padding(.horizontal, 8).padding(.vertical, 5)
             }
@@ -361,7 +356,7 @@ struct PDFDrawingToolkit: View {
                 HStack(spacing: 6) {
                     Image(systemName: controller.selectedTool.icon)
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(isDrawActive ? controller.inkColor : AppTheme.textSecondary)
+                        .foregroundStyle(AppTheme.textPrimary)
                     Text(controller.selectedTool.label)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundStyle(AppTheme.textPrimary)
@@ -370,12 +365,7 @@ struct PDFDrawingToolkit: View {
                         .foregroundStyle(AppTheme.textMuted)
                 }
                 .padding(.horizontal, 10).padding(.vertical, 7)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(activePanel == .tools ? AppTheme.background : Color.clear)
-                        .overlay(RoundedRectangle(cornerRadius: 8)
-                            .stroke(activePanel == .tools ? AppTheme.borderHover : Color.clear, lineWidth: 1))
-                )
+                .hairline(activePanel == .tools ? AppTheme.accent : AppTheme.border)
             }
             .buttonStyle(.plain)
 
@@ -394,16 +384,11 @@ struct PDFDrawingToolkit: View {
 
             if isDrawActive {
                 Button { togglePanel(.color) } label: {
-                    ZStack {
-                        Circle()
-                            .fill(controller.inkColor)
-                            .frame(width: 28, height: 28)
-                            .shadow(color: controller.inkColor.opacity(0.6),
-                                    radius: activePanel == .color ? 8 : 3)
-                        if activePanel == .color {
-                            Circle().stroke(Color.white, lineWidth: 2).frame(width: 28, height: 28)
-                        }
-                    }
+                    Rectangle()
+                        .fill(controller.inkColor)
+                        .frame(width: 22, height: 22)
+                        .padding(3)
+                        .hairline(activePanel == .color ? AppTheme.accent : AppTheme.borderHover)
                 }
                 .buttonStyle(.plain)
                 .padding(.horizontal, 8)
@@ -414,12 +399,8 @@ struct PDFDrawingToolkit: View {
             }
         }
         .padding(.horizontal, 4).padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(AppTheme.surface)
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderHover, lineWidth: 1))
-        )
-        .shadow(color: AppTheme.shadowColor, radius: 12, x: 0, y: 5)
+        .background(AppTheme.surface)
+        .hairline(AppTheme.accent)
     }
 
     private func penStyleButton(_ style: PDFPenStyle) -> some View {
@@ -428,21 +409,14 @@ struct PDFDrawingToolkit: View {
             VStack(spacing: 2) {
                 Image(systemName: style.icon)
                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                    .foregroundStyle(isSelected ? controller.inkColor : AppTheme.textSecondary)
+                    .foregroundStyle(isSelected ? AppTheme.onAccent : AppTheme.textSecondary)
                     .frame(height: 18)
-                Text(style.rawValue)
-                    .font(.system(size: 7, weight: isSelected ? .semibold : .regular, design: .rounded))
-                    .foregroundStyle(isSelected ? AppTheme.textPrimary : AppTheme.textMuted)
+                Text(style.rawValue.uppercased())
+                    .font(.system(size: 7, weight: .medium, design: .monospaced))
+                    .foregroundStyle(isSelected ? AppTheme.onAccent : AppTheme.textMuted)
             }
             .padding(.horizontal, 7).padding(.vertical, 5)
-            .background(
-                RoundedRectangle(cornerRadius: 7)
-                    .fill(isSelected
-                          ? (colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.05))
-                          : Color.clear)
-                    .overlay(RoundedRectangle(cornerRadius: 7)
-                        .stroke(isSelected ? AppTheme.borderHover : Color.clear, lineWidth: 1))
-            )
+            .background(isSelected ? AppTheme.accent : Color.clear)
         }
         .buttonStyle(.plain)
     }
@@ -451,9 +425,7 @@ struct PDFDrawingToolkit: View {
 
     private var pdfToolsPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("FERRAMENTAS")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundStyle(AppTheme.textMuted)
+            SectionLabel("FERRAMENTAS")
                 .padding(.horizontal, 2)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -464,30 +436,27 @@ struct PDFDrawingToolkit: View {
         }
         .padding(14)
         .background(panelBackground)
-        .shadow(color: AppTheme.shadowColor, radius: 10, x: 0, y: 4)
     }
 
     private func pdfToolCard(_ tool: PDFAnnotationTool) -> some View {
         let isSelected = controller.selectedTool == tool
         return Button {
             controller.selectedTool = tool
-            withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) { activePanel = nil }
+            withAnimation(AppTheme.motion) { activePanel = nil }
         } label: {
             VStack(spacing: 8) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(isSelected
-                              ? (colorScheme == .dark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
-                              : Color.clear)
+                    Rectangle()
+                        .fill(isSelected ? AppTheme.surfaceElevated : Color.clear)
                     Image(systemName: tool.icon)
                         .font(.system(size: 22, weight: .light))
                         .foregroundStyle(isSelected
-                                         ? (tool == .draw ? controller.inkColor : AppTheme.accent)
+                                         ? AppTheme.accent
                                          : AppTheme.textMuted)
                 }
                 .frame(height: 44)
-                .overlay(RoundedRectangle(cornerRadius: 8)
-                    .stroke(isSelected ? AppTheme.borderHover : Color.clear, lineWidth: 1.5))
+                .overlay(Rectangle()
+                    .strokeBorder(isSelected ? AppTheme.accent : AppTheme.border, lineWidth: 1))
 
                 Text(tool.label)
                     .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
@@ -502,9 +471,7 @@ struct PDFDrawingToolkit: View {
 
     private var pdfColorPanel: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("COR")
-                .font(.system(size: 10, weight: .bold, design: .rounded))
-                .foregroundStyle(AppTheme.textMuted)
+            SectionLabel("COR")
 
             LazyVGrid(
                 columns: Array(repeating: GridItem(.fixed(32), spacing: 8), count: 5),
@@ -515,7 +482,6 @@ struct PDFDrawingToolkit: View {
         }
         .padding(14)
         .background(panelBackground)
-        .shadow(color: AppTheme.shadowColor, radius: 10, x: 0, y: 4)
     }
 
     private func pdfColorSwatch(_ entry: (Color, String)) -> some View {
@@ -532,23 +498,21 @@ struct PDFDrawingToolkit: View {
         return Button { controller.inkColor = entry.0 } label: {
             ZStack {
                 if isWhite {
-                    CheckerboardView().clipShape(RoundedRectangle(cornerRadius: 7)).frame(width: 32, height: 32)
+                    CheckerboardView().clipShape(Rectangle()).frame(width: 32, height: 32)
                 }
-                RoundedRectangle(cornerRadius: 7)
+                Rectangle()
                     .fill(entry.0).frame(width: 32, height: 32)
-                    .overlay(RoundedRectangle(cornerRadius: 7)
-                        .stroke(isSelected ? Color.blue : AppTheme.border.opacity(0.4),
-                                lineWidth: isSelected ? 2.5 : 1))
+                    .overlay(Rectangle()
+                        .stroke(isSelected ? AppTheme.accent : AppTheme.border,
+                                lineWidth: isSelected ? 2 : 1))
                 if isSelected {
                     Image(systemName: "checkmark")
                         .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(isWhite ? .gray : .white)
+                        .foregroundStyle(isWhite ? .black : .white)
                 }
             }
         }
         .buttonStyle(.plain)
-        .scaleEffect(isSelected ? 1.08 : 1.0)
-        .animation(.spring(response: 0.2), value: isSelected)
     }
 
     // MARK: Width Panel
@@ -556,9 +520,7 @@ struct PDFDrawingToolkit: View {
     private var pdfWidthPanel: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("ESPESSURA")
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppTheme.textMuted)
+                SectionLabel("ESPESSURA")
                 Spacer()
                 Text(String(format: "%.0f pt", controller.lineWidth))
                     .font(.system(size: 11, weight: .semibold, design: .monospaced))
@@ -566,8 +528,8 @@ struct PDFDrawingToolkit: View {
             }
 
             ZStack {
-                RoundedRectangle(cornerRadius: 8).fill(AppTheme.background).frame(height: 44)
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                Rectangle().fill(AppTheme.background).frame(height: 44)
+                    .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 HorizontalLine()
                     .stroke(controller.inkColor,
                             style: StrokeStyle(lineWidth: min(controller.lineWidth, 20), lineCap: .round))
@@ -578,19 +540,16 @@ struct PDFDrawingToolkit: View {
             GeometryReader { geo in
                 let minW: CGFloat = 1, maxW: CGFloat = 20
                 ZStack(alignment: .leading) {
-                    Capsule().fill(AppTheme.background).frame(height: 8)
-                        .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
+                    Rectangle().fill(AppTheme.border).frame(height: 2)
                     let fraction = (controller.lineWidth - minW) / (maxW - minW)
                     let trackW = min(max(fraction * geo.size.width, 0), geo.size.width)
-                    Capsule()
-                        .fill(LinearGradient(colors: [controller.inkColor.opacity(0.6), controller.inkColor],
-                                             startPoint: .leading, endPoint: .trailing))
-                        .frame(width: trackW, height: 8)
+                    Rectangle()
+                        .fill(AppTheme.accent)
+                        .frame(width: trackW, height: 2)
                     let thumbX = fraction * (geo.size.width - 24) + 12
-                    Circle().fill(Color.white).frame(width: 24, height: 24)
-                        .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 1)
-                        .overlay(Circle().stroke(Color.black.opacity(0.1), lineWidth: 1))
-                        .offset(x: thumbX - 12)
+                    Rectangle().fill(AppTheme.surface).frame(width: 8, height: 24)
+                        .hairline(AppTheme.accent, width: 1.5)
+                        .offset(x: thumbX - 4)
                         .gesture(DragGesture(minimumDistance: 0).onChanged { value in
                             let raw = (value.location.x - 12) / (geo.size.width - 24)
                             controller.lineWidth = minW + min(max(raw, 0), 1) * (maxW - minW)
@@ -614,10 +573,7 @@ struct PDFDrawingToolkit: View {
                                 .foregroundStyle(isSel ? AppTheme.textPrimary : AppTheme.textMuted)
                         }
                         .frame(maxWidth: .infinity).padding(.vertical, 6)
-                        .background(RoundedRectangle(cornerRadius: 8)
-                            .fill(isSel ? AppTheme.background : Color.clear)
-                            .overlay(RoundedRectangle(cornerRadius: 8)
-                                .stroke(isSel ? AppTheme.borderHover : Color.clear, lineWidth: 1)))
+                        .hairline(isSel ? AppTheme.accent : .clear)
                     }
                     .buttonStyle(.plain)
                 }
@@ -625,48 +581,46 @@ struct PDFDrawingToolkit: View {
         }
         .padding(14)
         .background(panelBackground)
-        .shadow(color: AppTheme.shadowColor, radius: 10, x: 0, y: 4)
     }
 
     private var pdfWidthPreviewButton: some View {
         let w = controller.lineWidth
         let dotSize = min(max(w / 20 * 22, 3), 22)
         return ZStack {
-            RoundedRectangle(cornerRadius: 7)
-                .fill(activePanel == .width ? AppTheme.background : AppTheme.surfaceElevated)
+            Rectangle()
+                .fill(AppTheme.surface)
                 .frame(width: 38, height: 30)
-                .overlay(RoundedRectangle(cornerRadius: 7)
-                    .stroke(activePanel == .width ? AppTheme.borderHover : AppTheme.border, lineWidth: 1))
-            Circle().fill(controller.inkColor).frame(width: dotSize, height: dotSize)
+                .hairline(activePanel == .width ? AppTheme.accent : AppTheme.border)
+            Circle().fill(AppTheme.textPrimary).frame(width: dotSize, height: dotSize)
         }
     }
 
     private var collapsedPill: some View {
         Button {
-            withAnimation(.spring(response: 0.3)) { expanded = true }
+            withAnimation(AppTheme.motion) { expanded = true }
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: isDrawActive ? controller.penStyle.icon : controller.selectedTool.icon)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(isDrawActive ? controller.inkColor : AppTheme.textSecondary)
+                    .foregroundStyle(AppTheme.textPrimary)
                 if isDrawActive {
-                    Circle().fill(controller.inkColor).frame(width: 8, height: 8)
+                    Rectangle().fill(controller.inkColor).frame(width: 8, height: 8)
                 }
                 Image(systemName: "chevron.up")
                     .font(.system(size: 9, weight: .semibold))
                     .foregroundStyle(AppTheme.textMuted)
             }
             .padding(.horizontal, 12).padding(.vertical, 7)
-            .background(Capsule().fill(AppTheme.surface).overlay(Capsule().stroke(AppTheme.borderHover, lineWidth: 1)))
-            .shadow(color: AppTheme.shadowColor, radius: 6, x: 0, y: 3)
+            .background(AppTheme.surface)
+            .hairline(AppTheme.accent)
         }
         .buttonStyle(.plain)
     }
 
     private var panelBackground: some View {
-        RoundedRectangle(cornerRadius: 14)
+        Rectangle()
             .fill(AppTheme.surface)
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppTheme.borderHover, lineWidth: 1))
+            .overlay(Rectangle().strokeBorder(AppTheme.accent, lineWidth: 1))
     }
 
     private var pdfDivider: some View {
@@ -682,7 +636,7 @@ struct PDFDrawingToolkit: View {
     }
 
     private func togglePanel(_ panel: ActivePanel) {
-        withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
+        withAnimation(AppTheme.motion) {
             activePanel = activePanel == panel ? nil : panel
         }
     }

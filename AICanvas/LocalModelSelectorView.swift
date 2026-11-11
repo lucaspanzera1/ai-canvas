@@ -42,7 +42,7 @@ struct LocalModelSelectorView: View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
+                    Rectangle()
                         .fill(localColor.opacity(0.12))
                         .frame(width: 36, height: 36)
                     Image(systemName: "cpu.fill")
@@ -67,8 +67,8 @@ struct LocalModelSelectorView: View {
                         .foregroundStyle(AppTheme.textSecondary)
                         .frame(width: 32, height: 32)
                         .background(AppTheme.surfaceElevated)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                        .clipShape(Rectangle())
+                        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -84,7 +84,7 @@ struct LocalModelSelectorView: View {
 
     private var installedSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionLabel("INSTALADOS", icon: "checkmark.circle.fill", color: .green)
+            sectionLabel("INSTALADOS", icon: "checkmark.circle.fill", color: AppTheme.accent)
 
             VStack(spacing: 8) {
                 ForEach(manager.catalog.filter { manager.isInstalled($0) }) { info in
@@ -140,14 +140,14 @@ struct LocalModelSelectorView: View {
         }
         .padding(12)
         .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border.opacity(0.5), lineWidth: 1))
+        .clipShape(Rectangle())
+        .overlay(Rectangle().stroke(AppTheme.border.opacity(0.5), lineWidth: 1))
     }
 
     private func sectionLabel(_ text: String, icon: String, color: Color) -> some View {
         HStack(spacing: 6) {
             Image(systemName: icon).font(.system(size: 11)).foregroundStyle(color)
-            Text(text.localized).font(.system(size: 11, weight: .semibold, design: .rounded)).foregroundStyle(AppTheme.textPrimary)
+            Text(text.localized).font(.system(size: 11, weight: .semibold)).foregroundStyle(AppTheme.textPrimary)
         }
         .padding(.horizontal, 4)
     }
@@ -169,11 +169,11 @@ private struct InstalledModelRow: View {
             HStack(spacing: 14) {
                 // Selection dot
                 ZStack {
-                    Circle()
+                    Rectangle()
                         .stroke(isActive ? localColor : AppTheme.border, lineWidth: 1.5)
                         .frame(width: 20, height: 20)
                     if isActive {
-                        Circle().fill(localColor).frame(width: 11, height: 11)
+                        Rectangle().fill(localColor).frame(width: 11, height: 11)
                     }
                 }
 
@@ -192,12 +192,12 @@ private struct InstalledModelRow: View {
 
                 if isActive {
                     Text("EM USO")
-                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(localColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(localColor.opacity(0.12))
-                        .clipShape(Capsule())
+                        .clipShape(Rectangle())
                 }
 
                 Button {
@@ -208,15 +208,15 @@ private struct InstalledModelRow: View {
                         .foregroundStyle(AppTheme.danger)
                         .frame(width: 28, height: 28)
                         .background(AppTheme.danger.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .clipShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
             .padding(14)
             .background(isActive ? localColor.opacity(0.06) : AppTheme.surfaceElevated)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .clipShape(Rectangle())
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
+                Rectangle()
                     .stroke(isActive ? localColor.opacity(0.35) : AppTheme.border, lineWidth: isActive ? 1.5 : 1)
             )
         }
@@ -236,7 +236,7 @@ private struct InstalledModelRow: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(AppTheme.background)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .clipShape(Rectangle())
     }
 }
 
@@ -257,10 +257,10 @@ private struct DownloadModelRow: View {
             HStack(spacing: 14) {
                 // Model icon
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
+                    Rectangle()
                         .fill(localColor.opacity(0.1))
                         .frame(width: 44, height: 44)
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(localColor.opacity(0.2), lineWidth: 1))
+                        .overlay(Rectangle().stroke(localColor.opacity(0.2), lineWidth: 1))
                     Text(modelEmoji)
                         .font(.system(size: 22))
                 }
@@ -304,8 +304,8 @@ private struct DownloadModelRow: View {
         }
         .padding(14)
         .background(AppTheme.surfaceElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+        .clipShape(Rectangle())
+        .overlay(Rectangle().stroke(AppTheme.border, lineWidth: 1))
     }
 
     private var downloadButton: some View {
@@ -341,8 +341,8 @@ private struct DownloadModelRow: View {
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3).fill(AppTheme.border).frame(height: 6)
-                    RoundedRectangle(cornerRadius: 3)
+                    Rectangle().fill(AppTheme.border).frame(height: 6)
+                    Rectangle()
                         .fill(localColor)
                         .frame(width: geo.size.width * progress, height: 6)
                         .animation(.linear(duration: 0.2), value: progress)
@@ -367,7 +367,7 @@ private struct DownloadModelRow: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(AppTheme.background)
-            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .clipShape(Rectangle())
     }
 }
 

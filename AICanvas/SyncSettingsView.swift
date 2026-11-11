@@ -71,7 +71,7 @@ struct SyncSettingsView: View {
                 if let error = syncManager.lastError {
                     Section("Erro") {
                         Text(error)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(AppTheme.textPrimary)
                             .font(.footnote)
                     }
                 }

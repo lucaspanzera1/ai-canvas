@@ -158,18 +158,6 @@ struct NotebookListView: View {
         ZStack {
             AppTheme.background.ignoresSafeArea()
 
-            Circle()
-                .fill(AppTheme.textSecondary.opacity(0.04))
-                .blur(radius: 60)
-                .frame(width: 400, height: 400)
-                .offset(x: -200, y: -200)
-
-            Circle()
-                .fill(AppTheme.textSecondary.opacity(0.03))
-                .blur(radius: 80)
-                .frame(width: 500, height: 500)
-                .offset(x: 300, y: 100)
-
             if showGraphView {
                 GraphView(
                     store: store,
@@ -180,19 +168,18 @@ struct NotebookListView: View {
             } else if visibleFolders.isEmpty && visibleNotebooks.isEmpty {
                 VStack(spacing: 0) {
                     listHeader
-                        .padding(.bottom, 8)
                     emptyState
                 }
             } else {
                 VStack(spacing: 0) {
                     listHeader
-                        .padding(.bottom, 8)
                         .background(AppTheme.background)
 
                     ScrollView {
                         gridContent
-                            .padding(20)
-                            .padding(.bottom, 40)
+                            .padding(.horizontal, 32)
+                            .padding(.top, 28)
+                            .padding(.bottom, 60)
                     }
                     .onDrop(of: [.data], delegate: RootDropDelegate(store: store))
                 }
@@ -204,7 +191,7 @@ struct NotebookListView: View {
         LazyVGrid(columns: columns, spacing: 16) {
             ForEach(visibleFolders) { folder in
                 let folderIndex = visibleFolders.firstIndex(of: folder) ?? 0
-                let folderDelay = Double(folderIndex) * 0.05
+                let folderDelay = Double(folderIndex) * 0.03
 
                 FolderCard(folder: folder)
                     .onDrag {
@@ -239,11 +226,10 @@ struct NotebookListView: View {
                             Label("Apagar Pasta", systemImage: "trash")
                         }
                     }
-                    .scaleEffect(appeared ? 1 : 0.85)
                     .opacity(appeared ? 1 : 0)
-                    .animation(.spring(response: 0.45).delay(folderDelay), value: appeared)
+                    .animation(AppTheme.motion.delay(folderDelay), value: appeared)
                     .highPriorityGesture(TapGesture().onEnded {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                        withAnimation(AppTheme.motion) {
                             folderPath.append(folder)
                         }
                     })
@@ -252,11 +238,11 @@ struct NotebookListView: View {
             ForEach(visibleNotebooks) { notebook in
                 let nbIndex = visibleNotebooks.firstIndex(of: notebook) ?? 0
                 let combinedIndex = visibleFolders.count + nbIndex
-                let nbDelay = Double(combinedIndex) * 0.05
+                let nbDelay = Double(combinedIndex) * 0.03
 
                 NotebookCard(notebook: notebook, syncManager: syncManager)
                     .onTapGesture {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+                        withAnimation(AppTheme.motion) {
                             selectedNotebook = notebook
                         }
                     }
@@ -291,9 +277,8 @@ struct NotebookListView: View {
                             Label("Apagar Caderno", systemImage: "trash")
                         }
                     }
-                    .scaleEffect(appeared ? 1 : 0.85)
                     .opacity(appeared ? 1 : 0)
-                    .animation(.spring(response: 0.45).delay(nbDelay), value: appeared)
+                    .animation(AppTheme.motion.delay(nbDelay), value: appeared)
             }
 
             newItemCards
@@ -302,208 +287,153 @@ struct NotebookListView: View {
 
     @ViewBuilder
     private var newItemCards: some View {
-        let baseCount = visibleFolders.count + visibleNotebooks.count
+        let baseDelay = Double(visibleFolders.count + visibleNotebooks.count) * 0.03
 
-        let newFolderDelay = Double(baseCount) * 0.05
         NewItemCard(title: "Nova Pasta", icon: "folder.badge.plus") { showCreateFolder = true }
-            .scaleEffect(appeared ? 1 : 0.85)
             .opacity(appeared ? 1 : 0)
-            .animation(.spring(response: 0.45).delay(newFolderDelay), value: appeared)
+            .animation(AppTheme.motion.delay(baseDelay), value: appeared)
 
-        let newNotebookDelay = Double(baseCount + 1) * 0.05
         NewItemCard(title: "Novo Caderno", icon: "plus") { showCreateNotebook = true }
-            .scaleEffect(appeared ? 1 : 0.85)
             .opacity(appeared ? 1 : 0)
-            .animation(.spring(response: 0.45).delay(newNotebookDelay), value: appeared)
+            .animation(AppTheme.motion.delay(baseDelay + 0.03), value: appeared)
 
-        let importPDFDelay = Double(baseCount + 2) * 0.05
         NewItemCard(title: "Importar PDF", icon: "doc.badge.plus") { showPDFImporter = true }
-            .scaleEffect(appeared ? 1 : 0.85)
             .opacity(appeared ? 1 : 0)
-            .animation(.spring(response: 0.45).delay(importPDFDelay), value: appeared)
+            .animation(AppTheme.motion.delay(baseDelay + 0.06), value: appeared)
     }
 
     // MARK: - Header
 
+    private var itemCount: Int {
+        selectedFolder == nil
+            ? store.notebooks.count + store.folders.filter { $0.parentFolderId == nil }.count
+            : visibleNotebooks.count + visibleFolders.count
+    }
+
     private var listHeader: some View {
-        HStack(alignment: .bottom, spacing: 12) {
-            HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Top bar: navigation on the left, utilities on the right
+            HStack(spacing: 8) {
                 if !showSidebar {
-                    Button {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            showSidebar = true
+                    SquareIconButton(icon: "sidebar.left") {
+                        withAnimation(AppTheme.motion) { showSidebar = true }
+                    }
+                }
+
+                if selectedFolder != nil {
+                    Button(action: {
+                        withAnimation(AppTheme.motion) {
+                            _ = folderPath.removeLast()
                         }
-                    } label: {
-                        Image(systemName: "sidebar.left")
-                            .font(.system(size: 18))
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .padding(8)
-                            .background(AppTheme.surfaceElevated)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(AppTheme.border, lineWidth: 1))
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: isHeaderDropTargeted ? "tray.and.arrow.down" : "arrow.left")
+                                .font(.system(size: 12))
+                            Text(folderPath.count > 1 ? folderPath[folderPath.count - 2].name : "Início".localized)
+                                .font(.system(size: 13))
+                        }
+                        .foregroundStyle(isHeaderDropTargeted ? AppTheme.onAccent : AppTheme.textSecondary)
+                        .padding(.horizontal, 12)
+                        .frame(height: 32)
+                        .background(isHeaderDropTargeted ? AppTheme.accent : Color.clear)
+                        .hairline(isHeaderDropTargeted ? AppTheme.accent : AppTheme.border)
+                        .animation(AppTheme.motion, value: isHeaderDropTargeted)
                     }
                     .buttonStyle(.plain)
+                    .onDrop(of: [.data], delegate: ParentDropDelegate(
+                        targetFolderId: parentFolderId,
+                        store: store,
+                        isTargeted: $isHeaderDropTargeted
+                    ))
                 }
 
-                VStack(alignment: .leading, spacing: 6) {
-                    if let folder = selectedFolder {
-                        Group {
-                            Button(action: {
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                                    _ = folderPath.removeLast()
-                                }
-                            }) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: isHeaderDropTargeted ? "tray.and.arrow.down.fill" : "chevron.left")
-                                    Text(folderPath.count > 1 ? folderPath[folderPath.count - 2].name : "Início")
-                                }
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(isHeaderDropTargeted ? AppTheme.accent : AppTheme.textSecondary)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(isHeaderDropTargeted ? AppTheme.accent.opacity(0.15) : AppTheme.textSecondary.opacity(0.1))
-                                .clipShape(Capsule())
-                                .overlay(Capsule().stroke(isHeaderDropTargeted ? AppTheme.accent.opacity(0.6) : Color.clear, lineWidth: 1.5))
-                                .animation(.spring(response: 0.25), value: isHeaderDropTargeted)
-                            }
-                            .buttonStyle(.plain)
-                            .onDrop(of: [.data], delegate: ParentDropDelegate(
-                                targetFolderId: parentFolderId,
-                                store: store,
-                                isTargeted: $isHeaderDropTargeted
-                            ))
-                            .padding(.bottom, 4)
+                Spacer()
 
-                            HStack(spacing: 8) {
-                                NoteIcon(icon: folder.emoji, size: 30)
-                                Text(folder.name)
-                                    .font(.system(size: 34, weight: .bold, design: .rounded))
-                                    .foregroundStyle(AppTheme.textPrimary)
-                            }
-                        }
-                    } else {
-                        Group {
-                            HStack(spacing: 6) {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(AppTheme.textSecondary)
-                                Text("ESPAÇO CRIATIVO")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundStyle(AppTheme.textSecondary)
-                                    .tracking(1.5)
-                            }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(AppTheme.textSecondary.opacity(0.08))
-                            .clipShape(Capsule())
-
-                            Text("Meus Cadernos")
-                                .font(.system(size: 34, weight: .bold, design: .rounded))
-                                .foregroundStyle(AppTheme.textPrimary)
-                        }
-                    }
-                }
-            }
-
-            Spacer()
-
-            // Header Actions
-            VStack(alignment: .trailing, spacing: 12) {
-                HStack(spacing: 12) {
-                    // Open Source Action
+                HStack(spacing: -1) {
                     Link(destination: URL(string: "https://github.com/lucaspanzera1/ai-canvas")!) {
                         Image(systemName: "chevron.left.forwardslash.chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(AppTheme.textSecondary)
+                            .font(.system(size: 12))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .frame(width: 32, height: 32)
+                            .background(AppTheme.surface)
+                            .hairline()
                     }
                     .buttonStyle(.plain)
 
-                    // Graph View Toggle
-                    Button {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
-                            showGraphView.toggle()
-                        }
-                    } label: {
-                        Image(systemName: "point.3.connected.trianglepath.dotted")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(showGraphView ? AppTheme.accent : AppTheme.textSecondary)
+                    SquareIconButton(icon: "point.3.connected.trianglepath.dotted", isActive: showGraphView) {
+                        withAnimation(AppTheme.motion) { showGraphView.toggle() }
                     }
-                    .buttonStyle(.plain)
 
-                    // Config IAs
-                    Button {
+                    SquareIconButton(icon: "cpu") {
                         showOnboarding = true
-                    } label: {
-                        Image(systemName: "cpu")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(AppTheme.textSecondary)
                     }
-                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.top, 24)
+
+            // Title block
+            HStack(alignment: .lastTextBaseline) {
+                VStack(alignment: .leading, spacing: 10) {
+                    SectionLabel(selectedFolder == nil ? "ESPAÇO CRIATIVO" : "Pasta")
+
+                    HStack(spacing: 12) {
+                        if let folder = selectedFolder {
+                            NoteIcon(icon: folder.emoji, size: 28)
+                        }
+                        Text(selectedFolder?.name ?? "Meus Cadernos".localized)
+                            .font(.system(size: 40, weight: .semibold))
+                            .tracking(-1.2)
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .lineLimit(1)
+                    }
                 }
 
-                // Stats badge
-                HStack(spacing: 8) {
-                    Image(systemName: selectedFolder == nil ? "books.vertical.fill" : "folder.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(AppTheme.textSecondary)
-                    let count = selectedFolder == nil ? store.notebooks.count + store.folders.filter { $0.parentFolderId == nil }.count : visibleNotebooks.count + visibleFolders.count
-                    Text("\(count) \((count == 1 ? "item" : "itens").localized)")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(AppTheme.surfaceElevated)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
-                .shadow(color: AppTheme.shadowColor, radius: 4, y: 2)
+                Spacer()
+
+                Text(String(format: "%02d", itemCount) + " " + (itemCount == 1 ? "item" : "itens").localized.uppercased())
+                    .font(AppTheme.label(11))
+                    .tracking(1.2)
+                    .foregroundStyle(AppTheme.textSecondary)
             }
+            .padding(.top, 36)
+            .padding(.bottom, 20)
+
+            Rectangle()
+                .fill(AppTheme.textPrimary)
+                .frame(height: 1)
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 60)
-        .padding(.bottom, 20)
+        .padding(.horizontal, 32)
     }
 
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 24) {
+        VStack(alignment: .leading, spacing: 28) {
             Spacer()
 
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            stops: [.init(color: AppTheme.accent.opacity(0.06), location: 0), .init(color: .clear, location: 1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 140, height: 140)
-
-                Circle()
-                    .fill(AppTheme.surfaceElevated)
-                    .frame(width: 90, height: 90)
-                    .shadow(color: AppTheme.shadowColor, radius: 10, y: 5)
-                    .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
-
-                Text("✨")
-                    .font(.system(size: 44))
-                    .offset(x: 2, y: -2)
-            }
-
-            VStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
+                SectionLabel("00 itens")
                 Text(selectedFolder == nil ? "Espaço vazio" : "Pasta vazia")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(size: 28, weight: .semibold))
+                    .tracking(-0.6)
                     .foregroundStyle(AppTheme.textPrimary)
                 Text("Crie seu primeiro item e solte a imaginação\ncom a ajuda de IA poderosa.")
                     .font(.system(size: 15))
                     .foregroundStyle(AppTheme.textSecondary)
-                    .multilineTextAlignment(.center)
                     .lineSpacing(4)
             }
 
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Button {
+                    showCreateNotebook = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus")
+                        Text("Criar Caderno")
+                    }
+                }
+                .buttonStyle(MonoButtonStyle(kind: .primary))
+
                 Button {
                     showCreateFolder = true
                 } label: {
@@ -511,32 +441,8 @@ struct NotebookListView: View {
                         Image(systemName: "folder.badge.plus")
                         Text("Nova Pasta")
                     }
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 14)
-                    .background(AppTheme.surfaceElevated)
-                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
-                    .clipShape(Capsule())
                 }
-                .buttonStyle(.plain)
-
-                Button {
-                    showCreateNotebook = true
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Criar Caderno")
-                    }
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Color(uiColor: .systemBackground))
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 14)
-                    .background(AppTheme.accent)
-                    .clipShape(Capsule())
-                    .shadow(color: AppTheme.accent.opacity(0.3), radius: 8, y: 4)
-                }
-                .buttonStyle(.plain)
+                .buttonStyle(MonoButtonStyle())
 
                 Button {
                     showPDFImporter = true
@@ -545,19 +451,15 @@ struct NotebookListView: View {
                         Image(systemName: "doc.badge.plus")
                         Text("Importar PDF")
                     }
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 14)
-                    .background(AppTheme.surfaceElevated)
-                    .overlay(Capsule().stroke(AppTheme.border, lineWidth: 1))
-                    .clipShape(Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MonoButtonStyle())
             }
 
             Spacer()
+            Spacer()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 32)
     }
 
     private func handlePDFImport(_ result: Result<[URL], Error>) {
@@ -565,7 +467,7 @@ struct NotebookListView: View {
         case .success(let urls):
             guard let url = urls.first,
                   let notebook = store.createNotebookFromPDF(sourceURL: url, folderId: selectedFolder?.id) else { return }
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            withAnimation(AppTheme.motion) {
                 selectedNotebook = notebook
             }
         case .failure(let error):
@@ -574,70 +476,90 @@ struct NotebookListView: View {
     }
 }
 
+// MARK: - Card Chrome
+
+/// Shared square card: monochrome banner on top, hairline rule, text block below.
+/// Hover sharpens the border to full contrast instead of lifting or scaling.
+private struct ItemCardChrome<Footer: View>: View {
+    let icon: String
+    let title: String
+    let bannerImageData: Data?
+    let kind: String
+    @ViewBuilder let footer: () -> Footer
+    @State private var hovered = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack(alignment: .bottomLeading) {
+                // Overlay keeps a fill-scaled image from widening the card
+                AppTheme.surfaceElevated
+                    .frame(height: 76)
+                    .frame(maxWidth: .infinity)
+                    .overlay {
+                        if let imageData = bannerImageData, let uiImage = UIImage(data: imageData) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .grayscale(1)
+                                .contrast(1.1)
+                        }
+                    }
+                    .clipped()
+
+                NoteIcon(icon: icon, size: 20)
+                    .frame(width: 36, height: 36)
+                    .background(AppTheme.surface)
+                    .hairline()
+                    .padding(12)
+            }
+            .overlay(alignment: .topTrailing) {
+                Text(kind)
+                    .font(AppTheme.label(9))
+                    .tracking(1.2)
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+                    .background(AppTheme.surface)
+                    .hairline()
+                    .padding(12)
+            }
+
+            Rectangle().fill(AppTheme.border).frame(height: 1)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .tracking(-0.2)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .lineLimit(1)
+
+                footer()
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(AppTheme.surface)
+        }
+        .background(AppTheme.surface)
+        .hairline(hovered ? AppTheme.accent : AppTheme.border)
+        .contentShape(Rectangle())
+        .animation(AppTheme.motion, value: hovered)
+        .onHover { hovered = $0 }
+    }
+}
+
 // MARK: - Folder Card
 
 struct FolderCard: View {
     let folder: Folder
-    @State private var hovered = false
-
-    private var accentColor: Color {
-        notebookSwiftColor(at: folder.colorIndex)
-    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                if let imageData = folder.bannerImageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 60)
-                        .clipped()
-                } else {
-                    LinearGradient(
-                        gradient: Gradient(colors: [accentColor.opacity(0.3), accentColor.opacity(0.05)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .frame(height: 60)
-                }
-
-                HStack {
-                    NoteIcon(icon: folder.emoji, size: 28)
-                        .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
-                    Spacer()
-                    Image(systemName: "folder.fill")
-                        .font(.system(size: 18))
-                        .foregroundStyle(AppTheme.textPrimary.opacity(0.2))
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 14)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(folder.name)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .lineLimit(1)
-
-                Text(folder.lastModified.relativeString)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(AppTheme.textMuted)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppTheme.surfaceElevated)
+        ItemCardChrome(icon: folder.emoji, title: folder.name, bannerImageData: folder.bannerImageData, kind: "DIR") {
+            Text(folder.lastModified.relativeString.uppercased())
+                .font(AppTheme.label())
+                .tracking(0.8)
+                .foregroundStyle(AppTheme.textMuted)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(hovered ? accentColor.opacity(0.5) : AppTheme.border, lineWidth: hovered ? 2 : 1)
-        )
-        .shadow(color: hovered ? accentColor.opacity(0.2) : AppTheme.shadowColor, radius: hovered ? 12 : 6, y: hovered ? 6 : 2)
-        .scaleEffect(hovered ? 1.02 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
-        .onHover { h in hovered = h }
     }
 }
 
@@ -646,95 +568,49 @@ struct FolderCard: View {
 struct NotebookCard: View {
     let notebook: Notebook
     @ObservedObject var syncManager: SyncManager
-    @State private var hovered = false
-
-    private var accentColor: Color {
-        notebookSwiftColor(at: notebook.colorIndex)
-    }
 
     private var isSyncing: Bool { syncManager.syncingNotebooks.contains(notebook.id) }
     private var hasChanges: Bool { syncManager.notebookHasChanges(notebook) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ZStack(alignment: .topLeading) {
-                if let imageData = notebook.bannerImageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(height: 70)
-                        .clipped()
-                } else {
-                    LinearGradient(
-                        gradient: Gradient(colors: [accentColor.opacity(0.4), accentColor.opacity(0.1)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .frame(height: 70)
-                }
+        ItemCardChrome(
+            icon: notebook.emoji,
+            title: notebook.name,
+            bannerImageData: notebook.bannerImageData,
+            kind: notebook.type == .pdf ? "PDF" : "NB"
+        ) {
+            HStack(spacing: 6) {
+                Text(notebook.lastModified.relativeString.uppercased())
+                    .font(AppTheme.label())
+                    .tracking(0.8)
+                    .foregroundStyle(AppTheme.textMuted)
 
-                NoteIcon(icon: notebook.emoji, size: 34)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-                    .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
-            }
+                Spacer()
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text(notebook.name)
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .lineLimit(1)
-
-                HStack(spacing: 6) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 11))
-                        .foregroundStyle(AppTheme.textMuted)
-                    Text(notebook.lastModified.relativeString)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(AppTheme.textMuted)
-
-                    Spacer()
-
-                    if SyncSettings.load().isConfigured && (hasChanges || isSyncing) {
-                        Button {
-                            guard !isSyncing else { return }
-                            Task { await syncManager.syncNotebook(notebook) }
-                        } label: {
-                            Group {
-                                if isSyncing {
-                                    ProgressView()
-                                        .scaleEffect(0.6)
-                                        .frame(width: 14, height: 14)
-                                } else {
-                                    Image(systemName: "arrow.triangle.2.circlepath")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(accentColor)
-                                }
+                if SyncSettings.load().isConfigured && (hasChanges || isSyncing) {
+                    Button {
+                        guard !isSyncing else { return }
+                        Task { await syncManager.syncNotebook(notebook) }
+                    } label: {
+                        Group {
+                            if isSyncing {
+                                ProgressView()
+                                    .scaleEffect(0.5)
+                            } else {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(AppTheme.textPrimary)
                             }
-                            .padding(6)
-                            .background(accentColor.opacity(0.1))
-                            .clipShape(Circle())
                         }
-                        .buttonStyle(.plain)
-                        .transition(.scale.combined(with: .opacity))
+                        .frame(width: 22, height: 22)
+                        .hairline()
                     }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
                 }
-                .animation(.spring(response: 0.3), value: hasChanges)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(AppTheme.surfaceElevated)
+            .animation(AppTheme.motion, value: hasChanges)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(hovered ? accentColor.opacity(0.5) : AppTheme.border, lineWidth: hovered ? 2 : 1)
-        )
-        .shadow(color: hovered ? accentColor.opacity(0.2) : AppTheme.shadowColor, radius: hovered ? 12 : 6, y: hovered ? 6 : 2)
-        .scaleEffect(hovered ? 1.02 : 1.0)
-        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hovered)
-        .onHover { h in hovered = h }
     }
 }
 
@@ -749,38 +625,37 @@ struct NewItemCard: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(hovered ? AppTheme.borderActive : AppTheme.border)
-                        .frame(width: 44, height: 44)
+            VStack(alignment: .leading, spacing: 0) {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .light))
+                    .foregroundStyle(hovered ? AppTheme.onAccent : AppTheme.textPrimary)
 
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(AppTheme.textPrimary)
+                Spacer()
+
+                HStack {
+                    Text(title.localized)
+                        .font(.system(size: 13, weight: .medium))
+                    Spacer()
+                    Image(systemName: "arrow.right")
+                        .font(.system(size: 11))
                 }
-
-                Text(title.localized)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(AppTheme.textSecondary)
+                .foregroundStyle(hovered ? AppTheme.onAccent : AppTheme.textSecondary)
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 120)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(hovered ? AppTheme.surfaceElevated : .clear)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(
-                                hovered ? AppTheme.accent.opacity(0.6) : AppTheme.border,
-                                style: StrokeStyle(lineWidth: 1, dash: [6, 4])
-                            )
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: 140)
+            .background(hovered ? AppTheme.accent : Color.clear)
+            .overlay(
+                Rectangle()
+                    .strokeBorder(
+                        hovered ? AppTheme.accent : AppTheme.borderHover,
+                        style: StrokeStyle(lineWidth: 1, dash: [3, 3])
                     )
             )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .scaleEffect(hovered ? 1.01 : 1.0)
-        .animation(.spring(response: 0.25), value: hovered)
+        .animation(AppTheme.motion, value: hovered)
         .onHover { h in hovered = h }
     }
 }
@@ -832,20 +707,21 @@ struct ItemEditorSheet: View {
 
     var body: some View {
         ZStack {
-            AppTheme.background.ignoresSafeArea()
+            AppTheme.surface.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
                     Button("Cancelar") { isPresented = false }
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 13))
                         .foregroundStyle(AppTheme.textSecondary)
                         .buttonStyle(.plain)
 
                     Spacer()
 
-                    Text(mode.title)
-                        .font(.system(size: 14, weight: .semibold))
+                    Text(mode.title.localized.uppercased())
+                        .font(AppTheme.label(11))
+                        .tracking(1.4)
                         .foregroundStyle(AppTheme.textPrimary)
 
                     Spacer()
@@ -853,105 +729,102 @@ struct ItemEditorSheet: View {
                     Button(mode.buttonTitle) {
                         save()
                     }
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(name.isEmpty ? AppTheme.textMuted : AppTheme.accent)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(name.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary)
                     .disabled(name.isEmpty)
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 18)
                 .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
 
                 ScrollView {
-                    VStack(spacing: 28) {
-                        // Preview Card
-                        ZStack(alignment: .topLeading) {
-                            if let data = bannerImageData, let uiImage = UIImage(data: data) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(height: 80)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
-                            } else {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(AppTheme.surfaceElevated)
-                                    .frame(height: 80)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(AppTheme.border, lineWidth: 1)
-                                    )
+                    VStack(alignment: .leading, spacing: 32) {
+                        // Preview
+                        VStack(alignment: .leading, spacing: 0) {
+                            ZStack(alignment: .bottomLeading) {
+                                AppTheme.surfaceElevated
+                                    .frame(height: 88)
+                                    .frame(maxWidth: .infinity)
+                                    .overlay {
+                                        if let data = bannerImageData, let uiImage = UIImage(data: data) {
+                                            Image(uiImage: uiImage)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .grayscale(1)
+                                        }
+                                    }
+                                    .clipped()
+
+                                NoteIcon(icon: selectedEmoji, size: 22)
+                                    .frame(width: 40, height: 40)
+                                    .background(AppTheme.surface)
+                                    .hairline()
+                                    .padding(12)
                             }
 
-                            HStack(spacing: 14) {
-                                NoteIcon(icon: selectedEmoji, size: 32)
+                            Rectangle().fill(AppTheme.border).frame(height: 1)
 
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(name.isEmpty ? "Nome" : name)
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(AppTheme.textPrimary.opacity(name.isEmpty ? 0.6 : 1.0))
-                                    Text("Agora mesmo")
-                                        .font(.system(size: 11))
-                                        .foregroundStyle(AppTheme.textMuted)
-                                }
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(name.isEmpty ? "Nome" : name)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(name.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary)
+                                Text("Agora mesmo".localized.uppercased())
+                                    .font(AppTheme.label())
+                                    .tracking(0.8)
+                                    .foregroundStyle(AppTheme.textMuted)
                             }
-                            .padding(16)
+                            .padding(14)
                         }
-                        .padding(.top, 24)
+                        .hairline()
+                        .padding(.top, 28)
 
                         // Name input
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("NOME")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(AppTheme.textMuted)
+                        VStack(alignment: .leading, spacing: 10) {
+                            SectionLabel("Nome")
 
                             TextField("Ex: Ideias", text: $name)
                                 .textFieldStyle(.plain)
-                                .font(.system(size: 14))
+                                .font(.system(size: 15))
                                 .foregroundStyle(AppTheme.textPrimary)
                                 .focused($nameFocused)
-                                .padding(14)
-                                .background(AppTheme.surfaceElevated)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .padding(.vertical, 12)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(nameFocused ? AppTheme.accent : AppTheme.border, lineWidth: 1)
+                                    Rectangle()
+                                        .fill(nameFocused ? AppTheme.accent : AppTheme.border)
+                                        .frame(height: nameFocused ? 2 : 1),
+                                    alignment: .bottom
                                 )
                         }
 
-                        // Emoji picker
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("ÍCONE")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(AppTheme.textMuted)
+                        // Icon picker
+                        VStack(alignment: .leading, spacing: 10) {
+                            SectionLabel("ÍCONE")
 
                             Button { showEmojiPicker = true } label: {
-                                HStack(spacing: 12) {
-                                    NoteIcon(icon: selectedEmoji, size: 32)
-                                        .frame(width: 56, height: 56)
-                                        .background(AppTheme.background)
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                                HStack(spacing: 14) {
+                                    NoteIcon(icon: selectedEmoji, size: 24)
+                                        .frame(width: 48, height: 48)
+                                        .hairline()
 
                                     VStack(alignment: .leading, spacing: 3) {
                                         Text("Toque para escolher")
-                                            .font(.system(size: 13, weight: .semibold))
+                                            .font(.system(size: 13, weight: .medium))
                                             .foregroundStyle(AppTheme.textPrimary)
                                         Text("Biblioteca de emojis por categoria")
                                             .font(.system(size: 12))
-                                            .foregroundStyle(AppTheme.textMuted)
+                                            .foregroundStyle(AppTheme.textSecondary)
                                     }
 
                                     Spacer()
 
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(AppTheme.textMuted)
+                                    Image(systemName: "arrow.right")
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(AppTheme.textSecondary)
                                 }
                                 .padding(12)
-                                .background(AppTheme.surfaceElevated)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(AppTheme.border, lineWidth: 1))
+                                .hairline()
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                             .sheet(isPresented: $showEmojiPicker) {
@@ -960,40 +833,48 @@ struct ItemEditorSheet: View {
                         }
 
                         // Banner Image Picker
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text("BANNER PERSONALIZADO (IMAGEM)")
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(AppTheme.textMuted)
+                                SectionLabel("BANNER PERSONALIZADO (IMAGEM)")
                                 Spacer()
                                 if bannerImageData != nil {
-                                    Button("Remover", role: .destructive) {
+                                    Button {
                                         bannerImageData = nil
                                         selectedBannerItem = nil
+                                    } label: {
+                                        Text("Remover".localized.uppercased())
+                                            .font(AppTheme.label())
+                                            .tracking(1.2)
+                                            .underline()
+                                            .foregroundStyle(AppTheme.textPrimary)
                                     }
-                                    .font(.system(size: 10, weight: .medium))
+                                    .buttonStyle(.plain)
                                 }
                             }
 
                             PhotosPicker(selection: $selectedBannerItem, matching: .images) {
                                 if let data = bannerImageData, let uiImage = UIImage(data: data) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFill()
+                                    AppTheme.surfaceElevated
                                         .frame(height: 80)
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
+                                        .frame(maxWidth: .infinity)
+                                        .overlay {
+                                            Image(uiImage: uiImage)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .grayscale(1)
+                                        }
+                                        .clipped()
+                                        .hairline()
                                 } else {
                                     HStack(spacing: 8) {
                                         Image(systemName: "photo.badge.plus")
                                         Text("Selecionar Imagem")
                                     }
-                                    .font(.system(size: 14, weight: .medium))
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(AppTheme.textSecondary)
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
-                                    .background(AppTheme.surfaceElevated)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, style: StrokeStyle(lineWidth: 1, dash: [4])))
+                                    .padding(.vertical, 20)
+                                    .overlay(Rectangle().strokeBorder(AppTheme.borderHover, style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
                                 }
                             }
                             .buttonStyle(.plain)
@@ -1001,38 +882,9 @@ struct ItemEditorSheet: View {
                                 Task {
                                     if let data = try? await newItem?.loadTransferable(type: Data.self) {
                                         await MainActor.run {
-                                            withAnimation { bannerImageData = data }
+                                            withAnimation(AppTheme.motion) { bannerImageData = data }
                                         }
                                     }
-                                }
-                            }
-                        }
-
-                        // Color picker
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("COR DO TEMA")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(AppTheme.textMuted)
-
-                            HStack(spacing: 12) {
-                                ForEach(0..<8, id: \.self) { idx in
-                                    Button {
-                                        selectedColorIndex = idx
-                                    } label: {
-                                        ZStack {
-                                            Circle()
-                                                .fill(notebookSwiftColor(at: idx))
-                                                .frame(width: 28, height: 28)
-
-                                            if selectedColorIndex == idx {
-                                                Circle()
-                                                    .stroke(AppTheme.accent, lineWidth: 2)
-                                                    .frame(width: 34, height: 34)
-                                            }
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    .animation(.spring(response: 0.2), value: selectedColorIndex)
                                 }
                             }
                         }
@@ -1042,19 +894,12 @@ struct ItemEditorSheet: View {
                             save()
                         } label: {
                             Text(mode.buttonTitle)
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(Color(uiColor: .systemBackground))
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 14)
-                                .background(name.isEmpty ? AppTheme.borderHover : AppTheme.accent)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(MonoButtonStyle(kind: .primary, fullWidth: true))
                         .disabled(name.isEmpty)
-                        .animation(.easeInOut(duration: 0.2), value: name.isEmpty)
                         .padding(.bottom, 40)
                     }
-                    .padding(.horizontal, 24)
+                    .padding(.horizontal, 28)
                 }
             }
         }
@@ -1098,15 +943,16 @@ struct ItemEditorSheet: View {
 // MARK: - Helpers
 
 func notebookSwiftColor(at index: Int) -> Color {
+    // Monochrome ramp — kept so stored colorIndex values still map to a stable tone.
     let colors: [Color] = [
-        Color(red: 0.44, green: 0.58, blue: 0.88),   // Periwinkle
-        Color(red: 0.55, green: 0.85, blue: 0.76),   // Mint
-        Color(red: 0.98, green: 0.70, blue: 0.58),   // Peach
-        Color(red: 0.88, green: 0.56, blue: 0.56),   // Soft Red
-        Color(red: 0.90, green: 0.85, blue: 0.55),   // Pale Yellow
-        Color(red: 0.75, green: 0.65, blue: 0.85),   // Lavender
-        Color(red: 0.60, green: 0.60, blue: 0.60),   // Gray
-        Color(red: 0.20, green: 0.25, blue: 0.35),   // Slate
+        Color(light: 0x0A0A0A, dark: 0xFAFAFA),
+        Color(light: 0x262626, dark: 0xE5E5E5),
+        Color(light: 0x404040, dark: 0xD4D4D4),
+        Color(light: 0x525252, dark: 0xA3A3A3),
+        Color(light: 0x737373, dark: 0x8A8A8A),
+        Color(light: 0x8A8A8A, dark: 0x737373),
+        Color(light: 0xA3A3A3, dark: 0x525252),
+        Color(light: 0xD4D4D4, dark: 0x404040),
     ]
     return colors[index % colors.count]
 }
@@ -1123,12 +969,13 @@ struct NoteIcon: View {
     var body: some View {
         if isSFSymbol {
             Image(systemName: symbolName)
-                .font(.system(size: size * 0.75, weight: .semibold))
+                .font(.system(size: size * 0.7, weight: .regular))
                 .foregroundStyle(AppTheme.textPrimary)
                 .frame(width: size, height: size)
         } else {
             Text(icon)
-                .font(.system(size: size))
+                .font(.system(size: size * 0.85))
+                .grayscale(1)
         }
     }
 }
@@ -1192,11 +1039,11 @@ struct ParentDropDelegate: DropDelegate {
     @Binding var isTargeted: Bool
 
     func dropEntered(info: DropInfo) {
-        withAnimation(.spring(response: 0.25)) { isTargeted = true }
+        withAnimation(AppTheme.motion) { isTargeted = true }
     }
 
     func dropExited(info: DropInfo) {
-        withAnimation(.spring(response: 0.25)) { isTargeted = false }
+        withAnimation(AppTheme.motion) { isTargeted = false }
     }
 
     func performDrop(info: DropInfo) -> Bool {
@@ -1351,41 +1198,51 @@ struct EmojiPickerView: View {
 
     var body: some View {
         ZStack {
-            AppTheme.background.ignoresSafeArea()
+            AppTheme.surface.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
                 HStack {
                     Button("Cancelar") { isPresented = false }
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 13))
                         .foregroundStyle(AppTheme.textSecondary)
                         .buttonStyle(.plain)
 
                     Spacer()
 
-                    Text("Escolher Ícone")
-                        .font(.system(size: 14, weight: .semibold))
+                    Text("Escolher Ícone".localized.uppercased())
+                        .font(AppTheme.label(11))
+                        .tracking(1.4)
                         .foregroundStyle(AppTheme.textPrimary)
 
                     Spacer()
 
                     Text("Cancelar")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 13))
                         .foregroundStyle(.clear)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 18)
                 .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
 
-                // Mode toggle
-                Picker("Modo", selection: $mode) {
+                // Mode toggle — two joined square segments
+                HStack(spacing: -1) {
                     ForEach(IconPickerMode.allCases, id: \.self) { m in
-                        Text(m.rawValue).tag(m)
+                        Button { mode = m } label: {
+                            Text(m.rawValue.uppercased())
+                                .font(AppTheme.label(11))
+                                .tracking(1.2)
+                                .foregroundStyle(mode == m ? AppTheme.onAccent : AppTheme.textPrimary)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 34)
+                                .background(mode == m ? AppTheme.accent : AppTheme.surface)
+                                .hairline(AppTheme.accent)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.horizontal, 24)
+                .padding(.top, 20)
                 .onChange(of: mode) { _ in
                     selectedCategoryIndex = 0
                     searchText = ""
@@ -1408,20 +1265,18 @@ struct EmojiPickerView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(12)
-                .background(AppTheme.surfaceElevated)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(AppTheme.border, lineWidth: 1))
-                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
+                .overlay(Rectangle().fill(AppTheme.border).frame(height: 1), alignment: .bottom)
+                .padding(.horizontal, 24)
                 .padding(.top, 12)
 
                 // Category tabs (hidden during search)
                 if searchText.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 20) {
                             ForEach(currentCategories.indices, id: \.self) { idx in
                                 Button {
-                                    withAnimation(.spring(response: 0.3)) {
+                                    withAnimation(AppTheme.motion) {
                                         selectedCategoryIndex = idx
                                     }
                                 } label: {
@@ -1438,18 +1293,20 @@ struct EmojiPickerView: View {
                                             .font(.system(size: 13, weight: .medium))
                                             .foregroundStyle(selectedCategoryIndex == idx ? AppTheme.textPrimary : AppTheme.textSecondary)
                                     }
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(selectedCategoryIndex == idx ? AppTheme.surfaceElevated : .clear)
-                                    .clipShape(Capsule())
-                                    .overlay(Capsule().stroke(selectedCategoryIndex == idx ? AppTheme.border : .clear, lineWidth: 1))
+                                    .padding(.vertical, 10)
+                                    .overlay(
+                                        Rectangle()
+                                            .fill(selectedCategoryIndex == idx ? AppTheme.accent : .clear)
+                                            .frame(height: 2),
+                                        alignment: .bottom
+                                    )
                                 }
                                 .buttonStyle(.plain)
-                                .animation(.spring(response: 0.2), value: selectedCategoryIndex)
+                                .animation(AppTheme.motion, value: selectedCategoryIndex)
                             }
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 6)
                     }
                 } else {
                     Spacer().frame(height: 12)
@@ -1481,25 +1338,22 @@ struct EmojiPickerView: View {
                                     Group {
                                         if mode == .sfSymbol {
                                             Image(systemName: item)
-                                                .font(.system(size: 24, weight: .medium))
-                                                .foregroundStyle(AppTheme.textPrimary)
+                                                .font(.system(size: 22, weight: .regular))
+                                                .foregroundStyle(isSelected ? AppTheme.onAccent : AppTheme.textPrimary)
                                         } else {
                                             Text(item)
                                                 .font(.system(size: 30))
                                         }
                                     }
                                     .frame(width: 52, height: 52)
-                                    .background(isSelected ? AppTheme.accent.opacity(0.12) : Color.clear)
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .stroke(isSelected ? AppTheme.accent.opacity(0.5) : Color.clear, lineWidth: 1.5)
-                                    )
+                                    .background(isSelected && mode == .sfSymbol ? AppTheme.accent : Color.clear)
+                                    .hairline(isSelected ? AppTheme.accent : .clear)
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 12)
                         .padding(.bottom, 40)
                     }
                 }

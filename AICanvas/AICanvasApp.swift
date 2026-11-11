@@ -32,7 +32,7 @@ struct AICanvasApp: App {
                         .frame(width: 260)
                         .transition(AnyTransition.move(edge: .leading))
 
-                        Divider() // Separator
+                        Rectangle().fill(AppTheme.border).frame(width: 1).ignoresSafeArea()
                     }
 
                     // Main Content
@@ -60,11 +60,12 @@ struct AICanvasApp: App {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(AppTheme.background)
                 }
-                .animation(.spring(response: 0.4, dampingFraction: 0.85), value: showSidebar)
+                .animation(AppTheme.motion, value: showSidebar)
 
                 // Floating Pomodoro widget — stays on top across every screen
                 PomodoroWidgetView(manager: pomodoroManager)
             }
+            .tint(AppTheme.accent)
             .environment(\.locale, localization.locale)
             .onOpenURL { url in
                 handleWidgetURL(url)
@@ -83,7 +84,7 @@ struct AICanvasApp: App {
                 emoji: "✨",
                 colorIndex: Int.random(in: 0..<notebookNeonColors.count)
             )
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            withAnimation(AppTheme.motion) {
                 selectedNotebook = notebook
             }
 
@@ -93,7 +94,7 @@ struct AICanvasApp: App {
                   let id = UUID(uuidString: idString),
                   let notebook = store.notebooks.first(where: { $0.id == id })
             else { return }
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+            withAnimation(AppTheme.motion) {
                 selectedNotebook = notebook
             }
 
